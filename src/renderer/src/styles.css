@@ -1,0 +1,368 @@
+@import 'tailwindcss';
+@plugin '@tailwindcss/typography';
+
+@import '@fontsource-variable/onest';
+@import '@fontsource-variable/bricolage-grotesque';
+@import '@fontsource-variable/jetbrains-mono';
+
+@custom-variant dark (&:where([data-theme='dark'], [data-theme='dark'] *));
+
+/* Renkler: kobalt ve turkuaz, soğuk kağıt beyazı üstünde. */
+:root {
+  --bg: #f4f6fa;
+  --surface: #ffffff;
+  --surface-2: #edf0f7;
+  --ink: #131826;
+  --ink-2: #475069;
+  --ink-3: #78819a;
+  --line: #dde3ee;
+  --accent: #2443b8;
+  --accent-hover: #1c3697;
+  --accent-ink: #ffffff;
+  --accent-soft: #e5eafb;
+  --teal: #0c8a85;
+  --teal-soft: #dff3f1;
+  --warn: #a8690f;
+  --warn-soft: #fbf0d9;
+  --danger: #bf362e;
+  --danger-soft: #fbe6e4;
+  --shadow: 0 1px 2px rgb(19 24 38 / 0.06), 0 8px 24px rgb(19 24 38 / 0.08);
+  color-scheme: light;
+}
+
+[data-theme='dark'] {
+  --bg: #0e1320;
+  --surface: #131a2a;
+  --surface-2: #1c2538;
+  --ink: #e8ecf5;
+  --ink-2: #aab3c8;
+  --ink-3: #78829a;
+  --line: #27314a;
+  --accent: #7f9cff;
+  --accent-hover: #9bb1ff;
+  --accent-ink: #0b1020;
+  --accent-soft: #1c2950;
+  --teal: #45cbc2;
+  --teal-soft: #12302f;
+  --warn: #e3b35c;
+  --warn-soft: #33290f;
+  --danger: #f27d74;
+  --danger-soft: #3a1917;
+  --shadow: 0 1px 2px rgb(0 0 0 / 0.3), 0 12px 32px rgb(0 0 0 / 0.4);
+  color-scheme: dark;
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-ink: var(--ink);
+  --color-ink-2: var(--ink-2);
+  --color-ink-3: var(--ink-3);
+  --color-line: var(--line);
+  --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
+  --color-accent-ink: var(--accent-ink);
+  --color-accent-soft: var(--accent-soft);
+  --color-teal: var(--teal);
+  --color-teal-soft: var(--teal-soft);
+  --color-warn: var(--warn);
+  --color-warn-soft: var(--warn-soft);
+  --color-danger: var(--danger);
+  --color-danger-soft: var(--danger-soft);
+  --font-sans: 'Onest Variable', 'Segoe UI', system-ui, sans-serif;
+  --font-display: 'Bricolage Grotesque Variable', 'Onest Variable', 'Segoe UI', sans-serif;
+  --font-mono: 'JetBrains Mono Variable', Consolas, monospace;
+  --shadow-pop: var(--shadow);
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-size: 15px;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+  overflow: hidden;
+}
+
+/* Pencere sürükleme alanı */
+.drag {
+  -webkit-app-region: drag;
+}
+.no-drag,
+.drag button,
+.drag input,
+.drag select,
+.drag a {
+  -webkit-app-region: no-drag;
+}
+
+/* Temel katmanda: bileşenler outline-none ile kendi odak stilini verebilsin. */
+@layer base {
+  :focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+}
+
+::selection {
+  background: color-mix(in srgb, var(--accent) 28%, transparent);
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--ink-3) 45%, transparent) transparent;
+}
+
+/* Sohbet metni */
+.prose-chat {
+  color: var(--ink);
+  max-width: none;
+  font-size: 15px;
+  line-height: 1.65;
+  --tw-prose-body: var(--ink);
+  --tw-prose-headings: var(--ink);
+  --tw-prose-bold: var(--ink);
+  --tw-prose-links: var(--accent);
+  --tw-prose-code: var(--ink);
+  --tw-prose-quotes: var(--ink-2);
+  --tw-prose-quote-borders: var(--line);
+  --tw-prose-bullets: var(--ink-3);
+  --tw-prose-counters: var(--ink-3);
+  --tw-prose-hr: var(--line);
+  --tw-prose-th-borders: var(--line);
+  --tw-prose-td-borders: var(--line);
+}
+.prose-chat > :first-child {
+  margin-top: 0;
+}
+.prose-chat > :last-child {
+  margin-bottom: 0;
+}
+.prose-chat :where(h1, h2, h3, h4) {
+  font-family: var(--font-display);
+  letter-spacing: -0.01em;
+}
+.prose-chat :where(code):not(pre code) {
+  font-family: var(--font-mono);
+  font-size: 0.875em;
+  font-weight: 500;
+  background: var(--surface-2);
+  border-radius: 5px;
+  padding: 0.12em 0.36em;
+}
+.prose-chat :where(code):not(pre code)::before,
+.prose-chat :where(code):not(pre code)::after {
+  content: none;
+}
+.prose-chat table {
+  font-size: 14px;
+}
+
+/* Kod renkleri: iki temada da okunur */
+.hljs {
+  color: var(--ink);
+}
+.hljs-comment,
+.hljs-quote {
+  color: var(--ink-3);
+  font-style: italic;
+}
+.hljs-keyword,
+.hljs-selector-tag,
+.hljs-literal,
+.hljs-built_in {
+  color: var(--accent);
+}
+.hljs-string,
+.hljs-attr,
+.hljs-template-string {
+  color: var(--teal);
+}
+.hljs-number,
+.hljs-symbol,
+.hljs-variable {
+  color: var(--warn);
+}
+.hljs-title,
+.hljs-section,
+.hljs-name,
+.hljs-type {
+  color: var(--danger);
+}
+
+/* Cevap beklenirken yanıp sönen imleç */
+@keyframes blink {
+  50% {
+    opacity: 0;
+  }
+}
+.caret {
+  display: inline-block;
+  width: 7px;
+  height: 1.05em;
+  margin-left: 2px;
+  vertical-align: text-bottom;
+  background: var(--accent);
+  border-radius: 1.5px;
+  animation: blink 1s steps(1) infinite;
+}
+
+/* Mesajlaşan kişiliklerde "yazıyor" noktaları */
+.typing {
+  display: inline-flex;
+  gap: 4px;
+}
+.typing span {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--ink-3);
+  animation: typing 1.2s ease-in-out infinite;
+}
+.typing span:nth-child(2) {
+  animation-delay: 0.15s;
+}
+.typing span:nth-child(3) {
+  animation-delay: 0.3s;
+}
+@keyframes typing {
+  0%,
+  60%,
+  100% {
+    opacity: 0.35;
+    transform: translateY(0);
+  }
+  30% {
+    opacity: 1;
+    transform: translateY(-3px);
+  }
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.spin {
+  animation: spin 0.9s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .caret,
+  .spin,
+  .typing span {
+    animation: none;
+  }
+  * {
+    transition-duration: 0ms !important;
+  }
+}
+
+/* --- Belge paneli: özgün görünüm --- */
+.pdf-page {
+  position: relative;
+  flex-shrink: 0;
+  background: #fff;
+  box-shadow: 0 1px 3px rgb(15 23 42 / 0.18);
+}
+.pdf-page canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+/* pdf.js metin katmanı: görünmez metin sayfanın üstünde durur, böylece seçilebilir. */
+.pdf-page .textLayer {
+  position: absolute;
+  inset: 0;
+  overflow: clip;
+  line-height: 1;
+  text-size-adjust: none;
+  forced-color-adjust: none;
+  transform-origin: 0 0;
+  --scale-round-x: 1px;
+  --scale-round-y: 1px;
+  --min-font-size: 1;
+  --text-scale-factor: calc(var(--total-scale-factor) * var(--min-font-size));
+  --min-font-size-inv: calc(1 / var(--min-font-size));
+}
+.pdf-page .textLayer :is(span, br) {
+  color: transparent;
+  position: absolute;
+  white-space: pre;
+  cursor: text;
+  transform-origin: 0% 0%;
+  user-select: text;
+}
+.pdf-page .textLayer > :not(.markedContent),
+.pdf-page .textLayer .markedContent span:not(.markedContent) {
+  z-index: 1;
+  --font-height: 0;
+  font-size: calc(var(--text-scale-factor) * var(--font-height));
+  --scale-x: 1;
+  --rotate: 0deg;
+  transform: rotate(var(--rotate)) scaleX(var(--scale-x)) scale(var(--min-font-size-inv));
+}
+.pdf-page .textLayer .markedContent {
+  display: contents;
+}
+.pdf-page .textLayer ::selection {
+  background: rgb(47 91 234 / 0.3);
+}
+.pdf-page .textLayer .endOfContent {
+  display: none;
+}
+
+/* Word belgesi: docx-preview sayfaları gri zemine dizer; zemin panelle aynı olsun. */
+.docx-host .docx-wrapper {
+  background: transparent;
+  padding: 12px;
+}
+.docx-host .docx-wrapper > section.docx {
+  box-shadow: 0 1px 3px rgb(15 23 42 / 0.18);
+  margin-bottom: 12px;
+}
+
+/* Excel sayfası */
+.sheet-table {
+  border-collapse: collapse;
+  table-layout: fixed;
+  background: var(--surface);
+  font-size: 13px;
+  color: var(--ink);
+}
+.sheet-table td,
+.sheet-table th {
+  border: 1px solid var(--line);
+  padding: 4px 8px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  user-select: text;
+}
+.sheet-table th {
+  background: var(--surface-2);
+  color: var(--ink-3);
+  font-weight: 500;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+  user-select: none;
+}
+
+/* --- Sohbet içinde arama: eşleşmeler metne dokunmadan vurgulanır --- */
+::highlight(atlas-find) {
+  background-color: rgb(250 204 21 / 0.45);
+  color: inherit;
+}
+::highlight(atlas-find-current) {
+  background-color: rgb(249 115 22 / 0.85);
+  color: #fff;
+}
