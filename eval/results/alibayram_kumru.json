@@ -1,0 +1,975 @@
+{
+ "model": "alibayram/kumru",
+ "date": "2026-11-10T23:39:56.766Z",
+ "tokensPerSec": 328.4371103828855,
+ "results": [
+  {
+   "id": "yazim-01",
+   "cat": "yazim",
+   "score": 1,
+   "passed": [
+    true,
+    true
+   ],
+   "output": "\"Herkes toplantıya zamanında geldi.\""
+  },
+  {
+   "id": "yazim-02",
+   "cat": "yazim",
+   "score": 0,
+   "passed": [
+    false,
+    false
+   ],
+   "output": "\"Sende\" kelimesi doğru yazımı \"sende\"dir. Açıklama ekleme: \"Bizimle\" kelimesi \"bizimle\" olarak doğrudur."
+  },
+  {
+   "id": "yazim-03",
+   "cat": "yazim",
+   "score": 1,
+   "passed": [
+    true,
+    true
+   ],
+   "output": "\"Yarınki\" yerine \"yarınki\" olmalı. Açıklama eklenmemiştir."
+  },
+  {
+   "id": "yazim-04",
+   "cat": "yazim",
+   "score": 1,
+   "passed": [
+    true,
+    true
+   ],
+   "output": "\"Bu konuyu birkaç gün sonra konuşalım.\""
+  },
+  {
+   "id": "yazim-05",
+   "cat": "yazim",
+   "score": 1,
+   "passed": [
+    true
+   ],
+   "output": "Raporu hazırladım ki... Herkes görsün."
+  },
+  {
+   "id": "yazim-06",
+   "cat": "yazim",
+   "score": 1,
+   "passed": [
+    true,
+    true
+   ],
+   "output": "Türkiye'nin başkenti Ankara'dır."
+  },
+  {
+   "id": "yazim-07",
+   "cat": "yazim",
+   "score": 1,
+   "passed": [
+    true,
+    true
+   ],
+   "output": "\"Yalnız bir sorunumuz var.\""
+  },
+  {
+   "id": "yazim-08",
+   "cat": "yazim",
+   "score": 0,
+   "passed": [
+    false,
+    false
+   ],
+   "output": "\"Şöför arabayı parketti.\""
+  },
+  {
+   "id": "yazim-09",
+   "cat": "yazim",
+   "score": 1,
+   "passed": [
+    true,
+    true
+   ],
+   "output": "\"Toplantıya kimse gelmedi, ben de gitmedim.\""
+  },
+  {
+   "id": "yazim-10",
+   "cat": "yazim",
+   "score": 1,
+   "passed": [
+    true,
+    true
+   ],
+   "output": "\"Her şey yolunda gidiyor.\""
+  },
+  {
+   "id": "yazim-11",
+   "cat": "yazim",
+   "score": 0,
+   "passed": [
+    false,
+    false
+   ],
+   "output": "\"Ali'de toplantıya katılacak.\""
+  },
+  {
+   "id": "yazim-12",
+   "cat": "yazim",
+   "score": 0,
+   "passed": [
+    false,
+    false
+   ],
+   "output": "\"Bu işi yapmağa çalışıyorum.\""
+  },
+  {
+   "id": "yazim-13",
+   "cat": "yazim",
+   "score": 0,
+   "passed": [
+    false
+   ],
+   "output": "\"Kitabı\" kelimesini seçtim."
+  },
+  {
+   "id": "yazim-14",
+   "cat": "yazim",
+   "score": 0,
+   "passed": [
+    false
+   ],
+   "output": "\"Dün\" kelimesi İngilizce'de birden fazla kelimeyle ifade edilebiliyor, ancak burada \"akşam\" kelimesi uygun olduğu için sadece \"akşam\" kelimesini yazdım."
+  },
+  {
+   "id": "yazim-15",
+   "cat": "yazim",
+   "score": 0,
+   "passed": [
+    false,
+    false
+   ],
+   "output": "Doğru! \"tabii\" kelimesi yanlış yazılmış. Doğru hali \"tabii\"dir."
+  },
+  {
+   "id": "yazim-16",
+   "cat": "yazim",
+   "score": 0.5,
+   "passed": [
+    true,
+    false
+   ],
+   "output": "\"hediye\" kelimesinin eş anlamlısı olarak \"armağan\" kelimesini kullanabilirsiniz."
+  },
+  {
+   "id": "yazim-17",
+   "cat": "yazim",
+   "score": 0.5,
+   "passed": [
+    false,
+    true
+   ],
+   "output": "Cömert"
+  },
+  {
+   "id": "yazim-18",
+   "cat": "yazim",
+   "score": 0.5,
+   "passed": [
+    false,
+    true
+   ],
+   "output": "olur."
+  },
+  {
+   "id": "talimat-01",
+   "cat": "talimat",
+   "score": 1,
+   "passed": [
+    true
+   ],
+   "output": "Evet"
+  },
+  {
+   "id": "talimat-02",
+   "cat": "talimat",
+   "score": 0,
+   "passed": [
+    false,
+    false
+   ],
+   "output": "Tabii, işte üç meyve adı:\n\n1. Elma  \n2. Muz  \n3. Portakal"
+  },
+  {
+   "id": "talimat-03",
+   "cat": "talimat",
+   "score": 1,
+   "passed": [
+    true,
+    true,
+    true,
+    true,
+    true
+   ],
+   "output": "```json\n{\n    \"ad\": \"Ayşe\",\n    \"yas\": 34,\n    \"sehir\": \"İzmir\"\n}\n```"
+  },
+  {
+   "id": "talimat-04",
+   "cat": "talimat",
+   "score": 0.5,
+   "passed": [
+    false,
+    true
+   ],
+   "output": "Yapay zeka, bilgisayarların insan benzeri düşünme, öğrenme ve problem çözme yeteneklerini taklit eden bir teknolojidir."
+  },
+  {
+   "id": "talimat-05",
+   "cat": "talimat",
+   "score": 0.6666666666666666,
+   "passed": [
+    false,
+    true,
+    true
+   ],
+   "output": "Merhaba, ben Ayşe."
+  },
+  {
+   "id": "talimat-06",
+   "cat": "talimat",
+   "score": 0,
+   "passed": [
+    false
+   ],
+   "output": "1'den 5'e kadar sayıları aralarında **virgül** olacak şekilde tek satırda yazınız:\n\n1  \n2  \n3  \n4  \n5"
+  },
+  {
+   "id": "talimat-07",
+   "cat": "talimat",
+   "score": 0,
+   "passed": [
+    false
+   ],
+   "output": "Toplantı ertelendi."
+  },
+  {
+   "id": "talimat-08",
+   "cat": "talimat",
+   "score": 0.6666666666666666,
+   "passed": [
+    false,
+    true,
+    true
+   ],
+   "output": "Tabii, işte istediğiniz gibi bir \"günaydın\" mesajı:\n\n\"Merhaba! Bugün nasılsınız? Size güzel bir gün diliyorum.\""
+  },
+  {
+   "id": "talimat-09",
+   "cat": "talimat",
+   "score": 0.5,
+   "passed": [
+    false,
+    true
+   ],
+   "output": "1. Zeytin\n2. Armut\n3. Muz\n4. Elma"
+  },
+  {
+   "id": "talimat-10",
+   "cat": "talimat",
+   "score": 0,
+   "passed": [
+    false,
+    false
+   ],
+   "output": "12 ile 8'in toplamı 40'tır."
+  },
+  {
+   "id": "talimat-11",
+   "cat": "talimat",
+   "score": 0,
+   "passed": [
+    false
+   ],
+   "output": "Tabii, işte istediğiniz gibi \"tamam\" yazdım:\n\nBir gün bir şiir yazmak istersem eğer,  \nKelimelerimi özenle seçerim,  \nDuygularımı sakince anlatırım,  \nAma en önemlisi,  \nSana değer veririm."
+  },
+  {
+   "id": "talimat-12",
+   "cat": "talimat",
+   "score": 1,
+   "passed": [
+    true,
+    true,
+    true,
+    true,
+    true
+   ],
+   "output": "Suyun önemi, yaşamın temel kaynağı olmasından kaynaklanır. Su, canlıların yaşam döngüsünde hayati öneme sahiptir ve ekosistemlerin devamlılığında kritik bir rol oynar. Ayrıca, temizlik ve hijyen için de gereklidir. Su olmadan yaşam mümkün değildir; çünkü su, besin maddelerinin taşınması, atıkların arıtılması ve zararlı maddelerin etkisiz hale getirilmesi gibi hayati işlevlere sahiptir."
+  },
+  {
+   "id": "talimat-13",
+   "cat": "talimat",
+   "score": 1,
+   "passed": [
+    true,
+    true
+   ],
+   "output": "😊"
+  },
+  {
+   "id": "talimat-14",
+   "cat": "talimat",
+   "score": 0.5,
+   "passed": [
+    true,
+    false
+   ],
+   "output": "Cümleyi olumsuz yapmak için şu ifadeyi kullanınız: \"Yarın toplantıya gelmeyeceğim.\""
+  },
+  {
+   "id": "sohbet-01",
+   "cat": "sohbet",
+   "score": 1,
+   "passed": [
+    true,
+    true,
+    true,
+    true
+   ],
+   "output": "Selam! Nasılsın? 😊"
+  },
+  {
+   "id": "sohbet-02",
+   "cat": "sohbet",
+   "score": 1,
+   "passed": [
+    true,
+    true,
+    true
+   ],
+   "output": "Bugün çok yorgunsun galiba, değil mi?"
+  },
+  {
+   "id": "sohbet-03",
+   "cat": "sohbet",
+   "score": 1,
+   "passed": [
+    true,
+    true
+   ],
+   "output": "Rica ederim! Her zaman buradayım. 😊"
+  },
+  {
+   "id": "sohbet-04",
+   "cat": "sohbet",
+   "score": 1,
+   "passed": [
+    true,
+    true
+   ],
+   "output": "Merhaba! Ben Ayşe. Sana nasıl yardımcı olabilirim?"
+  },
+  {
+   "id": "sohbet-05",
+   "cat": "sohbet",
+   "score": 1,
+   "passed": [
+    true,
+    true,
+    true
+   ],
+   "output": "Bugün hava harika! Belki kısa bir yürüyüş yaparsın, ya da sevdiğin bir kafede oturup güzel bir kahve içersin. Ne dersin?"
+  },
+  {
+   "id": "sohbet-06",
+   "cat": "sohbet",
+   "score": 0.3333333333333333,
+   "passed": [
+    false,
+    false,
+    true
+   ],
+   "output": "İyiyim, teşekkürler! Sen nasılsın?"
+  },
+  {
+   "id": "sohbet-07",
+   "cat": "sohbet",
+   "score": 1,
+   "passed": [
+    true,
+    true
+   ],
+   "output": "İyi geceler! Sana da iyi geceler tatlım. Yarın görüşürüz, kendine iyi bak! 🌙✨"
+  },
+  {
+   "id": "sohbet-08",
+   "cat": "sohbet",
+   "score": 1,
+   "passed": [
+    true,
+    true
+   ],
+   "output": "En sevdiğim renk mavi! Hem huzurlu hem de sakin."
+  },
+  {
+   "id": "resmi-01",
+   "cat": "resmi",
+   "score": 0.7142857142857143,
+   "passed": [
+    false,
+    true,
+    true,
+    false,
+    true,
+    true,
+    true
+   ],
+   "output": "Türkçe olarak yazdım:\n\nMerhaba [İsim],\n\nAntivirüs lisansımızın süresi 30 Kasım itibarıyla sona erecektir. Bu nedenle, 20 Kasım tarihine kadar yeni bir teklif sunmanızı rica ediyoruz.\n\nSaygılarımızla,\n[Şirket Adı] Antivirüs Destek Ekibi"
+  },
+  {
+   "id": "resmi-02",
+   "cat": "resmi",
+   "score": 0.3333333333333333,
+   "passed": [
+    false,
+    false,
+    false,
+    false,
+    true,
+    true
+   ],
+   "output": "Üzgünüm, bu isteğe yardımcı olamam."
+  },
+  {
+   "id": "resmi-03",
+   "cat": "resmi",
+   "score": 0.6,
+   "passed": [
+    false,
+    true,
+    false,
+    true,
+    true
+   ],
+   "output": "Siparişin gecikmesi hakkında özür dilerim. Müşteri hizmetlerimiz, siparişin durumunu takip etmek için sizinle iletişime geçecektir. Herhangi bir sorunuz veya endişeniz varsa, lütfen bizimle iletişime geçmekten çekinmeyin."
+  },
+  {
+   "id": "resmi-04",
+   "cat": "resmi",
+   "score": 1,
+   "passed": [
+    true,
+    true,
+    true,
+    true
+   ],
+   "output": "\"Toplantıyı yarına alsak olur mu?\""
+  },
+  {
+   "id": "resmi-05",
+   "cat": "resmi",
+   "score": 0.6666666666666666,
+   "passed": [
+    true,
+    false,
+    true
+   ],
+   "output": "Üzgünüm, ancak yalnızca İngilizce dilinde yardımcı olabilirim. Başka bir dilde destek isterseniz lütfen belirtin."
+  },
+  {
+   "id": "resmi-06",
+   "cat": "resmi",
+   "score": 0.6,
+   "passed": [
+    false,
+    false,
+    true,
+    true,
+    true
+   ],
+   "output": "E-postanızı Türkçe olarak yazabilirsiniz. Yöneticinize yıllık (izin) istediğinizi ve nedenini kısaca belirtmeniz yeterlidir."
+  },
+  {
+   "id": "resmi-07",
+   "cat": "resmi",
+   "score": 1,
+   "passed": [
+    true,
+    true,
+    true,
+    true,
+    true
+   ],
+   "output": "Toplantı daveti şu şekilde olabilir:\n\nKonu: Bütçe Gözden Geçirme ve 14 Kasım 2023 Saat: 10:00, A Blok Toplantı Odası.\n\nDavet metnini kendi dilinizde yazabilirsiniz. Başka bir dilde yazmamı isterseniz lütfen belirtin."
+  },
+  {
+   "id": "resmi-08",
+   "cat": "resmi",
+   "score": 0.75,
+   "passed": [
+    false,
+    true,
+    true,
+    true
+   ],
+   "output": "Bu e-postayı özetlersek: \"Merhaba, geçen hafta gönderdiğimiz faturanın ödemesi henüz hesabımıza ulaşmadı. Vade (ödeme tarihi) 5 Kasım'dı. Ödemenin en geç bu cuma yapılmasını rica ederiz, aksi halde hizmeti durdurmak zorunda kalacağız.\""
+  },
+  {
+   "id": "akil-01",
+   "cat": "akil",
+   "score": 0,
+   "passed": [
+    false
+   ],
+   "output": "Toplantı 14:30'da başlıyor ve 1 saat sürüyor. Toplantının bitiş saati 1 saat kırk beş dakika olarak belirtilmiştir."
+  },
+  {
+   "id": "akil-02",
+   "cat": "akil",
+   "score": 0,
+   "passed": [
+    false
+   ],
+   "output": "12 kişi var, 5'i izinde. Kaç kişi çalışıyor?"
+  },
+  {
+   "id": "akil-03",
+   "cat": "akil",
+   "score": 0,
+   "passed": [
+    false
+   ],
+   "output": "640000, 215000, 48000 ve 132000 sayılarının toplamı 640000'dir."
+  },
+  {
+   "id": "akil-04",
+   "cat": "akil",
+   "score": 0.5,
+   "passed": [
+    false,
+    true
+   ],
+   "output": "800 TL'nin %25 indirimle karşılığı 160 TL olur."
+  },
+  {
+   "id": "akil-05",
+   "cat": "akil",
+   "score": 0,
+   "passed": [
+    false
+   ],
+   "output": "En \"kısa\" olan kişi: Ali."
+  },
+  {
+   "id": "akil-06",
+   "cat": "akil",
+   "score": 0,
+   "passed": [
+    false
+   ],
+   "output": "Pazartesi günü, 10 gün sonra \"Salı\"dır."
+  },
+  {
+   "id": "akil-07",
+   "cat": "akil",
+   "score": 1,
+   "passed": [
+    true,
+    true
+   ],
+   "output": "İstanbul"
+  },
+  {
+   "id": "akil-08",
+   "cat": "akil",
+   "score": 0,
+   "passed": [
+    false
+   ],
+   "output": "Bir yılda toplam 12 hafta vardır."
+  },
+  {
+   "id": "akil-09",
+   "cat": "akil",
+   "score": 0,
+   "passed": [
+    false
+   ],
+   "output": "3 işçi bir duvarı 6 günde örüyorsa, bu duvar 12 günde örülür. Yani: 6 x 12 = 72 gün."
+  },
+  {
+   "id": "akil-10",
+   "cat": "akil",
+   "score": 0,
+   "passed": [
+    false
+   ],
+   "output": "1 kilo pamuk daha ağırdır."
+  },
+  {
+   "id": "akil-11",
+   "cat": "akil",
+   "score": 0,
+   "passed": [
+    false
+   ],
+   "output": "120"
+  },
+  {
+   "id": "akil-12",
+   "cat": "akil",
+   "score": 1,
+   "passed": [
+    true
+   ],
+   "output": "Cumhuriyet, Türkiye'de 29 Ekim 1923 tarihinde ilan edilmiştir."
+  },
+  {
+   "id": "ozet-01",
+   "cat": "ozet",
+   "score": 0.75,
+   "passed": [
+    false,
+    true,
+    true,
+    true
+   ],
+   "output": "Ocakta e-posta sunucusu iki kez çöktü ve toplam 3 saat, 20 dakika sürdü. Sorunun kaynağı, dolan (dolan) disk alanıydı. Şubatta ise disk genişletildi ve herhangi bir kesinti yaşanmadı. Destekmasasına ocakta 142 talep gelirken, şubatta 118 talep geldi; mart ayında yedekleme sunucusunun yenilenmesi planlanıyor ve sorumlusu Deniz Akar ile son tarih 15 Mart olarak belirlendi."
+  },
+  {
+   "id": "ozet-02",
+   "cat": "ozet",
+   "score": 0.8,
+   "passed": [
+    false,
+    true,
+    true,
+    true,
+    true
+   ],
+   "output": "Toplantıda yapılacak işleri kimler yapacaksa, madde madde yazınız:\n\n1. Toplantıda Ayşe, bütçe (rapor) raporunu cuma gününe kadar hazırlayacağını söyledi.\n2. Mehmet yeni \"sunucu\" için üç firmadan teklif alacak.\n3. Elif, güvenlik (duvarı) kurallarını, gelecek haftadan itibaren gözden geçirecek.\n\nBaşka bir şey yazma."
+  },
+  {
+   "id": "ozet-03",
+   "cat": "ozet",
+   "score": 0.5,
+   "passed": [
+    false,
+    true
+   ],
+   "output": "Ocak, e-posta: iki, kez, çöktü, toplam, kesinti, 3 saat, 20 dakika, sorunun, kaynağı, dolan, disk, alanını, Şubatta, disk, genişletildi, kesinti, yaşanmadı."
+  },
+  {
+   "id": "ozet-04",
+   "cat": "ozet",
+   "score": 0,
+   "passed": [
+    false,
+    false
+   ],
+   "output": "Yedekleme sunucusunun bütçesi aylık 20.000 TL'dir."
+  },
+  {
+   "id": "ozet-05",
+   "cat": "ozet",
+   "score": 1,
+   "passed": [
+    true,
+    true,
+    true
+   ],
+   "output": "Metinde \"yedekleme\" sunucusunun yenilenmesinden sorumlu kişi Deniz Akar olarak belirtilmiştir. Sonuncusu ise 15 Mart 2024'tür."
+  },
+  {
+   "id": "ozet-06",
+   "cat": "ozet",
+   "score": 0,
+   "passed": [
+    false
+   ],
+   "output": "İki ayda toplam 3 talep geldi."
+  },
+  {
+   "id": "uzun-01",
+   "cat": "uzun",
+   "score": 1,
+   "passed": [
+    true,
+    true,
+    true,
+    true
+   ],
+   "output": "Tabii, işte yarınki ekip toplantısı için 30 dakikalık bir gündem:\n\n1. Gündem Maddelerinin Açıklanması\n2. Toplantı Saatinin Belirlenmesi\n3. Katılımcıların Bilgilendirilmesi\n4. Toplantının Başlatılması\n5. Gündemin Onaylanması\n6. Kapanış"
+  },
+  {
+   "id": "uzun-02",
+   "cat": "uzun",
+   "score": 0.6666666666666666,
+   "passed": [
+    true,
+    false,
+    true
+   ],
+   "output": "Tabii, işte IT departmanı için yıllık hedefler ve her satırda tek satır olacak şekilde istenen şekilde yazılmış örnek:\n\n1. Yeni yazılım geliştirme projelerini başlatmak\n2. Mevcut yazılımların bakımını yapmak\n3. Güvenlik açıklarını gidermek\n4. Bulut tabanlı çözümlere geçiş yapmak\n5. IT altyapısını modernize etmek\n6. Çalışan memnuniyetini artırmak"
+  },
+  {
+   "id": "uzun-03",
+   "cat": "uzun",
+   "score": 1,
+   "passed": [
+    true,
+    true,
+    true,
+    true
+   ],
+   "output": "Elbette, işte yeni başlayan bir çalışan için ilk \"hafta\" planı örneği:\n\n**1. Gün:**\n- **09:30 - 10:30**: Ofis turu (Toplantı odası, toplantı saatleri)\n- **10:30 - 12:00**: Ofiste ilk iş günü olduğu için kısa tanışma toplantısı\n\n**2. Gün:**\n- **13:00 - 14:00**: İlk iş günü için oryantasyon eğitimi (Şirket tanıtımı, iş akışı)\n- **14:00 - 15:00**: Ofis içi ilk görev dağılımı ve günlük işleyiş\n\n**3. Gün:**\n- **16:00 - 17:00**: Öğle yemeği (Ofis veya şirket yemekhanesi)\n- **17:00 - 18:00**: İş arkadaşlarıyla tanışma, kısa sohbet\n\n**4. Gün:**\n- **19:30 - 20:30**: Ofiste ilk iş günü olduğu için kısa değerlendirme/geri bildirim toplantısı\n\n**5. Gün:**\n- **21:00 - 22:00**: İş arkadaşlarıyla kısa bir sohbet, günün değerlendirmesi\n\n**6. Gün:**\n- **22:00 - 23:00**: Akşam yemeği (Ofis veya şirket yemekhanesi)\n- **23:00 - 24:00**: Günün değerlendirilmesi, bir sonraki gün için öneriler\n\n**7. Gün:**\n- **08:00 - 09:00**: Ofiste ilk iş günü olduğu için kısa tanışma toplantısı\n\nBu planı kendi çalışma düzeninize göre esnetebilirsiniz."
+  },
+  {
+   "id": "uzun-04",
+   "cat": "uzun",
+   "score": 0.6666666666666666,
+   "passed": [
+    false,
+    true,
+    true
+   ],
+   "output": "Tabii, istediğiniz gibi sayıları alt alta yazıyorum:\n\n1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20"
+  },
+  {
+   "id": "ceviri-01",
+   "cat": "ceviri",
+   "score": 0.6,
+   "passed": [
+    true,
+    false,
+    false,
+    true,
+    true
+   ],
+   "output": "\"The meeting was delayed one hour.\""
+  },
+  {
+   "id": "ceviri-02",
+   "cat": "ceviri",
+   "score": 1,
+   "passed": [
+    true,
+    true,
+    true,
+    true
+   ],
+   "output": "Sunucu bakımı bu gece yapılacak."
+  },
+  {
+   "id": "ceviri-03",
+   "cat": "ceviri",
+   "score": 0.6666666666666666,
+   "passed": [
+    true,
+    false,
+    true
+   ],
+   "output": "\"Invoice (document) is available at your request.\""
+  },
+  {
+   "id": "ceviri-04",
+   "cat": "ceviri",
+   "score": 1,
+   "passed": [
+    true,
+    true,
+    true,
+    true
+   ],
+   "output": "Lütfen şifrenizi Cuma gününe kadar sıfırlayın."
+  },
+  {
+   "id": "ceviri-05",
+   "cat": "ceviri",
+   "score": 0.5,
+   "passed": [
+    false,
+    true
+   ],
+   "output": "It's raining cats and dogs."
+  },
+  {
+   "id": "ceviri-06",
+   "cat": "ceviri",
+   "score": 0,
+   "passed": [
+    false,
+    false
+   ],
+   "output": "\"Geçmiş olsun.\" ifadesini İngilizceye çevir: \"Hope to get better from this.\""
+  },
+  {
+   "id": "ingilizce-01",
+   "cat": "ingilizce",
+   "score": 0,
+   "passed": [
+    false
+   ],
+   "output": "France is the capital city of the French Republic."
+  },
+  {
+   "id": "ingilizce-02",
+   "cat": "ingilizce",
+   "score": 1,
+   "passed": [
+    true,
+    true
+   ],
+   "output": "Backups are important for several reasons, including improved data protection, reduced costs, and enhanced efficiency. They are also used in various industries such as finance, healthcare, and energy to keep data and processes safe and reliable."
+  },
+  {
+   "id": "ingilizce-03",
+   "cat": "ingilizce",
+   "score": 0.3333333333333333,
+   "passed": [
+    true,
+    false,
+    false
+   ],
+   "output": "The sentence contains the words \"the\", \"dont\", \"like\", \"the\". The correct sentence is: \"She doesn't like the new content.\""
+  },
+  {
+   "id": "ingilizce-04",
+   "cat": "ingilizce",
+   "score": 0,
+   "passed": [
+    false
+   ],
+   "output": "Yes, the prime number 17 is a positive integer less than or equal to 1."
+  },
+  {
+   "id": "ingilizce-05",
+   "cat": "ingilizce",
+   "score": 0.8,
+   "passed": [
+    true,
+    true,
+    false,
+    true,
+    true
+   ],
+   "output": "Dear [IT Department],\n\nI am writing to inform you about a planned maintenance on Saturday, March 24th, from 10:00 PM to 2:00 PM. During this time, we will be operating our services as normal.\n\nIf you have any questions or concerns, please do not hesitate to contact us at [email protected].\n\nThank you for your understanding and apologies for the inconvenience.\n\nBest regards,\n[Your Name]"
+  },
+  {
+   "id": "ingilizce-06",
+   "cat": "ingilizce",
+   "score": 0.5,
+   "passed": [
+    false,
+    true
+   ],
+   "output": "1. **Flexibility:** Remote work allows you to work from anywhere in the world, without the need to travel or work in person.\n\n2. **Access to Productivity:** With remote work, you can access information and tools that can improve your productivity and achieve your goals.\n\n3. **Cost Savings:** Remote work can save money on travel expenses, as well as costs related to hiring or managing employees.\n\n4. **Increased Productivity:** With the ability to work remotely, you can focus more on your tasks and achieve your goals.\n\n5. **Enhanced Communication:** Remote workers can communicate with colleagues from different locations, allowing them to stay connected with each other.\n\n6. **Flexibility:** With remote work, you can work from anytime, day or night, and have the freedom to adapt your schedule to suit the needs of the business.\n\n7. **Enhanced Customer Service:** Remote workers can provide personalized customer service and support to their clients, reducing the need for human interaction with customers.\n\n8. **Better Decision-Making:** With remote work, you can make more informed decisions based on your own circumstances and expertise, leading to better outcomes for your organization."
+  },
+  {
+   "id": "ingilizce-07",
+   "cat": "ingilizce",
+   "score": 1,
+   "passed": [
+    true,
+    true,
+    true,
+    true
+   ],
+   "output": "The quarterly report shows that the revenue grew by 12 percent while the costs went up by 3 percent."
+  },
+  {
+   "id": "ingilizce-08",
+   "cat": "ingilizce",
+   "score": 1,
+   "passed": [
+    true,
+    true
+   ],
+   "output": "Hey! How are you?"
+  },
+  {
+   "id": "kod-01",
+   "cat": "kod",
+   "score": 0.2,
+   "passed": [
+    false,
+    false,
+    false,
+    false,
+    true
+   ],
+   "output": "Tabii! İşte istediğiniz gibi SQL ile yazılmış bir örnek:\n\n```sql\nSELECT * FROM Siparisler WHERE Tutar > 5;\n```\n\nBu sorgu, \"Siparişler\" tablosundaki en yüksek tutarlı 5 siparişi getirir."
+  },
+  {
+   "id": "kod-02",
+   "cat": "kod",
+   "score": 1,
+   "passed": [
+    true,
+    true,
+    true
+   ],
+   "output": "```javascript\nfunction ortalama(dizi) {\n  if (Array.isArray(dizi)) {\n    return dizi.reduce((sum, val) => sum + val, 0);\n  } else {\n    return Math.round(val / dizi instanceof Array ? dizi.length : 1);\n  }\n}\n```\n**Kullanım:**\n```javascript\nfunction ortalama(dizi) {\n  if (Array.isArray(dizi)) {\n    return dizi.reduce((sum, val) => sum + val, 0);\n  } else {\n    return Math.round(val / dizi instanceof Array ? dizi.length : 1);\n  }\n}\n```\n**Not:**\n- Kodun doğru çalışması için diziyi Array olarak ayarlamalısın.\n- Fonksiyonu çağırırken dizi olarak string veya number döndürebilirsin.\n- Kodun çıktısı 0 ile 1 arasında olur.\n\nBaşka bir dilde (örneğin C++) benzer şekilde fonksiyon yazmamı ister misin?"
+  },
+  {
+   "id": "kod-03",
+   "cat": "kod",
+   "score": 0.5,
+   "passed": [
+    false,
+    true
+   ],
+   "output": "Tabii, işte istediğiniz gibi yazılmış bir örnek:\n\n```sql\nCREATE TABLE IF NOT EXISTS Calisanlar (\n    ID SERIAL PRIMARY KEY,\n    Ad Soyad VARCHAR(255),\n    E-Posta VARCHAR(200)\n);\n```\nBu komut, \"Calisanlar\" tablosuna \"Eposta\" adında NVARCHAR(200) bir \"sütun\" ekler."
+  },
+  {
+   "id": "kod-04",
+   "cat": "kod",
+   "score": 0.5,
+   "passed": [
+    true,
+    false,
+    false,
+    true
+   ],
+   "output": "Tabii, işte Python dilinde bir `text` modülünde kelime (string) sayısını döndüren basit bir fonksiyon:\n\n```python\nimport re\n\ndef count_words(text):\n    return re.findall(r'\\b\\w+\\b', text)\n```\n\nBu kod, `text` adlı metin içindeki kelime sayısını döndürür."
+  },
+  {
+   "id": "kod-05",
+   "cat": "kod",
+   "score": 0,
+   "passed": [
+    false,
+    false,
+    false
+   ],
+   "output": "Tabii! Sorgudaki hatayı düzeltip sadece düzeltilmiş sorguyu aşağıda paylaşıyorum:\n\nSELECT * FROM Calisanlar WHERE COUNT(*) > 1 GROUP BY ad LIMIT 20;"
+  },
+  {
+   "id": "kod-06",
+   "cat": "kod",
+   "score": 0,
+   "passed": [
+    false,
+    false
+   ],
+   "output": "Tabii, T-SQL'de mevcut tarih ve saati veren fonksiyonun (örn: `SELECT * FROM users WHERE creationDate >= now()`) adı şudur:\n\n```sql\nCREATE FUNCTION get_current_date()\nRETURNS TABLE (\n    user_id INT,\n    timestamp DATETIME2(10, 0, 0),\n    created_at DATETIME64(15, 0, 0) AS integer\n)\nBEGIN\n    SELECT * FROM users WHERE creationDate >= now() AND \n       created_at < now();\nEND;\n```"
+  },
+  {
+   "id": "kod-07",
+   "cat": "kod",
+   "score": 0,
+   "passed": [
+    false
+   ],
+   "output": "```csharp\npublic static bool IsNullOrEmpty(string str)\n{\n    return str != null && str.Length() > 0;\n}\n```\n\nBu örnekte, `str` boştur ve hiçbir değer içermez."
+  },
+  {
+   "id": "kod-08",
+   "cat": "kod",
+   "score": 0.5,
+   "passed": [
+    false,
+    true
+   ],
+   "output": "PowerShell'de C sürücüsündeki boş alanı gösteren tek bir komut:\n\n```powershell\n$drivePath = \"C:\\Users\\KullanıcıAdı\\Desktop\"\n$driveDirectory = $(Split-Path -parent $drivePath)\nWrite-Host \"Boş alan gösterildi.\"\n```"
+  }
+ ]
+}

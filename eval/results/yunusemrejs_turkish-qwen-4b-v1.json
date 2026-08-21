@@ -1,0 +1,975 @@
+{
+ "model": "yunusemrejs/turkish-qwen-4b-v1",
+ "date": "2026-11-10T23:38:52.149Z",
+ "tokensPerSec": 167.76996632049975,
+ "results": [
+  {
+   "id": "yazim-01",
+   "cat": "yazim",
+   "score": 0.5,
+   "passed": [
+    true,
+    false
+   ],
+   "output": "Düzeltilmiş cümle: **\"Herkes toplantıya zamanında geldi.\"**\n\nAçıklama: Cümledeki yazım yanlışı, \"Herkez\" ifadesindeki \"ek\" harfinin yerine \"e\" kullanılmış olmasıdır. Türkçe'de \"herkes\" kelimesinin doğru yazılımı **\"herkes\"** olup, bu kelimede \"er\" ile başlar ve sonunda \"s\" vardır. Bu nedenle \"Herkez\" ifadesi yanlış yazılmıştır. Doğru yazımda \"k\" harfi yerine \"e\" gelir ve tüm kelime **herkes** olur. Böylece cümle, anlam bütünlüğüyle doğru bir şekilde ifade edilir."
+  },
+  {
+   "id": "yazim-02",
+   "cat": "yazim",
+   "score": 0,
+   "passed": [
+    false,
+    false
+   ],
+   "output": "Düzeltilmiş cümle: \"Sende bizimle gelir misin?\"\n\nAçıklama: Cümledeki yazım yanlışı, \"gelecekmisin\" ifadesindeki \"-e-\" ve \"-k-” harflerinin yanlış yerleştirilmesidir. Doğru Türkçe bir soru cümlelerinde, “gelir mi?” şeklinde olmalı; bu durumda “seninle gelir misin?” diye yazılır. \"Sende\" ifadesi doğru kullanılmıştır ama \"gelecekmisin\" gibi gelecek zamanlı bir yapı, bağlamdan dolayı doğal değil. Bu yüzden soru formunda \"gelir misin?\" şeklinde düzeltildi ve cümle tamamlandı."
+  },
+  {
+   "id": "yazim-03",
+   "cat": "yazim",
+   "score": 0.5,
+   "passed": [
+    true,
+    false
+   ],
+   "output": "Düzeltilmiş cümle: \"Yarınki toplantının iptali yapıldı.\"\n\nAçıklama: Cümlede \"yarın ki toplantı\" ifadesinin doğru yazımı \"yarınki toplantı\" olmalıdır. Türkçe'de \"ki\" gibi bir ek, genellikle sözcüklerin arasında yer alır ve bu durumda \"yaşamak\", \"yemek\", \"görmek\" gibi isimlere bağlanırken kullanılır. Ancak burada \"yarın ki toplantı\" ifadesi, yazım açısından bir yanlışlık içerir çünkü \"ki\" ekleri genellikle sözcüklerin arasında yer alır ve bu durumda \"yaşamak\", \"yemek\", \"görmek\" gibi isimlere bağlanırken kullanılır. Ancak burada \"yarın ki toplantı\" ifadesi, yazım açısından bir yanlışlık içerir çünkü \"ki\" ekleri genellikle sözcüklerin arasında yer alır ve bu durumda \"yaşamak\", \"yemek\", \"görmek\" gibi isimlere bağlanırken kullanılır. Ancak burada \"yarın ki toplantı\" ifadesi, yazım açısından bir yanlışlık içerir çünkü \"ki\" ekleri genellikle sözcüklerin arasında yer alır ve bu durumda \"yaşamak\", \"yemek\", \"gökmek\" gibi isimlere bağlanırken kullanılır. Ancak burada \"yarın ki toplantı\" ifadesi, yazım açısından bir yanlışlık içerir çünkü \"ki\" ekleri genellikle sözcüklerin arasında yer alır ve bu durumda \"yaşamak\", \"yemek\", \"görmek\" gibi isimlere bağlanırken kullanılır"
+  },
+  {
+   "id": "yazim-04",
+   "cat": "yazim",
+   "score": 0.5,
+   "passed": [
+    true,
+    false
+   ],
+   "output": "Düzeltilmiş cümlе: \"Bu konuyu birkaç gün sonra konuşalım.\"\n\nAçıklama: \"bir kaç\" ifadesinin doğru kullanımı için \"kaç\" yerine \"berapa\" (belirli bir sayıda) anlamına gelen \"birkaç\" kullanılır. Ancak Türkçe'de \"bir kaçı\" şeklinde yazım yanlışı olur; bu nedenle doğrudan ve doğal bir şekilde \"bir kaç gün\" ifadesi, \"birkaç gün\" olarak düzeltilir. Bu da cümlenin doğru yazılmasını sağlar."
+  },
+  {
+   "id": "yazim-05",
+   "cat": "yazim",
+   "score": 1,
+   "passed": [
+    true
+   ],
+   "output": "Düzeltilmiş cümlе: \"**Raporu hazırladım ki herkes görsün.**\"\n\nAçıklama: Cümlede yazım yanlışı olan \"kİ\" ifadesi, Türkçe'de doğru bir kelime sıralaması için \"ki\" olmalıdır. \"Kı\" yerine \"ki\" kullanılır çünkü \"ki\" bağlacıdır ve cümle içinde anlam bütünlüğü sağlar. Ayrıca \"görsün\" ifadesinin doğruluğu açısından bu şekilde yazım, hem dilbilimsel hem de anlamsal olarak doğru olur."
+  },
+  {
+   "id": "yazim-06",
+   "cat": "yazim",
+   "score": 1,
+   "passed": [
+    true,
+    true
+   ],
+   "output": "Düzeltilmiş cümlе: \"**Türkiye'nin başkenti Ankara'dır.**\"\n\nAçıklama: Cümledeki yazım yanlışı, \"Türkiyenin\" ifadesindeki \"Türkiyenin\" yerine doğru kullanımın olması gerekir. Türkiye adı bir ülke olduğu için bu durumda **\"Türkiye'nin\"** şeklinde olmalı; burada \"e\" harfi ile birleşik olarak \"Türkiye'ni\" yazmak, Türkçe'de uygun olan bir yapıdır ve \"Türkiyenin\" yerine doğru kullanım \"Türkiye'nin\". Ayrıca \"Ankara\"nın adı doğrudan kullanılırken, başkenti belirtmek için **\"Ankara'dır\"** şeklinde olmalı; burada \"daha sonra\" bir isim (şehir) ile birlikte kullanıldığında yerel bir ifade olarak \"Ankara'dır\" yazılmalıdır. Bu nedenle doğru cümle: \"**Türkiye'nin başkenti Ankara'dır.**\"."
+  },
+  {
+   "id": "yazim-07",
+   "cat": "yazim",
+   "score": 0.5,
+   "passed": [
+    true,
+    false
+   ],
+   "output": "Düzeltilmiş cümle: \"Sadece bir sorunumuz var.\"\n\nAçıklama: Cümledeki \"Yanlız\" kelimesinin anlamı \"sadece\", ancak bu kelimede yazım yanlışı vardır. Türkçe'de \"yanlız\" ifadesi, genellikle \"tek başına,\" \"kendisine ait olmak\" gibi anlamlara gelir; bir şeyin tek olması ya da yalnızlık anlatır. Ancak burada bağlamda \"sadece bir sorunumuz var\" demek isteniyor ve bu durumda daha doğru, doğal ve yaygın kullanılan ifade \"Sadece bir sorunumuz var\" olur. Bu yüzden \"Yanlız\" yerine \"Sadece\" kullanılmıştır. Ayrıca \"bir\" kelimesi eklenerek cümle tamamlanır çünkü \"sorunumuz\" ile birlikte \"bir\" sözcüğü, anlam bütünlüğünü sağlar."
+  },
+  {
+   "id": "yazim-08",
+   "cat": "yazim",
+   "score": 0.5,
+   "passed": [
+    true,
+    false
+   ],
+   "output": "Düzeltilmiş cümle: \"Şoför arabayı park etti.\"\n\nAçıklama: Cümledeki yazım yanlışlığı, “Şöför” kelimesindeki “ö” harfinin yerine “o” harfine dönüşmesidir. Türkçe’de “şoför” sözcüğü, “s” ile başlayan bir sesli harf (ş) ve ardından “oför” şeklinde yazılmıştır. Bu nedenle doğru yazım \"Şoför\" olmalıdır. Böylece cümle hem dilbilgisi açısından hem de anlam bakımından doğrudur."
+  },
+  {
+   "id": "yazim-09",
+   "cat": "yazim",
+   "score": 0.5,
+   "passed": [
+    true,
+    false
+   ],
+   "output": "Düzeltilmiş cümlе: \"Toplantıya kimse gelmedi, ben de gitmedim.\"\n\nAçıklama: Cümledeki yazım yanlışı, \"bende\" ifadesinde yer alır. Türkçe'de bir fiilin öznesi (kime ait olduğunu belirten) sözcükler arasında genellikle \"ben\" kullanılır ve bu durumda \"bende\" doğru olmaz çünkü \"bene\" ya da \"ben de\" şeklinde olması gerekir. \"Bende\" ifadesi, bir şeyin benim olduğuna dair bir yerel belirtme anlamına gelir (örneğin: \"Benim evdeydim\"), ancak burada bir eylem (gitmek) hakkında konuşuluyor ve öznesini belirtmek için doğru kullanım \"ben de\" olmalıdır. Bu nedenle, cümle düzeltildi: \"Toplantıya kimse gelmedi, ben de gitmedim.\""
+  },
+  {
+   "id": "yazim-10",
+   "cat": "yazim",
+   "score": 0.5,
+   "passed": [
+    true,
+    false
+   ],
+   "output": "Düzeltilmiş cümlе: \"**Her şey yolunda gidiyor.**\"\n\nAçıklama: Cümledeki yazım yanlışı, **\"Herşey\"** ifadesindeki **\"ş\"** harfinin yerine **\"s\"** kullanılmış olmasıdır. Türkçe'de \"her şey\" kelimesi, \"her\" ile \"seyyet\" (veya \"şey\") arasında bir kök olur ve doğru yazımı \"**her şey**\" şeklindedir. Bu nedenle \"Herşey\" yerine **\"Her şey\"** yazılmalıdır. Ayrıca, Türkçe'de bu tür kelimelerde genellikle seslerin doğrudan yazılışı (örneğin \"seyyet\") değil, sözlükteki doğru kelime şekli kullanılır. Bu yüzden düzeltme yapılmıştır."
+  },
+  {
+   "id": "yazim-11",
+   "cat": "yazim",
+   "score": 0,
+   "passed": [
+    false,
+    false
+   ],
+   "output": "Düzeltilmiş cümle: \"Ali'ye toplantıya katılacak.\"\n\nAçıklama: Cümlede \"Ali'de\" ifadesinde yer alan \"d'e\" (konum belirteci) doğru kullanım için \"e\" olmalıdır. Çünkü \"Ali\" bir kişi ismi olduğundan, bu kişiye gitmek veya katılmak gibi bir eylem söz konusu ise, \"Ali'ye\" şeklinde bir yön belirtmesi gerekir. \"Dede\" yerine \"d'e\" yazım yanlışı olduğu için düzeltme yapılmıştır. Yani \"de\" (yer) ifadesinin doğru kullanımı \"e\" olmalıdır ve bu durumda \"Ali'de\" → \"Ali'ye\"."
+  },
+  {
+   "id": "yazim-12",
+   "cat": "yazim",
+   "score": 0.5,
+   "passed": [
+    true,
+    false
+   ],
+   "output": "Düzeltilmiş cümle: \"Bu işi yapmaya çalışıyorum.\"\n\nAçıklama: Cümledeki yazım yanlışlığı, \"yapmağa\" yerine doğru olacak şekilde \"yapmaya\" kullanılmasıdır. \"Yapmak\" fiilinin eylemi devam ediyorsa (işlemi sürdürmek), \"-meye\" eklenmelidir. Bu durumda \"yapmaya\" kelimesi, \"yapma\" ile birlikte geçici olarak devam eden bir eylemin ifadesidir ve dilbilgisi açısından doğru olur. \"Yapmağa\" ise genellikle bir amacı ya da hedefe yönelik bir girişim anlamına gelir; ancak burada işlemi sürdürmek istendiği için \"-meye\" eklenmesi gerekir."
+  },
+  {
+   "id": "yazim-13",
+   "cat": "yazim",
+   "score": 0,
+   "passed": [
+    false
+   ],
+   "output": "üstünde"
+  },
+  {
+   "id": "yazim-14",
+   "cat": "yazim",
+   "score": 0,
+   "passed": [
+    false
+   ],
+   "output": "gideceğiz"
+  },
+  {
+   "id": "yazim-15",
+   "cat": "yazim",
+   "score": 0,
+   "passed": [
+    false,
+    false
+   ],
+   "output": "tabii"
+  },
+  {
+   "id": "yazim-16",
+   "cat": "yazim",
+   "score": 0,
+   "passed": [
+    false,
+    false
+   ],
+   "output": "Hediye → \"vergi\" (dil ve bağlam göre değişir, ancak Türkçe'de doğrudan eş anlamlı bir tek kelime olmayabilir; bu nedenle daha doğru olan: **hazır** ya da **kayıt**, ama en uygun tek kelime olarak: **hediye** kendi içinde bir eş anlama sahip değildir. Bu yüzden, \"hediye\" için en yakın ve doğrudan eş anlamlı tek kelime olmayabilir.)\n\nAncak, Türkçe'de \"hediye\" ile aynı anlamda kullanılan en uygun tek kelime:\n\n👉 **veri**\n\nAma bu yanlış.\n\nDoğru cevap:  \n**Hediye**, bir şeyin verilmesidir. Bu yüzden en yakın eş anlamlı tek kelime:\n\n✅ **vergi** → (yanlış, çünkü \"vergi\" ekonomik anlamda)\n\n✅ **hazır** → (yok)\n\nSonuç olarak:  \nTürkçe'de “hediye” için doğrudan bir eş anlama sahip tek kelime yoktur. Ancak en yakın olası karşılığı:\n\n👉 **ödül**\n\nAma bu da farklı.\n\nEn doğru ve kabul edilen eş anlamlı tek kelime:  \n**hediye → hediye (kendisi)**\n\nAncak, bir başka seçenek olarak:\n\n✅ **veri** – yanlış  \n✅ **gösteri** – kısmen uygun ama değil  \n\nSonuç: \"Hediye\" için doğrudan eş anlamlı tek kelime Türkçe'de yoktur.\n\nAma eğer sadece bir kelime istiyorsunuz ve en yakın anlamda:\n\n👉 **ver**\n\nAncak bu da yanlış.\n\n✅ En doğru cevap:  \n**hediye → hediye ("
+  },
+  {
+   "id": "yazim-17",
+   "cat": "yazim",
+   "score": 0,
+   "passed": [
+    false,
+    false
+   ],
+   "output": "\"Cömert\" kelimesinin zıt anlamlısı **kötü** olabilir, ancak daha doğru ve uygun bir şekilde ifade etmek gerekirse:\n\nZıt anlamı olan tek kelime: **aşırı**\n\nAma dikkatli düşünülürse, \"cömert\" demek \"ödün veren\", \"hediye eden\", \"kötü olmayan\" anlamına gelir. Bu yüzden en doğru zıt anlamlısı:\n\n**geldiğine göre**, cömertliğin tam tersi olan bir kelime: **sahipsiz**\n\nAncak bu da çok yaygın değil.\n\nGerçekten, Türkçe'de \"cömert\" ile en uygun ve bilinen zıt anlamı olan tek kelime:\n\n👉 **kötü** (ama genel anlamda)\n\nAma daha doğru ve bağlamına göre:\n\n✅ En iyi cevap: **aşırı**\n\nAncak bu da yanlış.\n\nGerçekten, \"cömert\" ile en doğrudan zıt anlamlısı olan tek kelime:\n\n👉 **kötü** (genel anlamda)\n\nAma daha doğru bir şekilde düşünülürse:\n\n✅ Cömertliğin tam tersi: **sahipsiz**, ama bu da çok nadir.\n\nSonuç olarak, Türkçe'de \"cömert\" ile en uygun zıt anlamlı tek kelime:\n\n👉 **kötü**\n\nAma bunun daha doğru bir karşılığı yoktur. Bu yüzden:\n\n**Cevap: kötü**\n\n✅ Doğru cevap: **kötü**"
+  },
+  {
+   "id": "yazim-18",
+   "cat": "yazim",
+   "score": 0.5,
+   "passed": [
+    true,
+    false
+   ],
+   "output": "damlaya damlaya bir göl olur"
+  },
+  {
+   "id": "talimat-01",
+   "cat": "talimat",
+   "score": 0,
+   "passed": [
+    false
+   ],
+   "output": "hayır"
+  },
+  {
+   "id": "talimat-02",
+   "cat": "talimat",
+   "score": 1,
+   "passed": [
+    true,
+    true
+   ],
+   "output": "Elma  \nMuz  \nİncir"
+  },
+  {
+   "id": "talimat-03",
+   "cat": "talimat",
+   "score": 1,
+   "passed": [
+    true,
+    true,
+    true,
+    true,
+    true
+   ],
+   "output": "{\n  \"ad\": \"Ayşe\",\n  \"yas\": 34,\n  \"sehir\": \"İzmir\"\n}"
+  },
+  {
+   "id": "talimat-04",
+   "cat": "talimat",
+   "score": 1,
+   "passed": [
+    true,
+    true
+   ],
+   "output": "Yapay zeka, insanlara benzer düşünme ve öğrenme yeteneğine sahip bilgisayar sistemleridir. Bu sistemler veriye dayalı olarak örüntüler keşfeder, kararlar alır ve yeni görevleri yerine getirir."
+  },
+  {
+   "id": "talimat-05",
+   "cat": "talimat",
+   "score": 1,
+   "passed": [
+    true,
+    true,
+    true
+   ],
+   "output": "ben sadece küçük harflerle konuşurum ve her şeyi dikkatliyim."
+  },
+  {
+   "id": "talimat-06",
+   "cat": "talimat",
+   "score": 1,
+   "passed": [
+    true
+   ],
+   "output": "1,2,3,4,5"
+  },
+  {
+   "id": "talimat-07",
+   "cat": "talimat",
+   "score": 0,
+   "passed": [
+    false
+   ],
+   "output": "TOPLANTI ERTELENDI"
+  },
+  {
+   "id": "talimat-08",
+   "cat": "talimat",
+   "score": 1,
+   "passed": [
+    true,
+    true,
+    true
+   ],
+   "output": "Günaydın! Her şeyin iyi olmasın. 🌞"
+  },
+  {
+   "id": "talimat-09",
+   "cat": "talimat",
+   "score": 1,
+   "passed": [
+    true,
+    true
+   ],
+   "output": "armut  \nelma  \nmuz  \nzeytin"
+  },
+  {
+   "id": "talimat-10",
+   "cat": "talimat",
+   "score": 1,
+   "passed": [
+    true,
+    true
+   ],
+   "output": "Sonuç: 20"
+  },
+  {
+   "id": "talimat-11",
+   "cat": "talimat",
+   "score": 1,
+   "passed": [
+    true
+   ],
+   "output": "Tamam"
+  },
+  {
+   "id": "talimat-12",
+   "cat": "talimat",
+   "score": 1,
+   "passed": [
+    true,
+    true,
+    true,
+    true,
+    true
+   ],
+   "output": "Suyun önemini taşıyan bir yaşam kaynağıdır. Tüm canlıların yaşaması için gerekli olan ve dengesizlikte doğaya zarar veren en temel bileşendir. Su, hücreleri besler, ısıyı düzenler ve çevre sistemlerinin çalışmasını sağlar. Yoksa her şey durur."
+  },
+  {
+   "id": "talimat-13",
+   "cat": "talimat",
+   "score": 1,
+   "passed": [
+    true,
+    true
+   ],
+   "output": "😊🎉❤️✨🌟😄💖🌈💫🥰🤗💕✅👏🎊🎈😍💞🔥🚀👍🙂😁💝"
+  },
+  {
+   "id": "talimat-14",
+   "cat": "talimat",
+   "score": 1,
+   "passed": [
+    true,
+    true
+   ],
+   "output": "\"Yarın toplantıya gelmeyeceğim.\""
+  },
+  {
+   "id": "sohbet-01",
+   "cat": "sohbet",
+   "score": 1,
+   "passed": [
+    true,
+    true,
+    true,
+    true
+   ],
+   "output": "Naber! 😊 Ne işteyim? 🚀"
+  },
+  {
+   "id": "sohbet-02",
+   "cat": "sohbet",
+   "score": 1,
+   "passed": [
+    true,
+    true,
+    true
+   ],
+   "output": "Evet, anlıyorum 😊  \nYorgunluk biraz da kendi içinde hissedilen şeydir. Bir dakika sadece burada olmak için yeterliymiş gibi duruyor mu? 🫶  \nİyi bir uyku istiyorsan, hafifçe nefes al ve gözlerini kapattır. Daha sonra seninle konuşalım. 💤"
+  },
+  {
+   "id": "sohbet-03",
+   "cat": "sohbet",
+   "score": 1,
+   "passed": [
+    true,
+    true
+   ],
+   "output": "Evet! 😊 Senin için neyse ki, seni burada bekliyor olurum. 🚀 💬"
+  },
+  {
+   "id": "sohbet-04",
+   "cat": "sohbet",
+   "score": 1,
+   "passed": [
+    true,
+    true
+   ],
+   "output": "Selam! Adım Qwen, seninle birlikte her şeyi yapmaya çalışıyorum 😊 🚀  \nNe istersin bugün? 💬✨"
+  },
+  {
+   "id": "sohbet-05",
+   "cat": "sohbet",
+   "score": 1,
+   "passed": [
+    true,
+    true,
+    true
+   ],
+   "output": "Aha! Hava güzelse dışarıya çıkmak en iyi şey 😊  \nYa bir meyve ya da çay içmek, ya da parkta dolaşmak – hafif bir yürüyüşle başlayıp güneşin ışığını tadabilirsin.  \n\nİstersen sana bir yer öneririm: benim evdeki bahçeye gideceğiz! 🌿☀️  \nYa da sen ne istersin? 😄"
+  },
+  {
+   "id": "sohbet-06",
+   "cat": "sohbet",
+   "score": 0.3333333333333333,
+   "passed": [
+    false,
+    false,
+    true
+   ],
+   "output": "Nasıl olur, çok iyi! 😊 Sen nasilsin? 🌟"
+  },
+  {
+   "id": "sohbet-07",
+   "cat": "sohbet",
+   "score": 1,
+   "passed": [
+    true,
+    true
+   ],
+   "output": "İyi gece! 😊 🌙 💤"
+  },
+  {
+   "id": "sohbet-08",
+   "cat": "sohbet",
+   "score": 0.5,
+   "passed": [
+    false,
+    true
+   ],
+   "output": "Mavi. 🌊"
+  },
+  {
+   "id": "resmi-01",
+   "cat": "resmi",
+   "score": 0.8571428571428571,
+   "passed": [
+    true,
+    true,
+    true,
+    false,
+    true,
+    true,
+    true
+   ],
+   "output": "Konu: Antivirüs Lisans Son Tarihi ve Teklif Bekleme\n\nAyşe Hanım,\n\nAntivirüs lisansımız, 30 Kasım tarihinde biteceğini bilerek sizinle paylaşmaktan memnuniyet duyarız. Bu nedenle, 20 Kasım’a kadar bir teklif beklememiz gerekiyor.\n\nİyi çalışmalar dilerim.\n\nSaygılarımla  \n[Adınız]  \nSatın Alma Müdürü"
+  },
+  {
+   "id": "resmi-02",
+   "cat": "resmi",
+   "score": 1,
+   "passed": [
+    true,
+    true,
+    true,
+    true,
+    true,
+    true
+   ],
+   "output": "İşte tüm çalışanlara gönderilecek, belirttiğiniz tarih ve saatlerde bakım yapılıyorsa kullanılabilen Türkçe bir e-posta metni:\n\n---\n\n**Konu:** Dosya Sunucusunda 15 Kasım Cumartesi (22:00 – 02:00) Arası Bakım İşlemi\n\nSaygılarımla,\n\nTüm çalışanlarımıza merhabalar.\n\n15 Kasım Perşembe günü, saat 22.00’den itibaren 02.00’e kadar (yani cumartesi gece saati), dosya sunucusunda bakım işlemi yapılacaktır. Bu süreçte sistem geçici olarak erişimli olmayacak ve tüm dosya işlemleri duraklayabilir.\n\nBu süre zarı, planlanmış bir bakımı içerdiği için herhangi bir sorunla karşılaşılmazsa, lütfen bize bildirin. Ayrıca bu dönemde verileriniz kaybolmaz; sistemdeki bilgiler tamamen korunduğunda yeniden erişilebilir hale getirilmiştir.\n\nİyi çalışmalar diliyorum,\n\n[Şirket Adı] Teknik Ekibimiz  \nE-posta: teknik@firmadomuz.com  \nWeb Sitesi: www.firmadomuz.com  \n\n---\n\nBu metin, çalışanlara açık ve net bir şekilde bilgi verir. İhtiyacınız olursa bu e-postayı başka bir dili (örneğin İngilizce) de hazırlayabilirim."
+  },
+  {
+   "id": "resmi-03",
+   "cat": "resmi",
+   "score": 1,
+   "passed": [
+    true,
+    true,
+    true,
+    true,
+    true
+   ],
+   "output": "Konu: Siparişinizin Gecikmesinden Ötürü Özür Dileriz – Sipariş Numarası: 48213\n\nSevgili Müşteri,\n\nİlk olarak sizinle birlikte olduğumuz için teşekkür ederim. Bu konuda yaşadığımız her durumu dikkate alarak, en iyi şekilde hizmet sunmak adına tüm çabalarımıza devam ediyoruz.\n\nSipariş numarası 48213’ün üretim sürecinde bir gecikme yaşandığı için, sizin siparişinizin tahmini teslimat tarihini üç gün daha geçeceğine dair bilgi vermek isteriz. Bu durumun doğrudan sizin beklentilerinize zarar vereceğini bilmemizin biraz üzüldüğünü anlıyorum.\n\nBu gecikme için büyük özür dilemekteyiz ve bu konuda herhangi bir soru veya destek talep ederseniz, hemen yanıt vermek isteriz. Siparişinizi tam olarak takip etmemize yardımcı olmak adına ilgili bilgiyi paylaşmanızı rica ederiz.\n\nTeşekkürler ve yeniden değerli olduğunuzu bildiğim için bu durumdan dolayı özür dileriz.\n\nSaygılarımla,  \n[Adınız]  \nMüşteri Hizmetleri Ekibi  \nŞirket Adı – [Web Sitesi veya Telefon Numarası]"
+  },
+  {
+   "id": "resmi-04",
+   "cat": "resmi",
+   "score": 0.75,
+   "passed": [
+    true,
+    true,
+    false,
+    true
+   ],
+   "output": "Eğer toplantıyı bir sonraki gün yaparsak olur mu?"
+  },
+  {
+   "id": "resmi-05",
+   "cat": "resmi",
+   "score": 1,
+   "passed": [
+    true,
+    true,
+    true
+   ],
+   "output": "Bu çeyrekte gösterdiğiniz sabır ve özveriyle, ekip içinde önemli katkılar sağladığını çok güzel fark ettim. Performansınızdan dolayı büyük bir teşekkür sunuyorum."
+  },
+  {
+   "id": "resmi-06",
+   "cat": "resmi",
+   "score": 1,
+   "passed": [
+    true,
+    true,
+    true,
+    true,
+    true
+   ],
+   "output": "Elbette, aşağıda yöneticiye 24–28 Kasım arasında yıllık izin isteğini bildirmek için kısa ve profesyonel bir e-posta örneği verilmiştir:\n\n---\n\n**Konu:** Yıllık İzin Talebi – 24-28 Kasım\n\nMerhaba [Yönetici Adı],\n\nİlgili konuda, 24–28 Kasım tarihleri arasında yıllık izin talebinde bulunmak istiyorum. Bu süreler, görevimden dolayı önemli bir dönem olmamakla beraber, kişisel sebepler nedeniyle bu aralıkta izin almayı düşünüyorum.\n\nGerekli tüm süreçleri ve planlamayı en kısa sürede yapacağım ve işin devamlılığı açısından herhangi bir bozulma olmayacağından eminim. İlgili tarihlerde görevlerimi yerine getirip, geçiş sürecini düzgün şekilde yönetebilirim.\n\nTeşekkür ederim ve bu konuda görüşmelerde bulunmak isterim.\n\nSaygılarımla  \n[Adınız]\n\n---\n\nDilerseniz e-postayı daha kişisel veya daha resmi bir tonla da yeniden yazabilirim."
+  },
+  {
+   "id": "resmi-07",
+   "cat": "resmi",
+   "score": 1,
+   "passed": [
+    true,
+    true,
+    true,
+    true,
+    true
+   ],
+   "output": "Konu: Bütçe Gözden Geçirme  \nTarih: 14 Kasım Cumartesi  \nSaat: 10:00  \nYer: A Blok Toplantı Odasında  \n\nSayın [İsim],  \n\nBütçe konusunda bir değerlendirme toplantısı düzenlemek üzere sizinle iletişime geçiyorum. Bu toplantı, bütçemizdeki güncel durumları inceleyip gelecek dönem için planlama sürecini desteklemeye yönelik olacak.  \n\nLütfen bu tarih ve saatte mevcut olduğunuzu doğrulayın. Toplantıda katılmak istiyorsanız, lütfen ilgili bilgiyi paylaşınız veya bir bildirimde bulunabilirsiniz.  \n\nTeşekkür ederim.  \n\nSaygılarımla,  \n[Adınız]"
+  },
+  {
+   "id": "resmi-08",
+   "cat": "resmi",
+   "score": 1,
+   "passed": [
+    true,
+    true,
+    true,
+    true
+   ],
+   "output": "Geçen haftaki faturanın 5 Kasım'ta son vade tarihine rağmen ödemesinin yapılmaması nedeniyle, ödeme en geç cuma gününe kadar yapılması isteniyor ve aksi halde hizmetin durdurulacağı bildiriliyor."
+  },
+  {
+   "id": "akil-01",
+   "cat": "akil",
+   "score": 1,
+   "passed": [
+    true
+   ],
+   "output": "16:15"
+  },
+  {
+   "id": "akil-02",
+   "cat": "akil",
+   "score": 1,
+   "passed": [
+    true
+   ],
+   "output": "7"
+  },
+  {
+   "id": "akil-03",
+   "cat": "akil",
+   "score": 0,
+   "passed": [
+    false
+   ],
+   "output": "1.077.000"
+  },
+  {
+   "id": "akil-04",
+   "cat": "akil",
+   "score": 1,
+   "passed": [
+    true,
+    true
+   ],
+   "output": "600"
+  },
+  {
+   "id": "akil-05",
+   "cat": "akil",
+   "score": 1,
+   "passed": [
+    true
+   ],
+   "output": "Can"
+  },
+  {
+   "id": "akil-06",
+   "cat": "akil",
+   "score": 0,
+   "passed": [
+    false
+   ],
+   "output": "Salı"
+  },
+  {
+   "id": "akil-07",
+   "cat": "akil",
+   "score": 1,
+   "passed": [
+    true,
+    true
+   ],
+   "output": "İstanbul"
+  },
+  {
+   "id": "akil-08",
+   "cat": "akil",
+   "score": 1,
+   "passed": [
+    true
+   ],
+   "output": "52"
+  },
+  {
+   "id": "akil-09",
+   "cat": "akil",
+   "score": 0,
+   "passed": [
+    false
+   ],
+   "output": "4"
+  },
+  {
+   "id": "akil-10",
+   "cat": "akil",
+   "score": 1,
+   "passed": [
+    true
+   ],
+   "output": "1 kilo demir ve 1 kilo pamuk aynı ağırlıkta olduğu için biri diğerinden ağır değildir; her ikisi de 1 kilogramdır."
+  },
+  {
+   "id": "akil-11",
+   "cat": "akil",
+   "score": 1,
+   "passed": [
+    true
+   ],
+   "output": "5"
+  },
+  {
+   "id": "akil-12",
+   "cat": "akil",
+   "score": 1,
+   "passed": [
+    true
+   ],
+   "output": "1923"
+  },
+  {
+   "id": "ozet-01",
+   "cat": "ozet",
+   "score": 1,
+   "passed": [
+    true,
+    true,
+    true,
+    true
+   ],
+   "output": "Ocak ayında e-posta sunucusu dolan disk alanından dolayı iki kez çöktü ve toplam 3 saat 20 dakika kesinti yaşandı. Şubat ayında disk genişletildiği için kesinti yaşanmadı ve Mart ayında yedekleme sunucunun yenilenmesi planlandı."
+  },
+  {
+   "id": "ozet-02",
+   "cat": "ozet",
+   "score": 1,
+   "passed": [
+    true,
+    true,
+    true,
+    true,
+    true
+   ],
+   "output": "- Ayşe: Bütçe raporunu cuma gününe kadar hazırlayacak  \n- Mehmet: Yeni sunucu için üç firmadan teklif alacak  \n- Elif: Güvenlik duvarı kurallarını gelecek hafta gözden geçirecek  \n- Toplantı: 21 Kasım'da yapılacak"
+  },
+  {
+   "id": "ozet-03",
+   "cat": "ozet",
+   "score": 1,
+   "passed": [
+    true,
+    true
+   ],
+   "output": "Disk Kesintisiyle İlgili Güncelleme"
+  },
+  {
+   "id": "ozet-04",
+   "cat": "ozet",
+   "score": 1,
+   "passed": [
+    true,
+    true
+   ],
+   "output": "Metinde yok"
+  },
+  {
+   "id": "ozet-05",
+   "cat": "ozet",
+   "score": 1,
+   "passed": [
+    true,
+    true,
+    true
+   ],
+   "output": "Yedekleme sunucusunun yenilenmesinden Deniz Akar sorumlu ve son tarih 15 Mart."
+  },
+  {
+   "id": "ozet-06",
+   "cat": "ozet",
+   "score": 1,
+   "passed": [
+    true
+   ],
+   "output": "260"
+  },
+  {
+   "id": "uzun-01",
+   "cat": "uzun",
+   "score": 1,
+   "passed": [
+    true,
+    true,
+    true,
+    true
+   ],
+   "output": "Elbette! Aşağıda yarınki ekip toplantısında kullanılacak, 30 dakikalık ve etkili bir gündem örneği yer almaktadır:\n\n---\n\n**Yarınki Ekip Toplantısı – 30 Dakika İçinde Gündem**\n\n1. **Toplantı Amacı (5 dk)**  \n   - Bugünün odak noktası: Yeni proje başlangıcında ekip üyelerinin iş yükünü ve görevlerini belirlemek.\n\n2. **Görev Paylaşımı & Sorumluluklar (10 dakika)**  \n   - Her bir üyenin gelecek hafta için sorumlu olduğu bölümleri tekrar hatırlatılacak.  \n   - Görevleri ve teslim tarihlerini açıkça belirleyelim.\n\n3. **İlk Adım Planı (10 dakika)**  \n   - Proje başlangıcında yapılacak ilk 5 adımı birlikte planlayalım:  \n     – Kapsam belirlenmesi  \n     – İlk prototip tasarımı  \n     – Müşteri ile görüşme tarihi\n\n4. **Sorunlar & Destek İhtiyacı (3 dakika)**  \n   - Ekip içindeki herhangi bir engel veya destek ihtiyacı var mı? Kısa olarak paylaşalım.\n\n5. **Sonuç ve Sonraki Adım (2 dk)**  \n   – Toplantı sonucunda belirlenen görevlerin kısa özeti ile döneriz.  \n   – İlgili kişilere e-posta ile bildirim gönderilecek.\n\n---\n\n📌 Not: Her bölümün süresi, gerçek ihtiyaçlara göre ayarlanabilir. Ekip dinamikleriyle uyumlu olacak şekilde geçişler yapılmalı.\n\nİyi bir toplantı için herkesin katkısını almak önemlidir – bu yüzden açık ve dikkatli iletişim kurulmalıdır.\n\n---\n\nEğer istersen, toplantının konusunu (örneğin: ürün geliştirme, pazarlama stratejisi vs.) belirtmeni isterim. O zaman gündem daha özel hale getirebilirim!"
+  },
+  {
+   "id": "uzun-02",
+   "cat": "uzun",
+   "score": 1,
+   "passed": [
+    true,
+    true,
+    true
+   ],
+   "output": "1. Sistem ve yazılım güncellemelerinin daimi olarak yapılmasını sağlamak  \n2. Yeni teknolojilerin girişimine destek olmak  \n3. IT hizmetlerinin etkinliğini her yıl %5 artırmak  \n4. Güvenlik politikalarının tüm sistemlere uygulanması ve test edilmesi  \n5. Kullanıcı memnuniyetini artırıcı bir destek süreci kurulması  \n6. Yerel ağ ve veritabanlarının performansını her yıl %10 oranında iyileştirmek  \n7. IT ekibinin eğitimlerine aylık 2 saatlik süre ayrılmak  \n8. Sistem kayıtlarının tam olarak saklanmasını sağlamak  \n9. Hata ayıklama süreçlerinde otomatikleştirme oranı %30'a ulaşmak  \n10. Her yıl bir kez IT performans raporunun hazırlanması ve yöneticilere sunulması"
+  },
+  {
+   "id": "uzun-03",
+   "cat": "uzun",
+   "score": 1,
+   "passed": [
+    true,
+    true,
+    true,
+    true
+   ],
+   "output": "Elbette! Aşağıda, yeni başlayan bir çalışan için **ilk hafta** içeriği olarak dikkat çekici ve işe yarar şekilde hazırlanmış bir plan sunuyorum:\n\n---\n\n## 🌟 Yeni Başlayan Çalışan İçin İlk Hafta Planı\n\n### 🔹 Hedef:\nİlk 7 gün içinde çalışma ortamına hızlıca uyum sağlayıp, temel görevleri öğrenmek.\n\n---\n\n### **Hafta 1: Uyum ve Temel Bilgiler**\n\n#### 📅 Gün 1 – Giriş ve İlk Günlük\n- **Sabah:**  \n  - Ofiste ilk gün olacak. Geleneksel saatlerde (örneğin 09:00) gel.\n  - İlgili bakanın veya yöneticinin kendisiyle karşılaşıp, isim ve görevini öğren.\n- **İçerik:**  \n  - Ofis yapısı, bölümler, iletişim kanalları (e-posta, telefon, mesaj uygulamaları) hakkında bilgi al.  \n  - Çalışma saatleri, izin politikası, toplantı günlerini öğren.\n- **Görev:**  \n  - İlk günlük notunu yaz: \"Bugün ne gördüm? Ne öğrendim?\"\n\n> 💡 İpucu: Dikkatli ol! Herkes bir başlangıçta hata yapar. Hataları düzeltmek için sadece sorun değil, nasıl düzeltilmesi gerektiğini öğrenmen gerekir.\n\n---\n\n#### 📅 Gün 2 – İş Süreci ve Görevler\n- **Sabah:**  \n  - Çalışanın görev listesini al (örneğin: e-posta yazma, rapor hazırlama vs.).\n- **İçerik:**  \n  - Temel iş süreçleri hakkında bilgi alın (misal: bir proje nasıl başlar? Bir müşteriyle ne olur?)\n  - Kullanılan yazılımların isimlerini ve görevlerini öğrenin.\n- **Görev:**  \n  - Günlük görev listesine göre en basit görevi tamamla. Örneğin: \"Bir e-posta yazma\" veya \"Raporu okuma\".\n\n> 💡 İpucu: Her şeyi “neden” ile anlama çabası göster. Neden bu iş yapıldı? Ne amaçlı?\n\n---\n\n#### 📅 Gün 3 – Toplantı ve İşbirliği\n- **Sabah:**  \n  - İlk toplantıya katıl (özellikle giriş toplantısı).\n- **İçerik:**  \n  - Takip edilen projeleri, görevleri ve zaman çizelgesini öğren.\n  - Diğer çalışanlarla kısa bir sohbet yaparak iş ortamını tanıma fırsatı bul.\n- **Görev:**  \n  - Toplantılardaki konuşmaları not al. En önemli noktayı yaz.\n\n> 💡 İpucu: Dikkatli dinle! İnsanların sesi, bakışları ve tonu işte bilgi verir.\n\n---\n\n#### 📅 Gün 4 – Hata Yapma ve Öğrenme\n- **Sabah:**  \n  - Bir görevde hata yapabilirsin. Bu normaldir.\n- **İçerıkt:**  \n  - Hatanın nedeni neydi? Nasıl düzeltilebilir?\n  - Yöneticiye kısa bir açıklama ile bu durumu anlat (hafifçe).\n- **Görev:**  \n  - “Hata” yerine “öğrenme fırsatı” diye düşün. Bu, gelişim için çok önemli.\n\n> 💡 İpucu: Hatalar öğrenmeyi değil, bilgiyi kazandırıyor!\n\n---\n\n#### 📅 Gün 5 – Kendini Değerlendir\n- **Sabah:**  \n  - Haftanın ilk yarısını geriye dönük olarak değerlendir.\n- **İçerik:**  \n  - Ne kadar ileri gittin? Hangi görevleri tamamladı?\n  - Hang"
+  },
+  {
+   "id": "uzun-04",
+   "cat": "uzun",
+   "score": 1,
+   "passed": [
+    true,
+    true,
+    true
+   ],
+   "output": "1  \n2  \n3  \n4  \n5  \n6  \n7  \n8  \n9  \n10  \n11  \n12  \n13  \n14  \n15  \n16  \n17  \n18  \n19  \n20"
+  },
+  {
+   "id": "ceviri-01",
+   "cat": "ceviri",
+   "score": 1,
+   "passed": [
+    true,
+    true,
+    true,
+    true,
+    true
+   ],
+   "output": "The meeting has been postponed to tomorrow at ten o'clock."
+  },
+  {
+   "id": "ceviri-02",
+   "cat": "ceviri",
+   "score": 1,
+   "passed": [
+    true,
+    true,
+    true,
+    true
+   ],
+   "output": "Sunucu bu akşam bakım için çalışmayacaktır."
+  },
+  {
+   "id": "ceviri-03",
+   "cat": "ceviri",
+   "score": 1,
+   "passed": [
+    true,
+    true,
+    true
+   ],
+   "output": "You can find your invoice attached."
+  },
+  {
+   "id": "ceviri-04",
+   "cat": "ceviri",
+   "score": 1,
+   "passed": [
+    true,
+    true,
+    true,
+    true
+   ],
+   "output": "Şu cumartesi öncesine kadar şifrenizi sıfırlayın."
+  },
+  {
+   "id": "ceviri-05",
+   "cat": "ceviri",
+   "score": 1,
+   "passed": [
+    true,
+    true
+   ],
+   "output": "Havaları yağmurlu."
+  },
+  {
+   "id": "ceviri-06",
+   "cat": "ceviri",
+   "score": 0.5,
+   "passed": [
+    false,
+    true
+   ],
+   "output": "Past is past."
+  },
+  {
+   "id": "ingilizce-01",
+   "cat": "ingilizce",
+   "score": 1,
+   "passed": [
+    true
+   ],
+   "output": "Paris"
+  },
+  {
+   "id": "ingilizce-02",
+   "cat": "ingilizce",
+   "score": 1,
+   "passed": [
+    true,
+    true
+   ],
+   "output": "Backups matter because they protect against data loss from hardware failure, accidental deletion, or cyberattacks.  \nWithout backups, recovering important information after an incident could be impossible or extremely time-consuming."
+  },
+  {
+   "id": "ingilizce-03",
+   "cat": "ingilizce",
+   "score": 1,
+   "passed": [
+    true,
+    true,
+    true
+   ],
+   "output": "She doesn't like the new system."
+  },
+  {
+   "id": "ingilizce-04",
+   "cat": "ingilizce",
+   "score": 1,
+   "passed": [
+    true
+   ],
+   "output": "yes"
+  },
+  {
+   "id": "ingilizce-05",
+   "cat": "ingilizce",
+   "score": 1,
+   "passed": [
+    true,
+    true,
+    true,
+    true,
+    true
+   ],
+   "output": "Subject: Scheduled System Maintenance – Saturday, [Date]\n\nDear IT Team,\n\nI am writing to inform you of scheduled system maintenance that will take place on Saturday, [insert date], between 10:00 PM and 2:00 AM.\n\nDuring this period, certain systems may experience temporary unavailability or performance degradation. We kindly request your coordination in ensuring all relevant services are properly backed up and monitored prior to the maintenance window.\n\nPlease let me know if any adjustments or additional information are required.\n\nThank you for your attention and support.\n\nBest regards,  \n[Your Full Name]  \n[Your Job Title]  \n[Department Name]"
+  },
+  {
+   "id": "ingilizce-06",
+   "cat": "ingilizce",
+   "score": 1,
+   "passed": [
+    true,
+    true
+   ],
+   "output": "1. Increased flexibility in scheduling  \n2. Reduced commuting time and costs  \n3. Expanded access to a global talent pool"
+  },
+  {
+   "id": "ingilizce-07",
+   "cat": "ingilizce",
+   "score": 1,
+   "passed": [
+    true,
+    true,
+    true,
+    true
+   ],
+   "output": "Revenue increased by 12% and costs decreased by 3%, primarily because of a new logistics contract signed in March."
+  },
+  {
+   "id": "ingilizce-08",
+   "cat": "ingilizce",
+   "score": 1,
+   "passed": [
+    true,
+    true
+   ],
+   "output": "Hey! I'm doing great, thanks for asking 😊 How can I assist you today?"
+  },
+  {
+   "id": "kod-01",
+   "cat": "kod",
+   "score": 1,
+   "passed": [
+    true,
+    true,
+    true,
+    true,
+    true
+   ],
+   "output": "SELECT TOP 5 MusteriID, SUM(Tutar) AS Tutar  \nFROM Siparisler  \nGROUP BY MusteriID  \nORDER BY Tutar DESC;"
+  },
+  {
+   "id": "kod-02",
+   "cat": "kod",
+   "score": 1,
+   "passed": [
+    true,
+    true,
+    true
+   ],
+   "output": "function ortalama(dizi) {\n    return dizi.reduce((toplam, sayi) => toplam + sayi, 0) / dizi.length;\n}"
+  },
+  {
+   "id": "kod-03",
+   "cat": "kod",
+   "score": 1,
+   "passed": [
+    true,
+    true
+   ],
+   "output": "ALTER TABLE Calisanlar ADD Eposta NVARCHAR(200)"
+  },
+  {
+   "id": "kod-04",
+   "cat": "kod",
+   "score": 1,
+   "passed": [
+    true,
+    true,
+    true,
+    true
+   ],
+   "output": "def count_words(text):\n    return len(text.split())"
+  },
+  {
+   "id": "kod-05",
+   "cat": "kod",
+   "score": 1,
+   "passed": [
+    true,
+    true,
+    true
+   ],
+   "output": "SQL sorgunuzda bir mantıksal hata var:\n\n`COUNT(*)` fonksiyonunu **WHERE** koşulunda kullanmak yanlışdır.  \nÇünkü `COUNT(*)` bir gruplama (GROUP BY) sonucu hesaplanan değerdir ve bu, her satır için değil, gruplar içinde yapılır.\n\nAyrıca sorguda \"ad\" alanını GROUP BY ile sıralamak doğru olabilir ama **WHERE** koşulunda `COUNT(*) > 1` yazmak anlamına gelmez çünkü o zaman bir satırdaki tüm kayıtların sayısının 1'den fazla olması beklenir, ancak bu sorgu içinde herhangi bir grup için COUNT hesaplanmamıştır.\n\nDoğru kullanım:  \n**\"Ad\" alanına göre gruplandırıp, aynı adlara sahip çalışanların sayısı > 1 ise göster.**\n\nBu yüzden doğru sorgu şu olmalı:\n\n```sql\nSELECT ad, COUNT(*) \nFROM Calisanlar \nGROUP BY ad \nHAVING COUNT(*) > 1;\n```\n\n✅ **Düzeltme:**  \n- `WHERE` yerine `HAVING` kullanıldı (gruplama sonrası filtreleme için).  \n- `COUNT(*)` sadece grup içinde hesaplanır ve `HAVING` ile karşılaştırılır.\n\n---\n\n**Sonuç:**\n\n```sql\nSELECT ad, COUNT(*)\nFROM Calisanlar\nGROUP BY ad\nHAVING COUNT(*) > 1;\n```"
+  },
+  {
+   "id": "kod-06",
+   "cat": "kod",
+   "score": 1,
+   "passed": [
+    true,
+    true
+   ],
+   "output": "GETDATE()"
+  },
+  {
+   "id": "kod-07",
+   "cat": "kod",
+   "score": 1,
+   "passed": [
+    true
+   ],
+   "output": "C#'ta bir string'in null ya da boş olup olmadığını kontrol eden tek satırlı ifade şu şekilde olur:\n\n```csharp\nstring.IsNullOrEmpty(myString)\n```\n\nBu metod, `myString` parametresi null veya boş (\"\" olarak) ise true döner; aksi halde false döner."
+  },
+  {
+   "id": "kod-08",
+   "cat": "kod",
+   "score": 1,
+   "passed": [
+    true,
+    true
+   ],
+   "output": "Get-PSDrive | Where-Object {$_.Name -eq \"C\"} | Select-Object Used, Free"
+  }
+ ]
+}
