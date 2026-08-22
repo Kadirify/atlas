@@ -1,0 +1,154 @@
+{
+ "taban": "taban/Qwen3.5-2B",
+ "epoch": 1.0,
+ "ornek": 11500,
+ "adim": 719,
+ "lr": 0.0001,
+ "r": 16,
+ "son_dogrulama": 0.01374879604045418,
+ "gunluk": [
+  {
+   "adim": 25,
+   "kayip": 0.1868,
+   "dakika": 1.1
+  },
+  {
+   "adim": 50,
+   "kayip": 0.0689,
+   "dakika": 2.3
+  },
+  {
+   "adim": 75,
+   "kayip": 0.0392,
+   "dakika": 3.5
+  },
+  {
+   "adim": 100,
+   "kayip": 0.0339,
+   "dakika": 4.6
+  },
+  {
+   "adim": 125,
+   "kayip": 0.0333,
+   "dakika": 5.8
+  },
+  {
+   "adim": 150,
+   "kayip": 0.0355,
+   "dakika": 6.9
+  },
+  {
+   "adim": 175,
+   "kayip": 0.03,
+   "dakika": 8.1
+  },
+  {
+   "adim": 200,
+   "kayip": 0.022,
+   "dakika": 9.3,
+   "dogrulama": 0.0187
+  },
+  {
+   "adim": 225,
+   "kayip": 0.0335,
+   "dakika": 10.6
+  },
+  {
+   "adim": 250,
+   "kayip": 0.0225,
+   "dakika": 11.7
+  },
+  {
+   "adim": 275,
+   "kayip": 0.0208,
+   "dakika": 12.9
+  },
+  {
+   "adim": 300,
+   "kayip": 0.0256,
+   "dakika": 14.1
+  },
+  {
+   "adim": 325,
+   "kayip": 0.0241,
+   "dakika": 15.3
+  },
+  {
+   "adim": 350,
+   "kayip": 0.0243,
+   "dakika": 16.5
+  },
+  {
+   "adim": 375,
+   "kayip": 0.0246,
+   "dakika": 17.7
+  },
+  {
+   "adim": 400,
+   "kayip": 0.0242,
+   "dakika": 18.8,
+   "dogrulama": 0.0156
+  },
+  {
+   "adim": 425,
+   "kayip": 0.0182,
+   "dakika": 20.1
+  },
+  {
+   "adim": 450,
+   "kayip": 0.0211,
+   "dakika": 21.3
+  },
+  {
+   "adim": 475,
+   "kayip": 0.0194,
+   "dakika": 22.5
+  },
+  {
+   "adim": 500,
+   "kayip": 0.0201,
+   "dakika": 23.7
+  },
+  {
+   "adim": 525,
+   "kayip": 0.0194,
+   "dakika": 24.8
+  },
+  {
+   "adim": 550,
+   "kayip": 0.0165,
+   "dakika": 26.0
+  },
+  {
+   "adim": 575,
+   "kayip": 0.0175,
+   "dakika": 27.2
+  },
+  {
+   "adim": 600,
+   "kayip": 0.015,
+   "dakika": 28.4,
+   "dogrulama": 0.014
+  },
+  {
+   "adim": 625,
+   "kayip": 0.0186,
+   "dakika": 29.7
+  },
+  {
+   "adim": 650,
+   "kayip": 0.0159,
+   "dakika": 30.8
+  },
+  {
+   "adim": 675,
+   "kayip": 0.0132,
+   "dakika": 32.0
+  },
+  {
+   "adim": 700,
+   "kayip": 0.0199,
+   "dakika": 33.3
+  }
+ ]
+}
