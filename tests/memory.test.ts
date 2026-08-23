@@ -146,7 +146,7 @@ describe('kişilikler', () => {
 
   it('sistem talimatı kişiliği, hafızayı ve özeti içerir', () => {
     const prompt = buildSystemPrompt(
-      { userName: 'Kadir', corporateMode: false, company: '', jobTitle: '', addressUser: 'siz' },
+      { userName: 'Deniz', corporateMode: false, company: '', jobTitle: '', addressUser: 'siz' },
       new Date(),
       { persona: kanka, memories: [memory('1', 'Kullanıcı İzmir’de yaşıyor.')], summary: 'Tatil planı konuşuldu.' }
     )

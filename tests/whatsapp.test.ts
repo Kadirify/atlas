@@ -22,31 +22,31 @@ describe('parseChat', () => {
     const chat = parseChat(
       [
         '05.01.2026 09:00 - Mesajlar ve aramalar uçtan uca şifrelidir.',
-        '05.01.2026 09:01 - Kadir: Şunlar lazım:',
+        '05.01.2026 09:01 - Deniz: Şunlar lazım:',
         '- ekmek',
         '- süt',
         '05.01.2026 09:02 - Emre: tamam kanka',
         '05.01.2026 09:03 - Emre: <Medya dahil edilmedi>',
-        '05.01.2026 09:04 - Kadir: Bu mesaj silindi',
+        '05.01.2026 09:04 - Deniz: Bu mesaj silindi',
         '05.01.2026 09:05 - Emre grubu oluşturdu',
         '05.01.2026, 21:30 - Emre: saat 21:30 gibi gelirim <Bu mesaj düzenlendi>'
       ].join('\r\n')
     )
     expect(chat.messages.map((m) => `${m.sender}|${m.text}`)).toEqual([
-      'Kadir|Şunlar lazım:\n- ekmek\n- süt',
+      'Deniz|Şunlar lazım:\n- ekmek\n- süt',
       'Emre|tamam kanka',
       'Emre|saat 21:30 gibi gelirim'
     ])
     expect(chat.participants).toEqual([
       { name: 'Emre', count: 2 },
-      { name: 'Kadir', count: 1 }
+      { name: 'Deniz', count: 1 }
     ])
     expect(new Date(chat.messages[2].ts).getHours()).toBe(21)
   })
 
   it('iPhone biçimini okur', () => {
     const chat = parseChat(
-      ['\u200e[05.01.2026 09:01:12] Kadir: Günaydın', '[05.01.2026 09:02:40] Emre: gunaydin kanka', '[05.01.2026 09:03:00] Emre: \u200egörüntü dahil edilmedi'].join('\n')
+      ['\u200e[05.01.2026 09:01:12] Deniz: Günaydın', '[05.01.2026 09:02:40] Emre: gunaydin kanka', '[05.01.2026 09:03:00] Emre: \u200egörüntü dahil edilmedi'].join('\n')
     )
     expect(chat.messages.map((m) => m.text)).toEqual(['Günaydın', 'gunaydin kanka'])
     expect(new Date(chat.messages[0].ts).getSeconds()).toBe(12)
@@ -74,7 +74,7 @@ describe('stil analizi', () => {
   )
 
   it('örnek dosya beklenen büyüklükte', () => {
-    expect(chat.participants.map((p) => p.name)).toEqual(['Emre', 'Kadir'])
+    expect(chat.participants.map((p) => p.name)).toEqual(['Emre', 'Deniz'])
     expect(own.length).toBeGreaterThan(200)
   })
 
@@ -94,14 +94,14 @@ describe('stil analizi', () => {
   })
 
   it('düzgün yazan birinde tersini bulur', () => {
-    const kadir = analyze(chat.messages.filter((m) => m.sender === 'Kadir').map((m) => m.text), [1])
-    expect(kadir.lowercaseStart).toBeLessThan(0.1)
+    const deniz = analyze(chat.messages.filter((m) => m.sender === 'Deniz').map((m) => m.text), [1])
+    expect(deniz.lowercaseStart).toBeLessThan(0.1)
     // Mesajlarının yarısı soru; noktayla bitenler diğer yarısı.
-    expect(kadir.endPunctuation).toBeGreaterThan(0.4)
-    expect(kadir.questionMark).toBeGreaterThan(0.9)
-    expect(styleRules(kadir).join('\n')).toContain('soru işareti koyarsın')
-    expect(kadir.turkishChars).toBeGreaterThan(0.6)
-    expect(kadir.laughter).toBe('')
+    expect(deniz.endPunctuation).toBeGreaterThan(0.4)
+    expect(deniz.questionMark).toBeGreaterThan(0.9)
+    expect(styleRules(deniz).join('\n')).toContain('soru işareti koyarsın')
+    expect(deniz.turkishChars).toBeGreaterThan(0.6)
+    expect(deniz.laughter).toBe('')
   })
 
   it('sayıları yazım kurallarına çevirir', () => {
@@ -182,13 +182,13 @@ describe('WhatsAppService', () => {
     expect(preview.to).toBeGreaterThan(preview.from)
 
     const stages: string[] = []
-    const persona = await service.build({ importId: preview.importId, target: 'Emre', self: 'Kadir' }, null, (p) => stages.push(p.stage))
+    const persona = await service.build({ importId: preview.importId, target: 'Emre', self: 'Deniz' }, null, (p) => stages.push(p.stage))
     expect(persona).toMatchObject({ name: 'Emre', whatsapp: true, multiMessage: true })
     expect(stages).toContain('analiz')
     expect(listPersonas(db).find((p) => p.id === persona.id)?.whatsapp).toBe(true)
 
     const profile = service.profile(persona.id)!
-    expect(profile).toMatchObject({ sourceName: 'Emre', selfName: 'Kadir', similarity: 1 })
+    expect(profile).toMatchObject({ sourceName: 'Emre', selfName: 'Deniz', similarity: 1 })
     expect(profile.examples).toBeGreaterThan(100)
 
     const block = await service.promptBlock(persona.id, 'yarın maça geliyor musun')
@@ -198,7 +198,7 @@ describe('WhatsAppService', () => {
     expect(block).toContain('Karşı taraf: Emre yarın maça geliyor musun?')
     expect(block).toContain('Sen: gelirim kanka')
 
-    const system = buildSystemPrompt({ userName: 'Kadir', corporateMode: false, company: '', jobTitle: '', addressUser: 'siz' }, new Date(), {
+    const system = buildSystemPrompt({ userName: 'Deniz', corporateMode: false, company: '', jobTitle: '', addressUser: 'siz' }, new Date(), {
       persona: findPersona(db, persona.id),
       styleBlock: block
     })
@@ -211,7 +211,7 @@ describe('WhatsAppService', () => {
 
   it('benzerlik ayarı örnek sayısını değiştirir', async () => {
     const preview = await service.parse('sohbet.txt', file())
-    const persona = await service.build({ importId: preview.importId, target: 'Emre', self: 'Kadir' }, null, () => {})
+    const persona = await service.build({ importId: preview.importId, target: 'Emre', self: 'Deniz' }, null, () => {})
     service.setSimilarity(persona.id, 0)
     const styleOnly = await service.promptBlock(persona.id, 'yarın maça geliyor musun')
     expect(styleOnly).not.toContain('Benzer durumlarda')
@@ -223,15 +223,15 @@ describe('WhatsAppService', () => {
 
   it('aynı kişiye yeniden eklemede örnekleri çoğaltmaz, yenilerini ekler', async () => {
     const first = await service.parse('sohbet.txt', file(40))
-    const persona = await service.build({ importId: first.importId, target: 'Emre', self: 'Kadir' }, null, () => {})
+    const persona = await service.build({ importId: first.importId, target: 'Emre', self: 'Deniz' }, null, () => {})
     const before = service.profile(persona.id)!.examples
 
     const same = await service.parse('sohbet.txt', file(40))
-    await service.build({ importId: same.importId, target: 'Emre', self: 'Kadir', mergeInto: persona.id }, null, () => {})
+    await service.build({ importId: same.importId, target: 'Emre', self: 'Deniz', mergeInto: persona.id }, null, () => {})
     expect(service.profile(persona.id)!.examples).toBe(before)
 
     const longer = await service.parse('sohbet.txt', file(80))
-    const merged = await service.build({ importId: longer.importId, target: 'Emre', self: 'Kadir', mergeInto: persona.id }, null, () => {})
+    const merged = await service.build({ importId: longer.importId, target: 'Emre', self: 'Deniz', mergeInto: persona.id }, null, () => {})
     expect(merged.id).toBe(persona.id)
     expect(service.profile(persona.id)!.examples).toBeGreaterThan(before)
     expect(listPersonas(db).filter((p) => p.whatsapp)).toHaveLength(1)
@@ -240,11 +240,11 @@ describe('WhatsAppService', () => {
   it('az mesajı olan kişiyi ve tanınmayan dosyayı reddeder; kişilik silinince verisi de silinir', async () => {
     await expect(service.parse('not.txt', toArrayBuffer(Buffer.from('sıradan bir metin')))).rejects.toThrow(/mesajı bulunamadı/)
     const small = await service.parse('sohbet.txt', file(5))
-    await expect(service.build({ importId: small.importId, target: 'Emre', self: 'Kadir' }, null, () => {})).rejects.toThrow(/en az/)
-    await expect(service.build({ importId: 'yok', target: 'Emre', self: 'Kadir' }, null, () => {})).rejects.toThrow(/yeniden seçin/)
+    await expect(service.build({ importId: small.importId, target: 'Emre', self: 'Deniz' }, null, () => {})).rejects.toThrow(/en az/)
+    await expect(service.build({ importId: 'yok', target: 'Emre', self: 'Deniz' }, null, () => {})).rejects.toThrow(/yeniden seçin/)
 
     const preview = await service.parse('sohbet.txt', file())
-    const persona = await service.build({ importId: preview.importId, target: 'Emre', self: 'Kadir' }, null, () => {})
+    const persona = await service.build({ importId: preview.importId, target: 'Emre', self: 'Deniz' }, null, () => {})
     db.deletePersona(persona.id)
     expect(service.profile(persona.id)).toBeNull()
     expect(db.countWaExamples(persona.id)).toBe(0)
@@ -283,14 +283,14 @@ describe('İngilizce', () => {
     const service = new WhatsAppService(db, noSemantic)
     const data = toArrayBuffer(Buffer.from(makeWhatsAppExport({ rounds: 120 })))
     const preview = await service.parse('sohbet.txt', data)
-    const persona = await service.build({ importId: preview.importId, target: 'Emre', self: 'Kadir' }, null, () => {})
+    const persona = await service.build({ importId: preview.importId, target: 'Emre', self: 'Deniz' }, null, () => {})
     expect(persona.tagline).toMatch(/^Learned from WhatsApp chats \(\d+ messages\)$/)
-    expect(persona.prompt).toContain('You are Emre, texting with Kadir on WhatsApp.')
+    expect(persona.prompt).toContain('You are Emre, texting with Deniz on WhatsApp.')
     const block = await service.promptBlock(persona.id, 'naber')
     expect(block).toContain('Your writing rules')
     expect(block).toContain('Examples from your real messages:')
     expect(block).not.toContain('Yazım kuralların')
-    await expect(service.build({ importId: 'yok', target: 'Emre', self: 'Kadir' }, null, () => {})).rejects.toThrow(/choose it again/)
+    await expect(service.build({ importId: 'yok', target: 'Emre', self: 'Deniz' }, null, () => {})).rejects.toThrow(/choose it again/)
     db.close()
   })
 })

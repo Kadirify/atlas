@@ -41,7 +41,7 @@ const doc: ExportDocument = {
   title: 'Bütçe <planı>',
   subtitle: '11 Kasım 2026, Atlas Orta',
   messages: [
-    { role: 'user', author: 'Kadir', content: 'Bana bir özet yaz & tablo ekle' },
+    { role: 'user', author: 'Deniz', content: 'Bana bir özet yaz & tablo ekle' },
     { role: 'assistant', author: 'Atlas', content: SAMPLE }
   ]
 }
@@ -87,7 +87,7 @@ describe('Markdown ayrıştırma', () => {
 describe('dışa aktarma', () => {
   it('Markdown dosyası başlık ve yazarlarla kurulur', () => {
     const md = toMarkdown(doc)
-    expect(md.startsWith('# Bütçe <planı>\n\n_11 Kasım 2026, Atlas Orta_\n\n## Kadir\n\n')).toBe(true)
+    expect(md.startsWith('# Bütçe <planı>\n\n_11 Kasım 2026, Atlas Orta_\n\n## Deniz\n\n')).toBe(true)
     expect(md).toContain('## Atlas\n\n# Başlık')
   })
 
@@ -227,12 +227,12 @@ describe('güncellemeyi indirme', () => {
 
 describe('belge paneli', () => {
   it('düz metin belgede her satır ayrı paragraftır, yazar başlığı yazılmaz', () => {
-    const cv = 'Kadir Örnek\nYazılım Geliştirici\n\n- Node.js\n- React\nİstanbul'
+    const cv = 'Deniz Örnek\nYazılım Geliştirici\n\n- Node.js\n- React\nİstanbul'
     expect(parseMarkdown(cv).map((b) => b.type)).toEqual(['paragraph', 'list', 'paragraph'])
     expect(parseMarkdown(cv, true).map((b) => b.type)).toEqual(['paragraph', 'paragraph', 'list', 'paragraph'])
     const plain: ExportDocument = { title: 'CV', subtitle: '', lineParagraphs: true, messages: [{ role: 'assistant', author: '', content: cv }] }
     const html = toHtml(plain)
-    expect(html).toContain('<p>Kadir Örnek</p><p>Yazılım Geliştirici</p>')
+    expect(html).toContain('<p>Deniz Örnek</p><p>Yazılım Geliştirici</p>')
     expect(html).not.toContain('class="who"')
     expect(html).not.toContain('class="sub"')
     expect(docxBody(plain).xml).not.toContain('Heading1')

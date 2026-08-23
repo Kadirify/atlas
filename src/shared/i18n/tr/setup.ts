@@ -95,7 +95,7 @@ export const setup = {
     title: 'Sana nasıl hitap edeyim?',
     lead: "İsteğe bağlı. Buradaki her şeyi sonradan Ayarlar'dan değiştirebilirsin.",
     name: 'Adın',
-    namePlaceholder: 'Kadir',
+    namePlaceholder: 'Deniz',
     corporateTitle: 'Kurumsal işlerde de kullanacağım',
     corporateDescription:
       'E-posta, rapor, duyuru ve toplantı özeti gibi iş yazıları için hazır araçlar açılır. Unvanın, şirketin ve imzan bu yazılara eklenir.',
