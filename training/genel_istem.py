@@ -10,12 +10,14 @@ cevapları `genel_uret.py` bir öğretmen modele (aynı aileden daha büyük mod
 import json
 import random
 import re
+import os
 from pathlib import Path
 
 from datasets import load_dataset
 
 KOK = Path(__file__).parent
-EVAL = Path(r"D:\chat-system\eval\items.mjs")
+# Ölçüm soruları eğitim verisine karışmasın diye okunur; depo dışında çalışırken ATLAS_EVAL_ITEMS ile verilir.
+EVAL = Path(os.environ.get("ATLAS_EVAL_ITEMS") or Path(__file__).resolve().parent.parent / "eval" / "items.mjs")
 random.seed(11)
 
 SISTEM = "Yardımcı bir asistansın. Kullanıcı hangi dilde yazarsa o dilde cevap ver. İstenenin dışına çıkma."
