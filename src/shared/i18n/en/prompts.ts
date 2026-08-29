@@ -28,14 +28,17 @@ export const prompts: Dict['prompts'] = {
 
     lookAtFile: 'Take a look at this file.',
     toolLimit: 'You have reached the tool use limit. Answer with what you have learned so far.',
+    /** Short action log added to an earlier assistant reply so the model knows what it did */
+    toolResultTrimmed: '(older tool result, shortened to save space; call the tool again if you need it)',
+    actionLog: (items: string) => `[Done in this reply: ${items}]`,
     codeToFiles:
-      'Do not write the code into the chat: a project folder is connected and you can write files. Save the code you just wrote into the folder with write_file; if several files are needed (package.json, index.html, src/... and so on), create each one separately. When done, say briefly which files you created and how to run it.',
+      'Do not write the code into the chat: a project folder is connected and you can write files. Save the code you just wrote into the folder: create new files with write_file and use edit_file for a small change in an existing file; if several files are needed (package.json, index.html, src/... and so on), write each one separately. When done, say briefly which files you created and how to run it.',
     dontAsk:
       'Do not ask for permission: reading, listing and searching need none, and the app shows its own approval card for anything that changes something. Do the step you suggested now by calling the tool, and keep going until the task is done.',
     actDontTell:
-      'Do not describe what you will do; do it now: call the matching tool right away (write_file to change the file, run_command for a command, sql_query for a query). Do not finish without calling the tool.',
+      'Do not describe what you will do; do it now: call the matching tool you have right away. Do not finish without calling the tool.',
     continueAfterTools:
-      'Continue. If the task is not finished, call the tool you need now (write_file to fix the file, run_command to check). If it is finished, say briefly what you did and the result.',
+      'Continue. If the task is not finished, call the tool you need now. If it is finished, say briefly what you did and the result.',
 
     errors: {
       noModel: 'No model is selected yet. Pick one in Settings → Models.',

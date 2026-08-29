@@ -137,7 +137,7 @@ function findExecutable(): Promise<string | null> {
     const candidate = local ? join(local, 'Programs', 'Ollama', 'ollama.exe') : null
     if (candidate && existsSync(candidate)) return Promise.resolve(candidate)
   }
-  const finder = process.platform === 'win32' ? 'where' : 'which'
+  const finder = process.platform === 'win32' ? join(process.env.SystemRoot ?? 'C:\Windows', 'System32', 'where.exe') : 'which'
   return new Promise((resolve) => {
     execFile(finder, ['ollama'], { windowsHide: true, timeout: 5000 }, (err, stdout) => {
       const first = stdout?.split('\n')[0]?.trim()
@@ -307,18 +307,14 @@ export async function createModel(
 const visionCache = new Map<string, boolean>()
 const toolsCache = new Map<string, boolean>()
 
-/** Model araç (fonksiyon) çağırabiliyor mu. */
-export async function supportsTools(model: string): Promise<boolean> {
-  const cached = toolsCache.get(model)
-  if (cached !== undefined) return cached
-  await supportsVision(model)
-  return toolsCache.get(model) ?? false
-}
-
-/** Model resim anlayabiliyor mu (Ollama'nın bildirdiği yeteneklere göre). */
-export async function supportsVision(model: string): Promise<boolean> {
-  const cached = visionCache.get(model)
-  if (cached !== undefined) return cached
+/**
+ * Modelin yetenekleri (Ollama'nın bildirdiğine göre). Ollama'ya ulaşılamazsa ya da cevap alınamazsa null:
+ * o zaman "bu model araç kullanamaz" gibi yanıltıcı bir hata yerine asıl istek denenir ve gerçek hata görünür.
+ */
+async function capabilities(model: string): Promise<{ vision: boolean; tools: boolean } | null> {
+  const vision = visionCache.get(model)
+  const tools = toolsCache.get(model)
+  if (vision !== undefined && tools !== undefined) return { vision, tools }
   try {
     const res = await fetch(`${BASE}/api/show`, {
       method: 'POST',
@@ -326,15 +322,37 @@ export async function supportsVision(model: string): Promise<boolean> {
       body: JSON.stringify({ model }),
       signal: AbortSignal.timeout(5000)
     })
-    if (!res.ok) return false
+    if (!res.ok) return null
     const body = (await res.json()) as { capabilities?: string[] }
-    const vision = body.capabilities?.includes('vision') ?? false
-    visionCache.set(model, vision)
-    toolsCache.set(model, body.capabilities?.includes('tools') ?? false)
-    return vision
+    const caps = { vision: body.capabilities?.includes('vision') ?? false, tools: body.capabilities?.includes('tools') ?? false }
+    visionCache.set(model, caps.vision)
+    toolsCache.set(model, caps.tools)
+    return caps
   } catch {
-    return false
+    return null
   }
+}
+
+/** Model araç (fonksiyon) çağırabiliyor mu. Bilinemiyorsa evet sayılır; asıl istek gerçek hatayı verir. */
+export async function supportsTools(model: string): Promise<boolean> {
+  return (await capabilities(model))?.tools ?? true
+}
+
+/** Model resim anlayabiliyor mu. Bilinemiyorsa evet sayılır; asıl istek gerçek hatayı verir. */
+export async function supportsVision(model: string): Promise<boolean> {
+  return (await capabilities(model))?.vision ?? true
+}
+
+/**
+ * Her model için son kullanılan bağlam boyu. Ollama bu değer değişince modeli bellekten atıp yeniden yüklediği için
+ * (saniyeler sürer) başlık, özet ve bellek gibi yan işler de aynı değerle çağrılır.
+ */
+const lastContext = new Map<string, number>()
+
+function contextFor(model: string, requested?: number): number {
+  const size = requested ?? lastContext.get(model) ?? NUM_CTX
+  lastContext.set(model, size)
+  return size
 }
 
 const pulls = new Map<string, AbortController>()
@@ -465,6 +483,8 @@ export interface ChatOptions {
 
 /** Cevabı parça parça verir; bittiğinde istatistikleri döndürür. */
 export async function* chatStream(opts: ChatOptions): AsyncGenerator<string, ChatStats> {
+  const numCtx = contextFor(opts.model, opts.numCtx)
+  const withTools = Boolean(opts.tools && opts.tools.length > 0)
   const res = await postNoThink(
     '/api/chat',
     {
@@ -473,13 +493,15 @@ export async function* chatStream(opts: ChatOptions): AsyncGenerator<string, Cha
       stream: true,
       ...(opts.tools && opts.tools.length > 0 ? { tools: opts.tools } : {}),
       options: {
-        num_ctx: opts.numCtx ?? NUM_CTX,
-        temperature: opts.temperature ?? 0.7,
-        // Aynı ifadeyi tekrar etmeyi zorlaştırır; küçük modellerde döngüyü azaltır.
-        repeat_penalty: 1.15,
-        repeat_last_n: 256,
-        // Düşünme de bu sınıra sayılır; düşünürken cevaba yer kalsın diye sınır büyütülür.
-        num_predict: opts.think ? MAX_REPLY_TOKENS * 3 : MAX_REPLY_TOKENS
+        num_ctx: numCtx,
+        // Araç turlarında model dosyadaki metni birebir kopyalayabilmeli (edit_file'ın old_text'i, adlar, import'lar):
+        // düşük sıcaklık ve tekrar cezası yok. Sohbette tekrar cezası küçük modellerde döngüyü azaltır.
+        ...(withTools
+          ? { temperature: opts.temperature ?? 0.3, repeat_penalty: 1, presence_penalty: 0, frequency_penalty: 0 }
+          : { temperature: opts.temperature ?? 0.7, repeat_penalty: 1.15, repeat_last_n: 256 }),
+        // Düşünme de bu sınıra sayılır; düşünürken cevaba yer kalsın diye sınır büyütülür. Bağlamın yarısını geçemez:
+        // istem de sığmalı.
+        num_predict: Math.min(opts.think ? MAX_REPLY_TOKENS * 3 : MAX_REPLY_TOKENS, Math.floor(numCtx / 2))
       }
     },
     opts.signal,
@@ -526,7 +548,7 @@ export async function chatOnce(
       stream: false,
       ...(opts.format ? { format: opts.format } : {}),
       options: {
-        num_ctx: NUM_CTX,
+        num_ctx: contextFor(opts.model, opts.numCtx),
         temperature: opts.temperature ?? 0.3,
         num_predict: opts.numPredict ?? 64
       }
