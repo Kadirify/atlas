@@ -1,6 +1,7 @@
 import { spawn } from 'node:child_process'
-import { readdir, readFile, stat } from 'node:fs/promises'
+import { open, readdir, stat } from 'node:fs/promises'
 import { basename, join } from 'node:path'
+import { StringDecoder } from 'node:string_decoder'
 import type { CodeEntry, CodeFile } from '@shared/types'
 import { L } from '../i18n'
 import { decodeText } from './attachments'
@@ -13,7 +14,11 @@ const SECRET_FILE = /^(?:\.env(?:\..*)?|.*\.(?:pem|key|pfx|p12|keystore)|id_(?:r
 const MAX_ENTRIES = 500
 const MAX_VIEW_BYTES = 400 * 1024
 const MAX_OUTPUT_CHARS = 12_000
+/** Komut çıktısından en çok bu kadarı bellekte tutulur (sonu saklanır; hatalar genelde sondadır) */
+const MAX_OUTPUT_BYTES = 256 * 1024
 const COMMAND_TIMEOUT_MS = 120_000
+const ANSI = /\u001b\[[0-9;?]*[A-Za-z]/g
+const SYSTEM32 = join(process.env.SystemRoot ?? 'C:\\Windows', 'System32')
 
 export class CodeError extends Error {}
 
@@ -30,20 +35,27 @@ export async function listDir(root: string, rel: string): Promise<CodeEntry[]> {
   return entries.slice(0, MAX_ENTRIES).map((e) => ({ name: e.name, path: prefix + e.name, dir: e.isDirectory(), secret: !e.isDirectory() && isSecretFile(e.name) }))
 }
 
-/** Dosyayı görüntülemek için okur. Gizli bilgi dosyaları ve ikili dosyalar içerik vermez. */
+/** Dosyayı görüntülemek için okur. Gizli bilgi dosyaları ve ikili dosyalar içerik vermez; büyük dosyanın yalnızca başı okunur. */
 export async function readForView(root: string, rel: string): Promise<CodeFile> {
   const t = L().tools.code
-  if (isSecretFile(rel)) return { path: rel, text: '', note: t.secretFile, truncated: false }
   const full = await resolveInside(root, rel)
+  if (isSecretFile(rel) || isSecretFile(full)) return { path: rel, text: '', note: t.secretFile, truncated: false }
   const info = await stat(full)
   if (!info.isFile()) throw new CodeError(t.notAFile)
-  const bytes = await readFile(full)
+  const handle = await open(full, 'r')
+  let bytes: Buffer
+  try {
+    const buffer = Buffer.alloc(Math.min(info.size, MAX_VIEW_BYTES))
+    const { bytesRead } = await handle.read(buffer, 0, buffer.length, 0)
+    bytes = buffer.subarray(0, bytesRead)
+  } finally {
+    await handle.close()
+  }
   const head = bytes.subarray(0, 4096)
   let zeros = 0
   for (const b of head) if (b === 0) zeros++
   if (zeros > head.length * 0.01) return { path: rel, text: '', note: t.binaryFile, truncated: false }
-  const truncated = bytes.length > MAX_VIEW_BYTES
-  return { path: rel, text: decodeText(truncated ? bytes.subarray(0, MAX_VIEW_BYTES) : bytes), note: '', truncated }
+  return { path: rel, text: decodeText(bytes), note: '', truncated: info.size > MAX_VIEW_BYTES }
 }
 
 export interface CommandResult {
@@ -52,34 +64,65 @@ export interface CommandResult {
   timedOut: boolean
 }
 
+function cleanOutput(text: string): string {
+  return text.replace(ANSI, '').replace(/\r(?!\n)/g, '\n')
+}
+
 /**
  * Komutu proje klasöründe çalıştırır ve çıktısını toplar. Etkileşimli girdi verilmez; süre dolarsa süreç sonlandırılır.
  * Bu işlev güvenlik denetimi yapmaz: çağıran önce classifyCommand ile bakmalı ve kullanıcıdan onay almalıdır.
  */
 export function runCommand(cwd: string, command: string, signal: AbortSignal, onChunk?: (chunk: string) => void): Promise<CommandResult> {
   return new Promise((resolve) => {
+    // Cevap durdurulmuşsa komut hiç başlatılmaz.
+    if (signal.aborted) return resolve({ code: null, output: '', timedOut: false })
     const windows = process.platform === 'win32'
-    const child = spawn(windows ? 'cmd.exe' : 'sh', windows ? ['/d', '/s', '/c', command] : ['-c', command], {
+    // cmd tam yoldan çağrılır ve komut tırnağa alınır: /s ilk ve son tırnağı atar, komutun kendi tırnakları bozulmaz.
+    const child = spawn(windows ? join(SYSTEM32, 'cmd.exe') : 'sh', windows ? ['/d', '/s', '/c', `"${command}"`] : ['-c', command], {
       cwd,
       windowsHide: true,
       windowsVerbatimArguments: windows,
       stdio: ['ignore', 'pipe', 'pipe'],
-      env: { ...process.env, CI: '1', FORCE_COLOR: '0', NO_COLOR: '1' }
+      // NoDefaultCurrentDirectoryInExePath: proje klasöründeki "git.bat" gibi bir dosya PATH'teki programın yerine çalışmasın.
+      env: { ...process.env, CI: '1', FORCE_COLOR: '0', NO_COLOR: '1', NoDefaultCurrentDirectoryInExePath: '1' }
     })
-    let output = ''
+    const chunks: Buffer[] = []
+    let bytes = 0
+    // Canlı terminal için: iki parçaya bölünen çok baytlı harfler bozulmasın.
+    const live = new StringDecoder('utf8')
     let timedOut = false
+    let settled = false
+    let exitTimer: NodeJS.Timeout | undefined
+    let killTimer: NodeJS.Timeout | undefined
+
     const add = (chunk: Buffer): void => {
-      const text = decodeText(chunk)
-      if (output.length < MAX_OUTPUT_CHARS * 2) output += text
-      // Canlı terminal için renk kodları temizlenmiş parça.
-      onChunk?.(text.replace(/\u001b\[[0-9;?]*[A-Za-z]/g, '').replace(/\r(?!\n)/g, '\n'))
+      chunks.push(chunk)
+      bytes += chunk.length
+      while (bytes > MAX_OUTPUT_BYTES && chunks.length > 1) bytes -= chunks.shift()!.length
+      onChunk?.(cleanOutput(live.write(chunk)))
     }
     child.stdout.on('data', add)
     child.stderr.on('data', add)
+
+    const finish = (code: number | null): void => {
+      if (settled) return
+      settled = true
+      clearTimeout(timer)
+      clearTimeout(exitTimer)
+      clearTimeout(killTimer)
+      signal.removeEventListener('abort', onAbort)
+      child.stdout.destroy()
+      child.stderr.destroy()
+      // Çıktı bütün olarak çözülür: UTF-8 değilse (Türkçe Windows'ta 1254) doğru kodlama seçilsin.
+      const clean = cleanOutput(decodeText(Buffer.concat(chunks))).trim()
+      resolve({ code, output: clean.length > MAX_OUTPUT_CHARS ? `…\n${clean.slice(-MAX_OUTPUT_CHARS)}` : clean, timedOut })
+    }
     const kill = (): void => {
       // Windows'ta alt süreçler de sonlansın diye süreç ağacı kapatılır.
-      if (windows && child.pid) spawn('taskkill', ['/pid', String(child.pid), '/t', '/f'], { windowsHide: true })
+      if (windows && child.pid) spawn(join(SYSTEM32, 'taskkill.exe'), ['/pid', String(child.pid), '/t', '/f'], { windowsHide: true }).on('error', () => {})
       else child.kill('SIGKILL')
+      // cmd çoktan kapanmış ama arka plandaki bir süreç çıktıyı açık tutuyorsa beklemeden bitirilir.
+      killTimer = setTimeout(() => finish(null), 2000)
     }
     const timer = setTimeout(() => {
       timedOut = true
@@ -87,23 +130,21 @@ export function runCommand(cwd: string, command: string, signal: AbortSignal, on
     }, COMMAND_TIMEOUT_MS)
     const onAbort = (): void => kill()
     signal.addEventListener('abort', onAbort)
-    const finish = (code: number | null): void => {
-      clearTimeout(timer)
-      signal.removeEventListener('abort', onAbort)
-      // Renk kodları ve satır başı karakterleri temizlenir; çıktı uzunsa sonu korunur (hatalar genelde sondadır).
-      const clean = output.replace(/\u001b\[[0-9;?]*[A-Za-z]/g, '').replace(/\r(?!\n)/g, '\n').trim()
-      resolve({ code, output: clean.length > MAX_OUTPUT_CHARS ? `…\n${clean.slice(-MAX_OUTPUT_CHARS)}` : clean, timedOut })
-    }
     child.on('error', (e) => {
-      output += String(e.message)
+      chunks.push(Buffer.from(String(e.message)))
       finish(null)
+    })
+    // "start /b" ile arka planda başlatılan bir süreç çıktı borusunu açık tutabilir: cmd kapandıktan kısa süre sonra bitirilir.
+    child.on('exit', (code) => {
+      exitTimer = setTimeout(() => finish(code), 500)
     })
     child.on('close', (code) => finish(code))
   })
 }
 
-/** Varsayılan programla açılınca kod çalıştırabilecek dosya türleri: bunlar açılmaz, Gezgin'de gösterilir. */
-const RUNNABLE = /\.(?:exe|com|bat|cmd|ps1|psm1|vbs|vbe|js|jse|mjs|cjs|wsf|wsh|msi|msp|scr|lnk|hta|reg|cpl|jar|appref-ms|py|pyw|sh|url|scf|inf)$/i
+/** Varsayılan programla açılınca kod çalıştırabilecek ya da başka bir yere bağlanabilecek dosya türleri: bunlar açılmaz, Gezgin'de gösterilir. */
+const RUNNABLE =
+  /\.(?:exe|com|bat|cmd|ps1|psm1|psd1|ps1xml|psc1|vbs|vbe|js|jse|mjs|cjs|wsf|wsh|ws|wsc|msi|msp|msix|msixbundle|appx|appxbundle|appinstaller|application|scr|pif|lnk|hta|reg|cpl|msc|chm|hlp|jar|jnlp|appref-ms|py|pyw|sh|url|website|scf|inf|rdp|library-ms|searchconnector-ms|settingcontent-ms|theme|themepack|diagcab|gadget|xll|xbap|docm|dotm|xlsm|xltm|xlam|pptm|potm|ppam|sldm|iso|img|vhd|vhdx|sct|shb|shs|mde|ade|adp|accde)$/i
 
 export function isRunnable(path: string): boolean {
   return RUNNABLE.test(path)
