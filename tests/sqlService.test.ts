@@ -91,7 +91,7 @@ describe('SqlService: Atlas araçları', () => {
 
   it('değiştiren sorgu onay ister; onaylanınca çalışır', async () => {
     const out = await run('sql_query', { sql: "UPDATE personel SET maas = maas + 1000 WHERE ad = 'Mehmet'" })
-    expect(approvals).toMatchObject([{ conversationId: 'sohbet-1', connectionName: 'Örnek', keywords: ['UPDATE', 'SET'] }])
+    expect(approvals).toMatchObject([{ conversationId: 'sohbet-1', connectionName: 'Örnek', keywords: ['UPDATE'] }])
     expect(out.step.status).toBe('ok')
     expect(out.result).toContain('1 satır etkilendi')
     expect((await service.runRead(connectionId, "SELECT maas FROM personel WHERE ad = 'Mehmet'")).rows).toEqual([[43000]])

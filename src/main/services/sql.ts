@@ -45,11 +45,33 @@ interface Driver {
   schema(): Promise<SqlTable[]>
   /** Nesnenin kaynak kodu (görünüm, yordam, işlev, tetikleyici, iş) */
   definition(object: { schema: string; name: string; type: SqlObjectType }): Promise<string>
-  /** Okuma: veritabanında hiçbir şey değiştiremeyecek biçimde çalışır */
-  read(sql: string, maxRows: number): Promise<SqlResult>
+  /** Okuma: veritabanında hiçbir şey değiştiremeyecek biçimde çalışır. signal: kullanıcı durdurunca sorgu iptal edilir. */
+  read(sql: string, maxRows: number, signal?: AbortSignal): Promise<SqlResult>
   /** Yazma: tek bir işlem (transaction) içinde çalışır; hata olursa geri alınır */
-  write(sql: string): Promise<SqlResult>
+  write(sql: string, signal?: AbortSignal): Promise<SqlResult>
   close(): Promise<void>
+}
+
+/** MySQL okumalarında sorgu süre sınırı (SQL Server ve PostgreSQL'de bağlantı ayarıyla verilir) */
+const QUERY_TIMEOUT_MS = 30_000
+/** Yazma sorgusu satır döndürürse (OUTPUT, RETURNING) en çok bu kadarı gösterilir */
+const WRITE_ROWS = 200
+
+/** Durdurulmuş bir cevapta sorgu hiç başlamasın */
+function checkAborted(signal?: AbortSignal): void {
+  if (signal?.aborted) throw new SqlError(L().tools.sql.errors.stopped)
+}
+
+/** Yazma sorgusunun döndürdüğü satırlar (SQL Server OUTPUT, PostgreSQL RETURNING gibi) */
+function writtenRows(records: Record<string, unknown>[] | undefined): Pick<SqlResult, 'columns' | 'rows' | 'rowCount' | 'truncated'> {
+  if (!records || records.length === 0) return { columns: [], rows: [], rowCount: 0, truncated: false }
+  const columns = Object.keys(records[0])
+  return {
+    columns,
+    rows: records.slice(0, WRITE_ROWS).map((r) => columns.map((c) => cell(r[c]))),
+    rowCount: Math.min(records.length, WRITE_ROWS),
+    truncated: records.length > WRITE_ROWS
+  }
 }
 
 function cell(value: unknown): SqlValue {
@@ -105,8 +127,9 @@ function sqliteDriver(file: string): Driver {
         db.close()
       }
     },
-    async read(sql, maxRows) {
-      // Salt okunur bağlantı: sorgu ne olursa olsun dosya değişemez.
+    async read(sql, maxRows, signal) {
+      // Salt okunur bağlantı: sorgu ne olursa olsun dosya değişemez. (SQLite eşzamanlı çalışır; başladıktan sonra durdurulamaz.)
+      checkAborted(signal)
       const db = open(true)
       const started = Date.now()
       try {
@@ -126,7 +149,8 @@ function sqliteDriver(file: string): Driver {
         db.close()
       }
     },
-    async write(sql) {
+    async write(sql, signal) {
+      checkAborted(signal)
       const db = open(false)
       const started = Date.now()
       try {
@@ -253,13 +277,16 @@ async function mssqlDriver(c: StoredConnection, password: string): Promise<Drive
         .query(`SELECT COALESCE(OBJECT_DEFINITION(OBJECT_ID(@ad)), (SELECT m.definition FROM sys.sql_modules m JOIN sys.triggers t ON t.object_id = m.object_id WHERE t.name = @kisa AND t.parent_class = 0)) AS kod`)
       return (result.recordset[0] as { kod: string | null } | undefined)?.kod ?? ''
     },
-    async read(sql, maxRows) {
+    async read(sql, maxRows, signal) {
       // Okuma her zaman geri alınan bir işlem içinde çalışır: sorgu bir şey değiştirmeye kalksa bile kalıcı olmaz.
+      checkAborted(signal)
       const transaction = new mssql.Transaction(pool)
       await transaction.begin()
       const started = Date.now()
+      const request = new mssql.Request(transaction)
+      const onAbort = (): void => request.cancel()
+      signal?.addEventListener('abort', onAbort, { once: true })
       try {
-        const request = new mssql.Request(transaction)
         request.stream = true
         const rows: SqlValue[][] = []
         let columns: string[] = []
@@ -281,21 +308,28 @@ async function mssqlDriver(c: StoredConnection, password: string): Promise<Drive
         })
         return { columns, rows, rowCount: rows.length, truncated, ms: Date.now() - started }
       } finally {
+        signal?.removeEventListener('abort', onAbort)
         await transaction.rollback().catch(() => undefined)
       }
     },
-    async write(sql) {
+    async write(sql, signal) {
+      checkAborted(signal)
       const transaction = new mssql.Transaction(pool)
       await transaction.begin()
       const started = Date.now()
+      const request = new mssql.Request(transaction)
+      const onAbort = (): void => request.cancel()
+      signal?.addEventListener('abort', onAbort, { once: true })
       try {
-        const result = await new mssql.Request(transaction).query(sql)
+        const result = await request.query(sql)
         await transaction.commit()
         const affected = (result.rowsAffected ?? []).reduce((sum: number, n: number) => sum + n, 0)
-        return { columns: [], rows: [], rowCount: 0, truncated: false, affected, ms: Date.now() - started }
+        return { ...writtenRows(result.recordset as Record<string, unknown>[] | undefined), affected, ms: Date.now() - started }
       } catch (e) {
         await transaction.rollback().catch(() => undefined)
         throw e
+      } finally {
+        signal?.removeEventListener('abort', onAbort)
       }
     },
     async close() {
@@ -361,13 +395,17 @@ async function postgresDriver(c: StoredConnection, password: string): Promise<Dr
       const r = await client.query('SELECT pg_get_functiondef(p.oid) AS kod FROM pg_proc p JOIN pg_namespace ns ON ns.oid = p.pronamespace WHERE p.proname = $1 AND ns.nspname = $2', [object.name, schema])
       return r.rows.map((x: { kod: string }) => x.kod).join('\n\n')
     },
-    async read(sql, maxRows) {
+    async read(sql, maxRows, signal) {
       // Salt okunur işlem: PostgreSQL bu işlemin içinde hiçbir yazmaya izin vermez. İmleç, büyük sonuçların
-      // tamamının belleğe alınmasını önler.
+      // tamamının belleğe alınmasını önler. Sorgu "extended" kipte gönderilir: PostgreSQL bu kipte birden çok ifadeyi
+      // reddeder, böylece okumanın arkasına gizlenmiş "COMMIT; ..." çalışamaz.
+      checkAborted(signal)
       const started = Date.now()
+      const onAbort = (): void => void client.end().catch(() => undefined)
+      signal?.addEventListener('abort', onAbort, { once: true })
       await client.query('BEGIN TRANSACTION READ ONLY')
       try {
-        await client.query(`DECLARE atlas_cursor NO SCROLL CURSOR FOR ${sql.replace(/;\s*$/, '')}`)
+        await client.query({ text: `DECLARE atlas_cursor NO SCROLL CURSOR FOR ${sql.replace(/;\s*$/, '')}`, queryMode: 'extended' } as unknown as string)
         const result = await client.query({ text: `FETCH ${maxRows + 1} FROM atlas_cursor`, rowMode: 'array' })
         const all = result.rows as unknown[][]
         return {
@@ -378,21 +416,27 @@ async function postgresDriver(c: StoredConnection, password: string): Promise<Dr
           ms: Date.now() - started
         }
       } finally {
+        signal?.removeEventListener('abort', onAbort)
         await client.query('ROLLBACK').catch(() => undefined)
       }
     },
-    async write(sql) {
+    async write(sql, signal) {
+      checkAborted(signal)
       const started = Date.now()
+      const onAbort = (): void => void client.end().catch(() => undefined)
+      signal?.addEventListener('abort', onAbort, { once: true })
       await client.query('BEGIN')
       try {
         const result = await client.query(sql)
         await client.query('COMMIT')
-        const list = Array.isArray(result) ? result : [result]
-        const affected = list.reduce((sum: number, r: { rowCount: number | null }) => sum + (r.rowCount ?? 0), 0)
-        return { columns: [], rows: [], rowCount: 0, truncated: false, affected, ms: Date.now() - started }
+        const list = (Array.isArray(result) ? result : [result]) as { rowCount: number | null; rows?: Record<string, unknown>[] }[]
+        const affected = list.reduce((sum, r) => sum + (r.rowCount ?? 0), 0)
+        return { ...writtenRows(list.findLast((r) => (r.rows?.length ?? 0) > 0)?.rows), affected, ms: Date.now() - started }
       } catch (e) {
         await client.query('ROLLBACK').catch(() => undefined)
         throw e
+      } finally {
+        signal?.removeEventListener('abort', onAbort)
       }
     },
     async close() {
@@ -456,18 +500,21 @@ async function mysqlDriver(c: StoredConnection, password: string): Promise<Drive
       const key = Object.keys(row).find((k) => /^(Create|SQL Original Statement)/i.test(k) && k !== 'Create View' ? true : /^Create /i.test(k))
       return String((key && row[key]) ?? row['Create View'] ?? row['SQL Original Statement'] ?? '')
     },
-    async read(sql, maxRows) {
+    async read(sql, maxRows, signal) {
       // Salt okunur işlem: MySQL bu işlemin içinde yazmayı reddeder. Sonuç akış olarak okunur; sınır aşılınca
-      // bağlantı kesilir, böylece büyük tablolar belleğe alınmaz.
+      // bağlantı kesilir, böylece büyük tablolar belleğe alınmaz. Durdurulunca ya da süre dolunca da bağlantı kesilir.
+      checkAborted(signal)
       const started = Date.now()
       await connection.query('START TRANSACTION READ ONLY')
       const raw = (connection as unknown as { connection: import('mysql2').Connection }).connection
+      const onAbort = (): void => raw.destroy()
+      signal?.addEventListener('abort', onAbort, { once: true })
       const rows: SqlValue[][] = []
       let columns: string[] = []
       let truncated = false
       try {
         await new Promise<void>((resolve, reject) => {
-          const query = raw.query({ sql, rowsAsArray: true })
+          const query = raw.query({ sql, rowsAsArray: true, timeout: QUERY_TIMEOUT_MS })
           query.on('fields', (fields: { name: string }[]) => {
             if (columns.length === 0) columns = fields.map((f) => f.name)
           })
@@ -485,19 +532,26 @@ async function mysqlDriver(c: StoredConnection, password: string): Promise<Drive
         })
         return { columns, rows, rowCount: rows.length, truncated, ms: Date.now() - started }
       } finally {
+        signal?.removeEventListener('abort', onAbort)
         if (truncated) connection = await connect()
         else await connection.query('ROLLBACK').catch(() => undefined)
       }
     },
-    async write(sql) {
+    async write(sql, signal) {
+      checkAborted(signal)
       const started = Date.now()
+      const raw = (connection as unknown as { connection: import('mysql2').Connection }).connection
+      const onAbort = (): void => raw.destroy()
+      signal?.addEventListener('abort', onAbort, { once: true })
       await connection.beginTransaction()
       try {
         const [result] = await connection.query(sql)
         await connection.commit()
+        signal?.removeEventListener('abort', onAbort)
         const affected = (result as { affectedRows?: number }).affectedRows ?? 0
-        return { columns: [], rows: [], rowCount: 0, truncated: false, affected, ms: Date.now() - started }
+        return { ...writtenRows(Array.isArray(result) ? (result as Record<string, unknown>[]) : undefined), affected, ms: Date.now() - started }
       } catch (e) {
+        signal?.removeEventListener('abort', onAbort)
         await connection.rollback().catch(() => undefined)
         throw e
       }
@@ -669,7 +723,7 @@ export class SqlService {
 
   /** Kullanıcının panelden çalıştırdığı sorgu: yalnızca okuma kabul edilir. */
   async runRead(id: string, sql: string): Promise<SqlResult> {
-    const verdict = classifySql(sql)
+    const verdict = classifySql(sql, this.get(id)?.engine)
     if (verdict.kind !== 'read') throw new SqlError(L().tools.sql.errors.panelReadOnly)
     return this.withDriver(id, (driver) => driver.read(sql, MAX_UI_ROWS))
   }
@@ -716,10 +770,12 @@ export class SqlService {
       let size = 0
       const tables = await this.cachedSchema(connection.id)
       const objects = tables.filter((x) => x.type !== 'table' && x.type !== 'view')
-      for (const table of tables.filter((x) => x.type === 'table' || x.type === 'view')) {
+      const relations = tables.filter((x) => x.type === 'table' || x.type === 'view')
+      for (const table of relations) {
         const line = `- ${fullName(table)}: ${table.columns.map((c) => `${c.name} ${c.type}`).join(', ')}`
         if (size + line.length > MAX_PROMPT_SCHEMA_CHARS) {
-          lines.push(p.schemaMore(tables.length - lines.length))
+          // Sayılan yalnızca sığmayan tablo ve görünümler (yordamlar ayrıca listelenir).
+          lines.push(p.schemaMore(relations.length - lines.length))
           break
         }
         lines.push(line)
@@ -730,7 +786,8 @@ export class SqlService {
       if (objects.length > 0) {
         const kinds = L().tools.sql.result.kinds
         const groups = (['procedure', 'function', 'trigger', 'job'] as const)
-          .map((type) => [type, objects.filter((o) => o.type === type).map((o) => fullName(o))] as const)
+          // Tetikleyici hangi tabloya bağlıysa adıyla birlikte verilir: "sipariş iptal edilince ne olur" sorusunda bulunsun.
+          .map((type) => [type, objects.filter((o) => o.type === type).map((o) => (o.parent ? `${fullName(o)} (${o.parent})` : fullName(o)))] as const)
           .filter(([, names]) => names.length > 0)
           .map(([type, names]) => `- ${kinds[type]}: ${names.join(', ')}`)
         schema += `\n${p.objectsTitle}\n${groups.join('\n').slice(0, 2500)}`
@@ -794,7 +851,8 @@ export class SqlService {
       if (call.name === 'sql_query') {
         const sql = String(args.sql ?? '').trim()
         if (!sql) return done(t.steps.query(''), t.result.emptySql, 'error')
-        const verdict = classifySql(sql)
+        // Metin, bağlı veritabanının yazım kurallarıyla incelenir (ters bölü, # yorumu, $etiket$ her türde farklı).
+        const verdict = classifySql(sql, this.get(connectionId)?.engine)
         const short = sql.replace(/\s+/g, ' ').slice(0, 80)
 
         if (verdict.kind === 'forbidden') {
@@ -806,15 +864,17 @@ export class SqlService {
           const connection = this.get(connectionId)
           const approved = await this.ask({ id, conversationId, connectionName: connection?.name ?? '', sql, keywords: verdict.keywords }, signal)
           if (!approved) return done(t.steps.denied(short), t.result.denied, 'denied')
-          const result = await this.withDriver(connectionId, (driver) => driver.write(sql))
+          const result = await this.withDriver(connectionId, (driver) => driver.write(sql, signal))
           this.schemaCache.delete(connectionId)
           this.events.result({ conversationId, sql, result })
-          return done(t.steps.wrote(result.affected ?? 0), t.result.wrote(result.affected ?? 0))
+          // Değiştiren sorgu satır da döndürdüyse (OUTPUT, RETURNING) model onları da görsün.
+          const rows = result.rows.length > 0 ? `\n${formatForModel(result, t.result.more)}` : ''
+          return done(t.steps.wrote(result.affected ?? 0), t.result.wrote(result.affected ?? 0) + rows)
         }
 
-        const result = await this.withDriver(connectionId, (driver) => driver.read(sql, MAX_UI_ROWS))
+        const result = await this.withDriver(connectionId, (driver) => driver.read(sql, MAX_UI_ROWS, signal))
         this.events.result({ conversationId, sql, result })
-        return done(t.steps.read(result.rowCount, result.truncated), formatForModel(result, t.result.more))
+        return done(t.steps.read(result.rowCount, result.truncated), formatForModel(result, t.result.more, t.result.noRows))
       }
       return done(call.name, t.result.unknownTool(call.name), 'error')
     } catch (e) {
@@ -829,9 +889,15 @@ function fullName(table: SqlTable): string {
 }
 
 /** Sonucu modele verilecek kısa bir tabloya çevirir. */
-export function formatForModel(result: SqlResult, more: (shown: number, total: number, truncated: boolean) => string): string {
+export function formatForModel(
+  result: SqlResult,
+  more: (shown: number, total: number, truncated: boolean) => string,
+  none = '(0)'
+): string {
   if (result.columns.length === 0) return '(0)'
   const lines = [result.columns.join(' | ')]
+  // Sonuç boşsa yalnızca başlık satırı kalmasın: model "satır yok" bilgisini açıkça görsün.
+  if (result.rows.length === 0) return `${lines[0]}\n${none}`
   let shown = 0
   let size = lines[0].length
   for (const row of result.rows.slice(0, MAX_MODEL_ROWS)) {
