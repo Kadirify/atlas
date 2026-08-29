@@ -94,6 +94,13 @@ export const tools: Dict['tools'] = {
         '- After writing a file, do not repeat its whole contents in your reply; say in one sentence what you saved and where.',
       readOnly:
         '- You only have reading tools; you cannot create, change or delete files. If asked to, write the content in the chat instead.',
+      windowsShell:
+        '- Commands run in cmd.exe on Windows: use dir to list files, type to read and findstr to search; ls, cat, grep and rm do not exist, and PowerShell commands are not run.',
+      fixCodeNotTests:
+        '- If a test fails, fix the code first. Change the test only if the test itself is clearly wrong, and tell the user.',
+      testCommand: (command: string) => `- This project's test command: ${command}`,
+      overridesPersona:
+        '- These folder rules come before any habit in the persona instructions above about showing code: write code to files, not into the chat.',
       citeFile: '- In your reply, name the file each piece of information came from.',
       planFirst:
         '- For tasks with several steps (a new app, changes in several files, debugging), first write a short plan with update_plan and update it as each step finishes. For small changes to an existing file use edit_file; do not rewrite the whole file.',
@@ -119,6 +126,7 @@ export const tools: Dict['tools'] = {
       plan: (done: number, total: number) => `Plan: ${done} of ${total} steps done`,
       edited: (path: string) => `Edited: ${path}`,
       editNotFound: (path: string) => `Not edited, text not found: ${path}`,
+      changedMeanwhile: (path: string) => `Not written, the file changed in the meantime: ${path}`,
       editAmbiguous: (path: string) => `Not edited, text appears in several places: ${path}`
     },
 
@@ -155,6 +163,12 @@ export const tools: Dict['tools'] = {
         `old_text was not found word for word in "${path}". Read the current file with read_file first, copy the part you want to change exactly (spaces and line breaks included) and try again.`,
       editAmbiguous: (path: string, count: number) =>
         `old_text appears in ${count} places in "${path}". Add enough surrounding lines to point to a single place and try again.`,
+      changedMeanwhile: (path: string) =>
+        `"${path}" changed while waiting for approval (the user or another program edited it); nothing was written. Read its current content with read_file and make the change again.`,
+      editedRegion: (path: string, region: string) => `"${path}" edited. The changed part now reads:
+${region}`,
+      duplicateLine: (line: string) =>
+        `Warning: right next to your change the same line appears twice in a row ("${line}"). You may have repeated it by mistake; check and fix it if needed.`,
       error: (message: string) => `Error: ${message}`
     },
 
@@ -184,7 +198,9 @@ export const tools: Dict['tools'] = {
       folderNotFound: 'Folder not found.',
       emptyPlan: 'The plan is empty; write at least one step.',
       editMissing: (path: string) => `There is no file named "${path}". Use write_file for a new file.`,
-      editEmpty: 'old_text cannot be empty.'
+      editEmpty: 'old_text cannot be empty.',
+      notUtf8: (path: string) =>
+        `"${path}" is not UTF-8 (most likely Windows-1254 or UTF-16). To avoid corrupting it, this file is not changed. Ask the user to save it as UTF-8.`
     },
 
     search: {
@@ -207,8 +223,8 @@ export const tools: Dict['tools'] = {
   /** Database tools (services/sql.ts) */
   sql: {
     defs: {
-      schema: 'Lists the tables of the connected database. With "table", returns the columns and types of that table. Use this before writing a query.',
-      schemaTableArg: 'Table name (optional). Example: Staff or dbo.Staff',
+      schema: 'Looks at an object in the database. If "table" is a table or view, returns its columns and types; if it is a procedure, function, trigger or job, returns its code. Use it for objects missing from the list in your instructions or whose details you do not know.',
+      schemaTableArg: 'Object name: table, view, procedure, function, trigger or job. Example: Staff, dbo.Staff, dbo.trg_OrderCancel',
       query: 'Runs one SQL statement on the connected database. SELECT runs right away. Statements that change data or structure are shown to the user for approval. DELETE, DROP and TRUNCATE are never run.',
       querySqlArg: 'A single SQL statement to run'
     },
@@ -218,7 +234,7 @@ export const tools: Dict['tools'] = {
       objectsTitle: 'Programmable objects (pass the name to sql_schema to see the code):',
       objectsHint:
         '- If asked what a procedure, function, trigger, view or scheduled job does, first read its code by passing its name to sql_schema, then explain. Running a procedure (EXEC) may change data, so it is asked with an approval card.',
-      schemaMore: (n: number) => `(${n} more tables; look with sql_schema)`,
+      schemaMore: (n: number) => `(${n} more objects; look with sql_schema)`,
       schemaFirst: 'Use only the real table and column names from this list; never invent names. If something is not listed, look with sql_schema.',
       readFree: 'To read data, run a SELECT with sql_query; do not ask the user for permission for that. Summarize the result briefly and clearly.',
       writeApproval: 'Send changing statements such as INSERT, UPDATE, CREATE and ALTER through sql_query as well: the app shows the user an approval card. If the user declines, do not insist.',
@@ -245,6 +261,7 @@ export const tools: Dict['tools'] = {
       noTables: 'The database has no tables.',
       noTable: (table: string) => `There is no table named "${table}". Call sql_schema without a table name and check the list.`,
       emptySql: 'The query is empty.',
+      noRows: '(The query ran; it returned no rows.)',
       more: (shown: number, total: number, truncated: boolean) =>
         truncated ? `(first ${shown} rows shown; the result is longer and was cut)` : `(first ${shown} of ${total} rows shown)`,
       wrote: (rows: number) => `The user approved. The statement ran and is permanent: ${rows} rows affected.`,
@@ -263,6 +280,7 @@ export const tools: Dict['tools'] = {
       notFound: 'This database connection no longer exists.',
       connect: (message: string) => `Could not connect to the database: ${message}`,
       unreachable: (host: string, port: number) => `Could not reach the server (${host}, port ${port}). Check that the server is running and that the address and port are right.`,
+      stopped: 'The reply was stopped; the query was not run.',
       panelReadOnly: 'Only SELECT queries run from here. Have Atlas write changing statements; they run with an approval card. Run delete operations in your own tool.'
     }
   },

@@ -334,6 +334,11 @@ export interface FileApproval {
   before?: string | null
   /** Yazmada yeni içerik */
   after?: string
+  /**
+   * Başka programların kendiliğinden çalıştırdığı bir dosya (package.json, .git, .vscode, .bat...):
+   * "hep izin ver" bunu kapsamaz, kart her seferinde kırmızı uyarıyla sorulur.
+   */
+  protected?: boolean
 }
 
 export interface FileAction {
@@ -562,6 +567,10 @@ export interface UndoEntry {
   path: string
   /** Önceki içerik; dosya Atlas tarafından oluşturulduysa null */
   before: string | null
+  /** Dosya Atlas tarafından buradan taşındıysa eski yolu; geri alırken dosya eski yerine taşınır */
+  movedFrom?: string
+  /** Atlas'ın yazdığı son içeriğin özeti; dosya sonradan değiştiyse geri alma onu ezmez */
+  afterHash?: string
 }
 
 export interface SearchHit {
