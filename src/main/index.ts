@@ -1,7 +1,7 @@
 import { copyFileSync, existsSync, mkdirSync } from 'node:fs'
 import { listLoaded, unloadModel } from './services/ollama'
 import { join } from 'node:path'
-import { app, BrowserWindow, nativeTheme, powerMonitor, shell } from 'electron'
+import { app, BrowserWindow, dialog, Menu, nativeTheme, powerMonitor, session, shell } from 'electron'
 import icon from '../../resources/icon.png?asset'
 import { langFromLocale } from '@shared/i18n'
 import { Db } from './db'
@@ -140,6 +140,11 @@ if (!app.requestSingleInstanceLock()) {
   }
 
   void app.whenReady().then(() => {
+    // Paketli sürümde Electron'un varsayılan menüsü (yeniden yükleme, geliştirici araçları kısayolları) kaldırılır.
+    if (app.isPackaged) Menu.setApplicationMenu(null)
+    // Sayfalar hiçbir izin (kamera, mikrofon, konum...) istemez; yalnızca panoya kopyalama açıktır.
+    session.defaultSession.setPermissionRequestHandler((_wc, permission, callback) => callback(permission === 'clipboard-sanitized-write'))
+    session.defaultSession.setPermissionCheckHandler((_wc, permission) => permission === 'clipboard-sanitized-write')
     const userData = app.getPath('userData')
     mkdirSync(userData, { recursive: true })
     const dbPath = join(userData, DB_FILE)
@@ -158,14 +163,20 @@ if (!app.requestSingleInstanceLock()) {
     const files = new FilesService(
       db,
       {
-        approval: (a) => broadcast('folders:approval', a),
+        approval: (a) => {
+          broadcast('folders:approval', a)
+          notifyApproval(a.conversationId)
+        },
         commandOutput: (e) => broadcast('folders:commandOutput', e),
         indexProgress: (p) => broadcast('folders:indexProgress', p)
       },
       memory
     )
     initSql(db, {
-      approval: (a) => broadcast('sql:approval', a),
+      approval: (a) => {
+        broadcast('sql:approval', a)
+        notifyApproval(a.conversationId)
+      },
       result: (e) => broadcast('sql:result', e)
     })
     /** Cevabı yazılmakta olan sohbetler; tepsi simgesindeki "yazıyor" işareti için */
@@ -188,6 +199,17 @@ if (!app.requestSingleInstanceLock()) {
         ? t.replyReadyLocked
         : [conversation?.title, text?.replace(/[#*_`>]/g, '').replace(/\s+/g, ' ').trim().slice(0, 140)].filter(Boolean).join('\n')
       tray.notify(title, body, () => {
+        showWindow()
+        broadcast('app:openConversation', conversationId)
+      })
+    }
+    /** Atlas penceresi önde değilken bir işlem onay bekliyorsa haber verir; yoksa cevap sessizce sonsuza kadar bekler. */
+    function notifyApproval(conversationId: string): void {
+      if (!db.getSettings().notifyWhenDone) return
+      if (mainWindow && !mainWindow.isDestroyed() && mainWindow.isVisible() && mainWindow.isFocused()) return
+      const t = L().main.notify
+      const conversation = db.getConversation(conversationId)
+      tray.notify(t.approvalNeeded, lock.isLocked() ? t.approvalNeededLocked : (conversation?.title ?? ''), () => {
         showWindow()
         broadcast('app:openConversation', conversationId)
       })
@@ -312,15 +334,28 @@ if (!app.requestSingleInstanceLock()) {
     createWindow(!(startHidden && settings.closeToTray && settings.setupDone && tray.available()))
 
     app.on('activate', () => showWindow())
-    app.on('before-quit', () => {
+    let closing = false
+    app.on('before-quit', (event) => {
       quitting = true
+      if (closing) return
+      closing = true
+      event.preventDefault()
       clearInterval(idleTimer)
       panel.destroy()
       tray.destroy()
       chat.stopAll()
       jobs.stopAll()
-      db.close()
+      // Durdurulan cevapların yazılan kısmı ve dosya değişikliklerinin geri alma kaydı kaydedilsin diye kısa süre beklenir.
+      void chat.settle(2000).finally(() => {
+        db.close()
+        app.quit()
+      })
     })
+  }).catch((err: unknown) => {
+    // Veritabanı açılamaz ya da güncellenemezse pencere hiç açılmadan beklemesin: ne olduğu söylenir ve uygulama kapanır.
+    const t = L().main.notify
+    dialog.showErrorBox(t.startupTitle, t.startupFailed(err instanceof Error ? err.message : String(err), app.getPath('userData')))
+    app.exit(1)
   })
 
   app.on('window-all-closed', () => {

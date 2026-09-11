@@ -4,6 +4,8 @@ import type { Db } from '../db'
 import { L } from '../i18n'
 
 const KEY = 'lockHash'
+/** Yanlış deneme sayısı ve bekleme bitişi; uygulamayı kapatıp açmak beklemeyi sıfırlamasın diye saklanır */
+const ATTEMPTS_KEY = 'lockAttempts'
 export const MIN_PIN_LENGTH = 4
 const MAX_PIN_LENGTH = 64
 /** Bu kadar yanlış denemeden sonra her yeni yanlışta bekleme süresi uzar. */
@@ -33,6 +35,17 @@ export class LockService {
   ) {
     // Kilit açıksa uygulama kilitli başlar.
     this.locked = this.enabled()
+    try {
+      const saved = JSON.parse(this.db.getInternal(ATTEMPTS_KEY) ?? 'null') as { failures?: unknown; blockedUntil?: unknown } | null
+      this.failures = Number(saved?.failures) || 0
+      this.blockedUntil = Number(saved?.blockedUntil) || 0
+    } catch {
+      // Bozuk kayıt: sayaç sıfırdan başlar.
+    }
+  }
+
+  private saveAttempts(): void {
+    this.db.setInternal(ATTEMPTS_KEY, this.failures > 0 ? JSON.stringify({ failures: this.failures, blockedUntil: this.blockedUntil }) : null)
   }
 
   enabled(): boolean {
@@ -71,6 +84,7 @@ export class LockService {
     if (this.check(pin)) {
       this.failures = 0
       this.blockedUntil = 0
+      this.saveAttempts()
       return
     }
     this.failures++
@@ -78,6 +92,7 @@ export class LockService {
       // 5. yanlışta 30 sn, sonra her yanlışta iki katı; en çok 5 dakika.
       this.blockedUntil = this.now() + Math.min(30_000 * 2 ** (this.failures - FREE_ATTEMPTS), MAX_WAIT_MS)
     }
+    this.saveAttempts()
     throw new Error(L().main.lock.wrong)
   }
 

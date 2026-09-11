@@ -1,12 +1,13 @@
 import { join } from 'node:path'
-import { BrowserWindow, globalShortcut, nativeTheme, screen, shell } from 'electron'
+import { app, BrowserWindow, globalShortcut, nativeTheme, screen, shell } from 'electron'
 import { SHORTCUT_CHOICES, type PanelRequest, type Settings, type ShortcutStatus } from '@shared/types'
 import { SelectionHelper } from './services/selection'
 
 const WIDTH = 440
 const MARGIN = 12
 const MAX_HEIGHT = 760
-const isDev = !!process.env.ELECTRON_RENDERER_URL
+// Paketli sürümde ortam değişkeniyle başka bir adres yüklenemesin.
+const isDev = !app.isPackaged && !!process.env.ELECTRON_RENDERER_URL
 
 /**
  * Atlas paneli: ekranın sağ kenarında açılan, her programın üstünde duran küçük pencere.
