@@ -16,7 +16,7 @@ import { isAtlasModel } from './catalog'
 import { loopNotice, PartialError, streamGuarded } from './generate'
 import { memoryBlock, type MemoryService } from './memory'
 import type { FilesService } from './files'
-import { chatOnce, describeError, OllamaError, supportsTools, supportsVision, type OllamaMessage } from './ollama'
+import { chatOnce, describeError, OllamaError, supportsTools, supportsVision, type OllamaMessage, type ToolCall } from './ollama'
 import { addressLine, builtinPersonas, findPersona, personaInstructions } from './personas'
 import type { WhatsAppService } from './whatsapp'
 import { sqlService } from './sql'
@@ -38,6 +38,93 @@ const CRASH_RETRIES = 2
 const CHANGE_TOOLS = new Set(['write_file', 'edit_file', 'move_file', 'create_folder'])
 /** Yalnızca plan güncelleyen turlar araç sınırından düşmez; ama en çok bu kadar */
 const MAX_PLAN_ONLY_ROUNDS = 4
+
+/** Metindeki dengeli { ... } bloklarını (iç içe ve tırnak içi süslü parantezlere dikkat ederek) sırayla verir. */
+function* jsonObjects(text: string): Generator<string> {
+  for (let start = text.indexOf('{'); start !== -1; start = text.indexOf('{', start + 1)) {
+    let depth = 0
+    let quoted = false
+    for (let i = start; i < text.length; i++) {
+      const c = text[i]
+      if (quoted) {
+        if (c === '\\') i++
+        else if (c === '"') quoted = false
+      } else if (c === '"') quoted = true
+      else if (c === '{') depth++
+      else if (c === '}' && --depth === 0) {
+        yield text.slice(start, i + 1)
+        start = i
+        break
+      }
+    }
+  }
+}
+
+function argValue(raw: string): unknown {
+  const value = raw.trim()
+  if (/^(["']).*\1$/s.test(value)) return value.slice(1, -1).replace(/\\(["'\\])/g, '$1')
+  if (/^-?\d+(?:\.\d+)?$/.test(value)) return Number(value)
+  if (value === 'true' || value === 'false') return value === 'true'
+  return value
+}
+
+/**
+ * Bazı modeller (özellikle araç verisiyle eğitilmemiş olanlar) aracı gerçek araç çağrısı yerine metin olarak yazar:
+ * {"name": "run_command", "arguments": {...}}, <tool_call>...</tool_call> ya da tek satırda list_folder(path=".").
+ * Ad bilinen bir araçsa gerçek çağrıya çevrilir; yoksa iş orada kalıyordu. Dosya içeriği gibi başka JSON'lara dokunulmaz.
+ */
+export function extractTextToolCalls(text: string, names: Set<string>): { calls: ToolCall[]; rest: string } {
+  const calls: ToolCall[] = []
+  let rest = text
+  for (const span of jsonObjects(text)) {
+    let value: unknown
+    try {
+      value = JSON.parse(span)
+    } catch {
+      continue
+    }
+    const found: ToolCall[] = []
+    for (const item of Array.isArray(value) ? value : [value]) {
+      const o = (item ?? {}) as { name?: unknown; arguments?: unknown; parameters?: unknown; function?: { name?: unknown; arguments?: unknown } }
+      const name = typeof o.name === 'string' ? o.name : typeof o.function?.name === 'string' ? o.function.name : ''
+      let args: unknown = o.arguments ?? o.parameters ?? o.function?.arguments ?? {}
+      if (typeof args === 'string') {
+        try {
+          args = JSON.parse(args)
+        } catch {
+          args = null
+        }
+      }
+      if (!names.has(name) || !args || typeof args !== 'object' || Array.isArray(args)) break
+      found.push({ name, arguments: args as Record<string, unknown> })
+    }
+    if (found.length === 0) continue
+    calls.push(...found)
+    rest = rest.replace(span, '')
+  }
+  if (calls.length === 0) {
+    // Tek satırda tek başına duran Python biçimi çağrı: list_folder(path=".")
+    for (const m of text.matchAll(/^[ \t>*-]*`{0,3}([a-z_]+)\(([^()\n]*)\)`{0,3}[ \t]*$/gm)) {
+      if (!names.has(m[1])) continue
+      const args: Record<string, unknown> = {}
+      for (const a of m[2].matchAll(/(\w+)\s*=\s*("(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*'|[^,\s]+)/g)) args[a[1]] = argValue(a[2])
+      calls.push({ name: m[1], arguments: args })
+      rest = rest.replace(m[0], '')
+    }
+  }
+  if (calls.length > 0) {
+    rest = rest
+      .replace(/<\/?tool_call>/g, '')
+      .replace(/```[a-z]*\s*```/gi, '')
+      .trim()
+  }
+  return { calls, rest }
+}
+
+/** Araç tanımlarındaki adlar */
+function toolNames(tools: unknown[]): Set<string> {
+  return new Set(tools.map((t) => (t as { function?: { name?: string } })?.function?.name).filter((n): n is string => !!n))
+}
 
 /** JavaScript'in büyük-küçük harf duyarsız araması "İ"yi "i" saymaz ("İstersen..." kaçmasın). */
 function fold(text: string): string {
@@ -97,8 +184,14 @@ export function dumpsCode(text: string): boolean {
   return lines >= CODE_DUMP_LINES
 }
 
+/** "Şimdi dosyayı güncelleyelim", "testi çalıştıralım" gibi birinci çoğul kişiyle duyurulan işlem */
+const ANNOUNCE_PLURAL =
+  /(?<!\p{L})(?:güncelleyelim|düzeltelim|değiştirelim|yazalım|çalıştıralım|oluşturalım|ekleyelim|uygulayalım|kaydedelim|okuyalım|bakalım|deneyelim|kontrol edelim|let's (?:run|write|fix|apply|update|check|create|add))(?!\p{L})/iu
+
 export function announcesAction(text: string): boolean {
-  return ANNOUNCE.test(fold(text).slice(-500))
+  const tail = fold(text).trimEnd().slice(-500)
+  // İki noktayla biten cevap ("Şimdi dosyayı güncelleyelim:") arkasından gelecek işi duyurup durmuş demektir.
+  return ANNOUNCE.test(tail) || ANNOUNCE_PLURAL.test(tail) || /:\s*$/.test(tail)
 }
 
 export interface ChatEvents {
@@ -436,7 +529,13 @@ export class ChatService {
           )
         for (let attempt = 0; ; attempt++) {
           try {
-            return await once()
+            const r = await once()
+            // Araç metin olarak yazıldıysa gerçek çağrıya çevrilir.
+            if (withTools && tools && !r.looped && (r.stats.toolCalls?.length ?? 0) === 0) {
+              const { calls, rest } = extractTextToolCalls(r.text, toolNames(tools))
+              if (calls.length > 0) return { ...r, text: rest, stats: { ...r.stats, toolCalls: calls } }
+            }
+            return r
           } catch (err) {
             const partial = err instanceof PartialError ? err.partial : ''
             const cause = err instanceof PartialError ? err.original : err

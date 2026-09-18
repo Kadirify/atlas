@@ -151,3 +151,40 @@ describe('dürtme ve bağlam yardımcıları (denetimden)', () => {
     expect(messages[4].content).toBe(big)
   })
 })
+
+import { extractTextToolCalls } from '../src/main/services/chat'
+
+describe('metin olarak yazılan araç çağrıları', () => {
+  const names = new Set(['run_command', 'list_folder', 'read_file', 'edit_file'])
+
+  it('JSON biçimini gerçek çağrıya çevirir', () => {
+    const out = extractTextToolCalls('{"name": "run_command", "arguments": {"command": "npm test"}}', names)
+    expect(out.calls).toEqual([{ name: 'run_command', arguments: { command: 'npm test' } }])
+    expect(out.rest).toBe('')
+  })
+
+  it('kod bloğu, <tool_call> etiketi ve birden çok çağrı', () => {
+    const text = 'Önce bakayım.\n```json\n{"name": "list_folder", "arguments": {"path": "."}}\n```\n<tool_call>{"name": "read_file", "arguments": {"path": "a.js"}}</tool_call>'
+    const out = extractTextToolCalls(text, names)
+    expect(out.calls.map((c) => c.name)).toEqual(['list_folder', 'read_file'])
+    expect(out.rest).toBe('Önce bakayım.')
+  })
+
+  it('tek satırlık Python biçimi', () => {
+    expect(extractTextToolCalls('list_folder(path=".")', names).calls).toEqual([{ name: 'list_folder', arguments: { path: '.' } }])
+  })
+
+  it('başka JSON ve düz anlatımdaki adlar çağrı sayılmaz', () => {
+    const pkg = '```json\n{"name": "ornek-proje", "scripts": {"test": "node test.js"}}\n```'
+    expect(extractTextToolCalls(pkg, names).calls).toEqual([])
+    expect(extractTextToolCalls('Dosyayı read_file(path) ile okuyabilirsin, sonra düzeltirsin.', names).calls).toEqual([])
+  })
+})
+
+describe('duyurup duran cevaplar', () => {
+  it('"-elim" biçimi ve iki noktayla biten cevap yakalanır', () => {
+    expect(announcesAction('Sorun ikinci satırda. Şimdi dosyayı bu düzeltmeyle güncelleyelim:')).toBe(true)
+    expect(announcesAction('Testi bir kez daha çalıştıralım.')).toBe(true)
+    expect(announcesAction('Testler geçti; değişiklik tamam.')).toBe(false)
+  })
+})
