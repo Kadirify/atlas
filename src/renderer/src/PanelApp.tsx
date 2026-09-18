@@ -81,7 +81,10 @@ export default function PanelApp() {
   // Ortak bileşenler (logo, Markdown) dili depodan okur; panelde depo yalnızca bunun için doldurulur.
   const language = lock?.language
   useEffect(() => {
-    if (language) useApp.setState({ settings: { ...DEFAULT_SETTINGS, language } })
+    if (!language) return
+    useApp.setState({ settings: { ...DEFAULT_SETTINGS, language } })
+    // Ekran okuyucular paneli doğru dilde okusun.
+    document.documentElement.lang = language
   }, [language])
 
   // Tema: kilit durumundaki ayara göre, ana pencereyle aynı.
@@ -256,9 +259,11 @@ export default function PanelApp() {
         )}
 
         {run && (
-          <section aria-live="polite">
+          <section aria-busy={run.busy}>
             <div className="mb-1.5 flex items-center justify-between">
-              <h2 className="text-[13px] font-semibold text-ink">{run.busy ? t.writing : t.resultTitle}</h2>
+              <h2 className="text-[13px] font-semibold text-ink" role="status">
+                {run.busy ? t.writing : t.resultTitle}
+              </h2>
               {run.busy && (
                 <Button size="sm" variant="ghost" onClick={() => run.jobId && void window.api.jobs.stop(run.jobId)}>
                   <Square size={12} aria-hidden />

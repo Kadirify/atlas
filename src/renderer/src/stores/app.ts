@@ -95,7 +95,8 @@ interface AppState {
   refreshInstalled(): Promise<void>
   refreshConversations(): Promise<void>
   select(id: string | null): Promise<void>
-  send(text: string, attachmentIds?: string[]): Promise<void>
+  /** Mesajı gönderir; mesaj kaydedildiyse true döner (gönderilemeyen metin mesaj kutusunda kalır). */
+  send(text: string, attachmentIds?: string[]): Promise<boolean>
   stop(): Promise<void>
   regenerate(): Promise<void>
   edit(messageId: string, text: string): Promise<void>
@@ -105,6 +106,9 @@ interface AppState {
   remove(id: string): Promise<void>
   clearError(id: string): void
 }
+
+/** Kod alanında tercih edilen modeller, sırayla */
+const CODE_MODEL_ORDER = [/(?:^|\/)atlas-code\b/, /(?:^|\/)atlas-(?:strong|guclu)\b/, /(?:^|\/)atlas-(?:medium|orta)\b/]
 
 function without<T>(record: Record<string, T>, key: string): Record<string, T> {
   const { [key]: _removed, ...rest } = record
@@ -273,12 +277,11 @@ export const useApp = create<AppState>((set, get) => ({
 
   async startCode(folderId) {
     const created = await window.api.conversations.create({ personaId: 'builtin:yazilim', private: false, folderId, sqlId: null })
-    // Atlas Code kuruluysa bu sohbet onunla çalışır; değilse varsayılan modelle devam eder.
+    // Atlas Code kuruluysa bu sohbet onunla çalışır; yoksa Strong, o da yoksa Medium; hiçbiri yoksa varsayılan model.
+    // Adlar yayımlanmış ("kadirify/atlas-code") ya da yerel ("atlas-code-agirlik:tur1") olabilir.
     const names = get().installed.map((m) => m.name)
-    const codeModel = ['atlas-code', 'atlas-guclu', 'atlas-orta'].map((p) => names.find((n) => n.startsWith(p))).find(Boolean)
-      ? { name: ['atlas-code', 'atlas-guclu', 'atlas-orta'].map((p) => names.find((n) => n.startsWith(p))).find(Boolean)! }
-      : undefined
-    if (codeModel) await window.api.conversations.setModel(created.id, codeModel.name)
+    const codeModel = CODE_MODEL_ORDER.map((pattern) => names.find((n) => pattern.test(n))).find(Boolean)
+    if (codeModel) await window.api.conversations.setModel(created.id, codeModel)
     await get().refreshConversations()
     set({ filesOpen: true, codeFile: null })
     await get().select(created.id)
@@ -380,6 +383,7 @@ export const useApp = create<AppState>((set, get) => ({
       const message = await window.api.chat.send(conversationId, text, attachmentIds)
       set((s) => ({ messages: { ...s.messages, [conversationId]: [...(s.messages[conversationId] ?? []), message] } }))
       void get().refreshConversations()
+      return true
     } catch (err) {
       if (!id) throw err
       const conversationId = id
@@ -387,6 +391,7 @@ export const useApp = create<AppState>((set, get) => ({
         streaming: without(s.streaming, conversationId),
         errors: { ...s.errors, [conversationId]: errorText(err) }
       }))
+      return false
     }
   },
 
@@ -446,8 +451,16 @@ export const useApp = create<AppState>((set, get) => ({
     await window.api.conversations.remove(id)
     set((s) => ({
       activeId: s.activeId === id ? null : s.activeId,
+      // Silinen sohbetin belge paneli ve dosya görüntüleyicisi açık kalmasın.
+      docId: s.activeId === id ? null : s.docId,
+      codeFile: s.activeId === id ? null : s.codeFile,
       messages: without(s.messages, id),
       streaming: without(s.streaming, id),
+      thoughts: without(s.thoughts, id),
+      liveSteps: without(s.liveSteps, id),
+      liveTerminal: without(s.liveTerminal, id),
+      approvals: without(s.approvals, id),
+      learned: without(s.learned, id),
       errors: without(s.errors, id)
     }))
     await get().refreshConversations()

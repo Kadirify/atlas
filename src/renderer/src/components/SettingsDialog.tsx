@@ -245,7 +245,24 @@ function ModelsTab() {
 
   useEffect(() => {
     void refresh()
-    return window.api.models.onPullProgress((p) => setPulls((prev) => ({ ...prev, [p.model]: p })))
+    const timers: ReturnType<typeof setTimeout>[] = []
+    const off = window.api.models.onPullProgress((p) => {
+      setPulls((prev) => ({ ...prev, [p.model]: p }))
+      // Pencere indirme sürerken kapatılıp açıldıysa indirmeyi başlatan pencere artık yoktur; bitişi burada yakalanır.
+      // İndirmeden sonra model birkaç saniyede kurulur; sonra satır kalkar ve liste yenilenir.
+      if (p.status === 'success') {
+        timers.push(
+          setTimeout(() => {
+            clearPull(p.model)
+            void refresh()
+          }, 4000)
+        )
+      }
+    })
+    return () => {
+      off()
+      timers.forEach(clearTimeout)
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
@@ -580,7 +597,10 @@ export default function SettingsDialog({ onClose }: { onClose(): void }) {
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent): void => {
-      if (e.key === 'Escape') closeRef.current()
+      if (e.key !== 'Escape') return
+      // Esc yalnızca pencereyi kapatır; arkadaki sohbette süren cevap durmaz.
+      e.preventDefault()
+      closeRef.current()
     }
     window.addEventListener('keydown', onKey)
     panelRef.current?.focus()

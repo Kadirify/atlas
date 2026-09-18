@@ -18,7 +18,7 @@ import {
 import { Select } from '@/components/AppParts'
 import { PersonaAvatar } from '@/components/PersonaParts'
 import { Button, CheckCard, Field, IconButton, Input, Notice, ProgressBar, Textarea } from '@/components/ui'
-import { cn, errorText, formatBytes } from '@/lib/format'
+import { cn, errorText, formatBytes, formatDay } from '@/lib/format'
 import { useLocale, useT } from '@/lib/useT'
 import { useApp } from '@/stores/app'
 
@@ -336,7 +336,7 @@ function MemoryRow({ memory, onChanged }: { memory: Memory; onChanged(): void })
         <p className="text-xs text-ink-3">
           {m.rowMeta(
             t.common.memoryCategory[memory.category],
-            new Date(memory.createdAt).toLocaleDateString(locale, { day: 'numeric', month: 'long' }),
+            formatDay(memory.createdAt, locale),
             !memory.conversationId
           )}
         </p>
@@ -583,7 +583,7 @@ function FolderRow({ folder, onChanged }: { folder: Folder; onChanged(): void })
               ? f.indexed(
                   folder.chunks,
                   folder.chunks.toLocaleString(locale),
-                  new Date(folder.indexedAt).toLocaleDateString(locale, { day: 'numeric', month: 'long' })
+                  formatDay(folder.indexedAt, locale)
                 )
               : f.notIndexed}
           </p>

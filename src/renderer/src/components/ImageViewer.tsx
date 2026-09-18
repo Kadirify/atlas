@@ -182,7 +182,7 @@ export default function ImageViewer({ images, startId, onClose }: { images: View
 
       <p className="absolute bottom-4 left-1/2 max-w-[80%] -translate-x-1/2 truncate rounded-full bg-black/50 px-3 py-1 text-xs text-white/90" aria-live="polite">
         {copied ? v.copied : images.length > 1 ? `${image.name} (${index + 1} / ${images.length})` : image.name}
-        {zoom > 1 && !copied ? `, %${Math.round(zoom * 100)}` : ''}
+        {zoom > 1 && !copied ? `, ${v.zoomLevel(Math.round(zoom * 100))}` : ''}
       </p>
     </div>,
     document.body

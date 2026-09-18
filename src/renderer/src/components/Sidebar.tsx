@@ -1,4 +1,4 @@
-import { Code2, Ellipsis, EyeOff, LayoutGrid, LockKeyhole, Pencil, Pin, PinOff, Plus, Search, Settings as SettingsIcon, Trash2, X } from 'lucide-react'
+import { CircleAlert, Code2, Ellipsis, EyeOff, LayoutGrid, LockKeyhole, Pencil, Pin, PinOff, Plus, Search, Settings as SettingsIcon, Trash2, X } from 'lucide-react'
 import { forwardRef, useEffect, useMemo, useRef, useState } from 'react'
 import { UNTITLED_CONVERSATION, type Conversation, type SearchHit } from '@shared/types'
 import { Wordmark } from '@/components/Logo'
@@ -6,6 +6,7 @@ import { IconButton } from '@/components/ui'
 import { cn, groupConversations } from '@/lib/format'
 import { useT } from '@/lib/useT'
 import { useApp } from '@/stores/app'
+import { useSql } from '@/stores/sql'
 
 function ConversationRow({ conversation, snippet }: { conversation: Conversation; snippet?: string }) {
   const t = useT()
@@ -13,6 +14,10 @@ function ConversationRow({ conversation, snippet }: { conversation: Conversation
   const title = conversation.title === UNTITLED_CONVERSATION ? t.common.newChat : conversation.title
   const active = useApp((s) => s.view.name === 'chat' && s.activeId === conversation.id)
   const busy = useApp((s) => s.streaming[conversation.id] !== undefined)
+  // Arka plandaki bir sohbette onay bekleyen işlem varsa cevap orada durur; satırda görünsün.
+  const fileWaiting = useApp((s) => (s.approvals[conversation.id]?.length ?? 0) > 0)
+  const sqlWaiting = useSql((s) => (s.approvals[conversation.id]?.length ?? 0) > 0)
+  const waiting = fileWaiting || sqlWaiting
   const select = useApp((s) => s.select)
   const rename = useApp((s) => s.rename)
   const setPinned = useApp((s) => s.setPinned)
@@ -34,6 +39,7 @@ function ConversationRow({ conversation, snippet }: { conversation: Conversation
     }
     const esc = (e: KeyboardEvent): void => {
       if (e.key === 'Escape') {
+        e.preventDefault()
         setMenu(false)
         setConfirmDelete(false)
       }
@@ -62,7 +68,10 @@ function ConversationRow({ conversation, snippet }: { conversation: Conversation
         onBlur={commitRename}
         onKeyDown={(e) => {
           if (e.key === 'Enter') commitRename()
-          if (e.key === 'Escape') setEditing(false)
+          if (e.key === 'Escape') {
+            e.preventDefault()
+            setEditing(false)
+          }
         }}
         aria-label={t.chat.sidebar.titleLabel}
         className="h-9 w-full rounded-lg border border-accent bg-surface px-2.5 text-sm text-ink outline-none"
@@ -84,7 +93,13 @@ function ConversationRow({ conversation, snippet }: { conversation: Conversation
         )}
       >
         <span className="flex items-center gap-2">
-          {busy && <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-accent" aria-label={t.chat.sidebar.answering} />}
+          {waiting ? (
+            <span role="img" aria-label={t.chat.sidebar.waitingApproval} title={t.chat.sidebar.waitingApproval} className="flex shrink-0 text-warn">
+              <CircleAlert size={13} aria-hidden />
+            </span>
+          ) : (
+            busy && <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-accent" role="img" aria-label={t.chat.sidebar.answering} />
+          )}
           {conversation.private && <EyeOff size={13} className="shrink-0 text-ink-3" aria-label={t.chat.sidebar.privateChat} />}
           <span className={cn('truncate text-sm', active && 'font-medium')}>{title}</span>
         </span>
@@ -199,7 +214,7 @@ const Sidebar = forwardRef<HTMLInputElement, { onOpenSettings(): void }>(functio
   const byId = useMemo(() => new Map(conversations.map((c) => [c.id, c])), [conversations])
 
   return (
-    <aside className="flex w-[280px] shrink-0 flex-col border-r border-line bg-bg">
+    <aside className="flex w-[280px] shrink-0 flex-col border-r border-line bg-bg max-[1180px]:w-[236px] max-[900px]:w-[200px]">
       <div className="drag flex h-10 shrink-0 items-center px-4">
         <Wordmark size={21} />
       </div>
@@ -245,7 +260,11 @@ const Sidebar = forwardRef<HTMLInputElement, { onOpenSettings(): void }>(functio
             type="search"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            onKeyDown={(e) => e.key === 'Escape' && setQuery('')}
+            onKeyDown={(e) => {
+              if (e.key !== 'Escape') return
+              e.preventDefault()
+              setQuery('')
+            }}
             placeholder={t.chat.sidebar.search}
             aria-label={t.chat.sidebar.search}
             className="h-9 w-full rounded-lg border border-line bg-surface pr-3 pl-9 text-sm text-ink placeholder:text-ink-3 focus:border-accent focus:outline-none"

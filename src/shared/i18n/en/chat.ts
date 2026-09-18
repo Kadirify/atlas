@@ -22,6 +22,12 @@ export const chat: Dict['chat'] = {
   typing: 'Typing',
   jumpToBottom: 'Jump to bottom',
   writeAnswer: 'Get a response',
+  imageBlocked: (alt: string) => (alt ? `Remote image not shown: ${alt}` : 'Remote image not shown'),
+  live: {
+    writing: 'Atlas is writing',
+    approval: 'Atlas is waiting for your approval',
+    done: 'Reply ready'
+  },
 
   message: {
     edit: 'Edit message',
@@ -109,10 +115,16 @@ export const chat: Dict['chat'] = {
   undo: {
     button: (n: number) => (n === 1 ? 'Undo the change' : `Undo ${n} files`),
     hint: 'Files Atlas changed in this reply go back to how they were; files it created go to the recycle bin.',
-    confirm: (n: number) => `${n} files will go back to how they were. Changes you made afterwards are lost too.`,
+    confirm: (n: number) =>
+      n === 1
+        ? 'The file will go back to how it was. Changes you made afterwards are lost too.'
+        : `${n} files will go back to how they were. Changes you made afterwards are lost too.`,
     yes: 'Undo',
     no: 'Cancel',
-    done: (n: number) => (n === 1 ? '1 file restored.' : `${n} files restored.`)
+    done: (n: number) => (n === 1 ? '1 file restored.' : `${n} files restored.`),
+    lostWarning: 'The file changes in this reply can no longer be undone. Continue?',
+    lostWarningLater: 'The file changes in the later replies can no longer be undone. Continue?',
+    continue: 'Continue'
   },
 
   viewer: {
@@ -123,7 +135,8 @@ export const chat: Dict['chat'] = {
     copied: 'Copied',
     save: 'Save the image',
     previous: 'Previous image (left arrow)',
-    next: 'Next image (right arrow)'
+    next: 'Next image (right arrow)',
+    zoomLevel: (percent: number) => `${percent}%`
   },
 
   codeArea: {
@@ -182,6 +195,7 @@ export const chat: Dict['chat'] = {
     file: 'SQLite file',
     browse: 'Choose…',
     remove: 'Delete connection',
+    removeConfirm: 'Delete this connection and its saved password?',
     cancel: 'Cancel',
     saveAndConnect: 'Save and connect',
     connecting: 'Connecting…',
@@ -277,6 +291,7 @@ export const chat: Dict['chat'] = {
     titleLabel: 'Chat name',
     answering: 'Writing a response',
     privateChat: 'Private chat',
+    waitingApproval: 'Waiting for your approval',
     optionsFor: (title: string) => `Options for ${title}`,
     confirmDelete: 'Delete this chat permanently?',
     pin: 'Pin',
@@ -325,7 +340,8 @@ export const chat: Dict['chat'] = {
     command: 'Atlas wants to run this command',
     commandNote: 'The command runs in the project folder and its output is given to Atlas. It can take up to 2 minutes.',
     moveTo: 'to:',
-    trashNote: "The file isn't deleted permanently. You can restore it from the trash."
+    trashNote: "The file isn't deleted permanently. You can restore it from the trash.",
+    protectedWarning: 'Other programs may run this file automatically. Review it carefully.'
   },
 
   folder: {

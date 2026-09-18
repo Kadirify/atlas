@@ -50,4 +50,14 @@ export function subscribeSql(): void {
     // Yalnızca satır döndüren sorgular panelde gösterilir.
     useSql.setState((s) => (result.columns.length > 0 ? { last: { ...s.last, [conversationId]: { sql, result } } } : s))
   )
+  // Cevap bitince (durdurulunca ya da hata olunca da) bekleyen onaylar geçersizdir: ana süreç onları zaten iptal eder.
+  // Kart ekranda kalsaydı "Onayla"ya basmak hiçbir şey yapmaz, kullanıcı verinin değiştiğini sanardı.
+  const clear = ({ conversationId }: { conversationId: string }): void =>
+    useSql.setState((s) => {
+      if (!s.approvals[conversationId]) return s
+      const { [conversationId]: _done, ...rest } = s.approvals
+      return { approvals: rest }
+    })
+  window.api.chat.onDone(clear)
+  window.api.chat.onError(clear)
 }

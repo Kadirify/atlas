@@ -216,7 +216,7 @@ export function FileTree({ folderId, name }: { folderId: string; name: string })
     ))
 
   return (
-    <nav aria-label={c.files} className="flex w-[230px] shrink-0 flex-col border-r border-line bg-bg">
+    <nav aria-label={c.files} className="flex w-[230px] shrink-0 flex-col border-r border-line bg-bg max-[1180px]:w-[188px]">
       <header className="drag flex h-10 shrink-0 items-center gap-1 pr-1 pl-3">
         <span className="min-w-0 flex-1 truncate text-[13px] font-semibold text-ink" title={name}>
           {name}
@@ -267,7 +267,7 @@ export function CodeViewer({ folderId, path }: { folderId: string; path: string 
   }
 
   return (
-    <aside aria-label={c.viewerLabel} className="flex w-[44%] max-w-[820px] min-w-[300px] flex-col border-l border-line bg-bg">
+    <aside aria-label={c.viewerLabel} className="flex w-[44%] max-w-[820px] min-w-[232px] flex-col border-l border-line bg-bg">
       <header className="drag flex h-10 shrink-0 items-center gap-2 pr-[150px] pl-4">
         <File size={15} className="shrink-0 text-accent" aria-hidden />
         <span className="min-w-0 truncate font-mono text-[13px] text-ink" title={path}>
@@ -321,7 +321,9 @@ function EntryMenu({ folderId, entry, x, y, onClose }: { folderId: string; entry
   useEffect(() => {
     const close = (): void => onClose()
     const onKey = (e: KeyboardEvent): void => {
-      if (e.key === 'Escape') onClose()
+      if (e.key !== 'Escape') return
+      e.preventDefault()
+      onClose()
     }
     window.addEventListener('mousedown', close)
     window.addEventListener('keydown', onKey)

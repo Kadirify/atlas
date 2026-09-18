@@ -1,4 +1,4 @@
-import { Check, ChevronDown, Circle, CircleAlert, CircleCheck, CircleDot, FilePen, FileText, FolderInput, FolderOpen, FolderPlus, ListChecks, Search, SquareTerminal, Trash2, X, type LucideIcon } from 'lucide-react'
+import { Check, ChevronDown, Circle, CircleAlert, CircleCheck, CircleDot, FilePen, FileText, FolderInput, FolderOpen, FolderPlus, ListChecks, Search, ShieldAlert, SquareTerminal, Trash2, X, type LucideIcon } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import type { FileApproval, PlanItem, FolderCapability, ToolStep } from '@shared/types'
 import { Button } from '@/components/ui'
@@ -87,7 +87,7 @@ export function LiveTerminal({ command, output }: { command: string; output: str
     if (el) el.scrollTop = el.scrollHeight
   }, [output])
   return (
-    <div className="mb-3 overflow-hidden rounded-lg border border-line bg-[#0b1020] text-[12.5px]">
+    <div className="term-box mb-3 overflow-hidden rounded-lg border border-line bg-[#0b1020] text-[12.5px]">
       <div className="flex items-center gap-2 px-3 py-1.5 font-mono text-[#c7d2fe]">
         <span className="text-[#64748b]" aria-hidden>
           &gt;
@@ -96,7 +96,7 @@ export function LiveTerminal({ command, output }: { command: string; output: str
         <span className="shrink-0 font-sans text-xs text-[#93c5fd]">{t.chat.steps.running}</span>
         <span className="caret" aria-hidden />
       </div>
-      <pre ref={ref} className="max-h-[260px] overflow-auto border-t border-white/10 px-3 py-2 font-mono leading-relaxed whitespace-pre-wrap text-[#cbd5e1]" aria-live="polite">
+      <pre ref={ref} className="max-h-[260px] overflow-auto border-t border-white/10 px-3 py-2 font-mono leading-relaxed whitespace-pre-wrap text-[#cbd5e1]">
         {output || ' '}
       </pre>
     </div>
@@ -109,7 +109,7 @@ function TerminalOutput({ terminal }: { terminal: NonNullable<ToolStep['terminal
   const lines = terminal.output ? terminal.output.split('\n').length : 0
   const [open, setOpen] = useState(lines <= 12)
   return (
-    <div className="mt-1.5 mb-2 ml-6 overflow-hidden rounded-lg border border-line bg-[#0b1020] text-[12.5px]">
+    <div className="term-box mt-1.5 mb-2 ml-6 overflow-hidden rounded-lg border border-line bg-[#0b1020] text-[12.5px]">
       <button
         type="button"
         aria-expanded={open}
@@ -221,12 +221,19 @@ export function ApprovalCard({ approval }: { approval: FileApproval }) {
       {approval.kind === 'delete' && (
         <p className="mt-2 text-[13px] text-ink-3">{t.chat.approval.trashNote}</p>
       )}
+      {approval.protected && (
+        <p className="mt-2 flex items-start gap-2 rounded-lg bg-danger-soft px-3 py-2 text-[13px] leading-relaxed font-medium text-danger">
+          <ShieldAlert size={15} className="mt-0.5 shrink-0" aria-hidden />
+          {t.chat.approval.protectedWarning}
+        </p>
+      )}
       <div className="mt-4 flex gap-2">
         <Button size="sm" variant="primary" onClick={() => void respond(approval, true)}>
           <Check size={14} aria-hidden />
           {t.common.actions.approve}
         </Button>
-        {approval.kind !== 'delete' && (
+        {/* Başka programların kendiliğinden çalıştırdığı dosyalar her seferinde sorulur; kalıcı izin önerilmez. */}
+        {approval.kind !== 'delete' && !approval.protected && (
           <Button size="sm" variant="secondary" onClick={() => void respond(approval, true, true)} title={approval.kind === 'command' ? t.chat.approval.alwaysCommandHint : t.chat.approval.alwaysEditsHint}>
             {approval.kind === 'command' ? t.chat.approval.alwaysCommand : t.chat.approval.alwaysEdits}
           </Button>
@@ -239,8 +246,8 @@ export function ApprovalCard({ approval }: { approval: FileApproval }) {
   )
 }
 
-/** Sohbet başlığındaki klasör düğmesi: klasör bağlar, değiştirir ya da bağlantıyı kaldırır. */
-export function FolderMenu() {
+/** Sohbet başlığındaki klasör düğmesi: klasör bağlar, değiştirir ya da bağlantıyı kaldırır. compact: yalnızca simge. */
+export function FolderMenu({ compact = false }: { compact?: boolean }) {
   const t = useT()
   const folders = useApp((s) => s.folders)
   const loadFolders = useApp((s) => s.loadFolders)
@@ -262,7 +269,9 @@ export function FolderMenu() {
       if (!ref.current?.contains(e.target as Node)) setOpen(false)
     }
     const esc = (e: KeyboardEvent): void => {
-      if (e.key === 'Escape') setOpen(false)
+      if (e.key !== 'Escape') return
+      e.preventDefault()
+      setOpen(false)
     }
     document.addEventListener('mousedown', close)
     document.addEventListener('keydown', esc)
@@ -289,23 +298,25 @@ export function FolderMenu() {
   const item = 'flex min-h-9 w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-left text-[13px] hover:bg-surface-2'
 
   return (
-    <div ref={ref} className="relative shrink-0">
+    <div ref={ref} className={cn('relative', compact ? 'shrink-0' : 'min-w-0 shrink')}>
       <button
         type="button"
         disabled={disabled}
         aria-haspopup="menu"
         aria-expanded={open}
+        aria-label={current ? current.name : t.chat.folder.attach}
         title={disabled ? capability?.reason : current ? current.path : t.chat.folder.attachHint}
         onClick={() => setOpen((v) => !v)}
         className={cn(
-          'flex h-8 max-w-[220px] items-center gap-1.5 rounded-md px-2 text-[13px] transition-colors',
+          'flex h-8 max-w-[220px] min-w-0 items-center gap-1.5 rounded-md px-2 text-[13px] transition-colors',
           'disabled:cursor-not-allowed disabled:opacity-50',
           current ? 'bg-teal-soft font-medium text-teal' : 'text-ink-2 hover:bg-surface-2 hover:text-ink'
         )}
       >
         <FolderOpen size={14} className="shrink-0" aria-hidden />
-        <span className="truncate">{current ? current.name : t.chat.folder.attach}</span>
-        <ChevronDown size={13} className="shrink-0 opacity-70" aria-hidden />
+        {/* Başlık darken (yan panel açık, küçük pencere) yalnızca simge kalır; yolu üzerine gelince görünür. */}
+        {!compact && <span className="truncate">{current ? current.name : t.chat.folder.attach}</span>}
+        {!compact && <ChevronDown size={13} className="shrink-0 opacity-70" aria-hidden />}
       </button>
 
       {open && (

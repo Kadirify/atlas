@@ -108,7 +108,7 @@ export const settings: Dict['settings'] = {
     hint: 'Enter your password to continue.',
     password: 'Password',
     unlock: 'Unlock',
-    wait: (seconds: number) => `You can try again in ${seconds} seconds.`
+    wait: (seconds: number) => (seconds === 1 ? 'You can try again in 1 second.' : `You can try again in ${seconds} seconds.`)
   },
 
   models: {

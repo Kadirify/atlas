@@ -6,7 +6,7 @@ export function cn(...parts: (string | false | null | undefined)[]): string {
 }
 
 /** Ondalık sayıyı geçerli dilin yazımıyla verir (Türkçede virgül, İngilizcede nokta). */
-function decimal(value: number, digits: number): string {
+export function decimal(value: number, digits: number): string {
   return value.toLocaleString(currentLocale(), { minimumFractionDigits: digits, maximumFractionDigits: digits })
 }
 
@@ -15,6 +15,12 @@ export function formatBytes(bytes: number): string {
   if (bytes >= 1e6) return `${Math.round(bytes / 1e6)} MB`
   if (bytes >= 1e3) return `${Math.round(bytes / 1e3)} KB`
   return `${Math.max(0, Math.round(bytes))} ${T().common.units.bytes}`
+}
+
+/** Günü ve ayı yazar; bu yıldan değilse yılı da ekler ("3 Mart 2025"). */
+export function formatDay(time: number, locale: string, now = new Date()): string {
+  const date = new Date(time)
+  return date.toLocaleDateString(locale, { day: 'numeric', month: 'long', ...(date.getFullYear() !== now.getFullYear() ? { year: 'numeric' } : {}) })
 }
 
 export function formatGb(gb: number): string {
