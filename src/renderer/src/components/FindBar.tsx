@@ -1,26 +1,24 @@
 import { ChevronDown, ChevronUp, Search, X } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { IconButton } from '@/components/ui'
+import { fold } from '@/lib/fold'
 import { useT } from '@/lib/useT'
 
 const MAX_MATCHES = 2000
 
-/** Kabın içindeki metinde aranan sözü bulur; büyük-küçük harf ayrımı yapmaz (Türkçe İ/ı dahil). */
+/** Kabın içindeki metinde aranan sözü bulur; büyük-küçük harf ayrımı yapmaz ("API"yi "api" de bulur, Türkçe İ/ı dahil). */
 function findRanges(root: HTMLElement, query: string): Range[] {
-  const needle = query.toLocaleLowerCase('tr')
+  const needle = fold(query)
   if (!needle) return []
   const ranges: Range[] = []
   const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT)
   for (let node = walker.nextNode(); node && ranges.length < MAX_MATCHES; node = walker.nextNode()) {
-    const text = node.nodeValue ?? ''
-    // Türkçe küçültme "İ" harfinde uzunluğu değiştirebilir; o durumda konumlar kayar, düz küçültme kullanılır.
-    const tr = text.toLocaleLowerCase('tr')
-    const hay = tr.length === text.length ? tr : text.toLowerCase()
-    const key = tr.length === text.length ? needle : query.toLowerCase()
-    for (let at = hay.indexOf(key); at !== -1 && ranges.length < MAX_MATCHES; at = hay.indexOf(key, at + key.length)) {
+    // fold uzunluğu değiştirmez; bulunan konumlar asıl metinde de aynıdır.
+    const hay = fold(node.nodeValue ?? '')
+    for (let at = hay.indexOf(needle); at !== -1 && ranges.length < MAX_MATCHES; at = hay.indexOf(needle, at + needle.length)) {
       const range = document.createRange()
       range.setStart(node, at)
-      range.setEnd(node, at + key.length)
+      range.setEnd(node, at + needle.length)
       ranges.push(range)
     }
   }

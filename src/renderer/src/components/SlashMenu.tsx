@@ -2,6 +2,7 @@ import { Plus, X } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import type { SlashPrompt } from '@shared/types'
 import { Button } from '@/components/ui'
+import { fold } from '@/lib/fold'
 import { cn } from '@/lib/format'
 import { useT } from '@/lib/useT'
 import { useApp } from '@/stores/app'
@@ -44,8 +45,8 @@ export default function SlashMenu({
       ...custom.map((p) => ({ ...p, custom: true })),
       ...s.builtin.map((p) => ({ ...p, custom: false }))
     ]
-    const q = query.toLocaleLowerCase('tr')
-    return q ? all.filter((p) => p.name.toLocaleLowerCase('tr').includes(q)) : all
+    const q = fold(query)
+    return q ? all.filter((p) => fold(p.name).includes(q)) : all
   }, [custom, s.builtin, query])
 
   useEffect(() => setActive(0), [query])
