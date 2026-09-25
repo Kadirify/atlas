@@ -3,13 +3,21 @@ productName: Atlas
 directories:
   output: release
   buildResources: build
+# Arayüz kütüphaneleri derlemede out/ içine gömülür; pakete yalnızca ana sürecin ihtiyaç duydukları girer.
 files:
   - out/**
-  - resources/**
+  - resources/icon.png
   - package.json
+  - "!**/*.map"
+  - "!**/*.d.{ts,mts,cts}"
+electronLanguages:
+  - tr
+  - en-US
 win:
   icon: build/icon.ico
   target: nsis
 nsis:
   oneClick: false
   allowToChangeInstallationDirectory: true
+  artifactName: Atlas-Setup-${version}.${ext}
+publish: null
