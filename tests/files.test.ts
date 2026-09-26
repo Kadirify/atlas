@@ -470,3 +470,15 @@ describe('Kod alanı araçları', () => {
     expect(await service.promptBlock(folder, true)).toContain('Bu projede yalnızca TypeScript kullan.')
   })
 })
+
+describe('gizli dosyalar komutla da okunmaz', () => {
+  it('.env adı geçen komut çalıştırılmaz, onaya bile sunulmaz', async () => {
+    await writeFile(join(root, '.env'), 'DB_PASS=cokgizli')
+    for (const command of ['type .env', 'findstr PASS .env', 'node -e "console.log(require(\'fs\').readFileSync(\'.env\', \'utf8\'))"', 'more < keys/id_rsa']) {
+      const out = await run('run_command', { command })
+      expect(out.step.status, command).toBe('denied')
+      expect(out.result).not.toContain('cokgizli')
+    }
+    expect(approvals).toEqual([])
+  })
+})

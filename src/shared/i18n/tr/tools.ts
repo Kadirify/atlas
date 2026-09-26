@@ -128,6 +128,7 @@ export const tools = {
       commandRan: (command: string, code: number | null, timedOut: boolean) =>
         timedOut ? `Komut süre sınırını aştı ve durduruldu: ${command}` : code === 0 ? `Komut çalıştı: ${command}` : `Komut hata verdi (${code ?? '?'}): ${command}`,
       commandForbidden: (reason: string) => `Çalıştırılmadı: Atlas silen komutları çalıştıramaz (${reason})`,
+      secretCommand: (name: string) => `Çalıştırılmadı: komut gizli bir dosyaya erişiyor (${name})`,
       deleteForbidden: (path: string) => `Silinmedi: Atlas dosya silemez (${path})`,
       unknownTool: (name: string) => `Bilinmeyen araç: ${name}`,
       plan: (done: number, total: number) => `Plan: ${done} / ${total} adım bitti`,
@@ -157,6 +158,8 @@ export const tools = {
       commandRan: (code: number | null, timedOut: boolean, output: string) =>
         `${timedOut ? 'Komut 2 dakikalık süre sınırını aştı ve durduruldu.' : `Komut bitti. Çıkış kodu: ${code ?? 'bilinmiyor'}.`}\nÇıktı:\n${output || '(çıktı yok)'}`,
       commandDenied: 'Kullanıcı bu komutu onaylamadı; çalıştırılmadı. Üsteleme.',
+      secretCommand: (name: string) =>
+        `Bu komut çalıştırılmadı: "${name}" parola ya da anahtar içerebilecek gizli bir dosya. Atlas bu dosyaların içeriğini okuyamaz ve gösteremez; başka bir yolla da deneme. Kullanıcıya dosyayı kendisinin açabileceğini söyle.`,
       commandForbidden: (reason: string) =>
         `Bu komut çalıştırılmadı (${reason}): Atlas silen, üstüne yazan ya da sistemi değiştiren komutları çalıştıramaz ve başka bir yolla da denememelisin. Kullanıcıya "Maalesef silme işlemlerini ben yapamam; bunu sen kendin çalıştırabilirsin" de ve komutu kod bloğu içinde ver.`,
       deleteForbidden: (path: string) =>

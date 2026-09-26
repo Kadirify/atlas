@@ -585,6 +585,9 @@ export class FilesService {
           const verdict = classifyCommand(command)
           // Silen ya da yok eden komutlar onaya bile sunulmaz.
           if (verdict.forbidden) return done(t.step.commandForbidden(verdict.reason || short), t.result.commandForbidden(verdict.reason), 'denied')
+          // Gizli dosyaları (.env, anahtarlar) okuyan ya da gösteren komutlar da: read_file'ın yasağı "type .env" ile aşılmasın.
+          const secret = command.split(/[\s"'`|&<>;(),=]+/).find((part) => part && isSecretFile(part))
+          if (secret) return done(t.step.secretCommand(secret), t.result.secretCommand(secret), 'denied')
           const approved = await this.allow({ id: randomUUID(), conversationId, kind: 'command', path: command }, signal)
           if (!approved) return done(t.step.denied(short), t.result.commandDenied, 'denied')
           const outcome = await runCommand(root, command, signal, (chunk) => this.events.commandOutput?.({ conversationId, stepId: id, command, chunk }))
