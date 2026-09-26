@@ -519,7 +519,9 @@ export class FilesService {
       result
     })
     const args = call.arguments ?? {}
-    const root = folder.path
+    // Klasörün diskteki gerçek yazılışı: klasör kısa adla (RUNNER~1 gibi) ya da farklı harflerle eklenmiş olsa da
+    // modele ve kullanıcıya gösterilen göreli yollar ("raporlar/ozet.md") doğru hesaplansın.
+    const root = await realpath(folder.path).catch(() => folder.path)
     const t = L().tools.files
 
     try {

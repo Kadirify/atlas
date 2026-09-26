@@ -130,6 +130,22 @@ describe('okuma araçları', () => {
 })
 
 describe('yazma araçları', () => {
+  it('klasör kısa (8.3) adıyla eklenmiş olsa da göreli yollar doğru', async () => {
+    if (process.platform !== 'win32') return
+    const long = join(root, 'uzun-adli-proje-klasoru')
+    await mkdir(long)
+    await writeFile(join(long, 'not.txt'), 'merhaba')
+    // Windows'un verdiği kısa ad (GitHub'ın Windows makinelerinde geçici klasör RUNNER~1 gibi kısa adla gelir).
+    const { execSync } = await import('node:child_process')
+    const short = execSync(`cmd /c for %I in ("${long}") do @echo %~sI`, { encoding: 'utf8' }).trim()
+    if (!short || short.toLowerCase() === long.toLowerCase()) return // bu diskte kısa ad üretilmiyor
+    const shortFolder = db.addFolder(short)
+    const out = await service.execute('sohbet', shortFolder, { name: 'write_file', arguments: { path: 'alt/yeni.md', content: 'x' } }, new AbortController().signal, true)
+    expect(out.step.label).toContain('alt/yeni.md')
+    expect(out.step.label).not.toContain('..')
+    expect((await service.execute('sohbet', shortFolder, { name: 'read_file', arguments: { path: 'not.txt' } }, new AbortController().signal, true)).step.label).toContain('not.txt')
+  })
+
   it('yeni dosyayı onayla yazar ve kayda geçirir', async () => {
     const { step } = await run('write_file', { path: 'raporlar/ozet.md', content: '# Özet\nHer şey yolunda.' })
     expect(step.label).toBe('Oluşturuldu: raporlar/ozet.md')
