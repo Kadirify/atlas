@@ -51,6 +51,7 @@ npm test
 
 - Yeni ölçüm soruları `eval/items.mjs`, kuralları `eval/checks.mjs` dosyasına eklenir. Eğitim verisiyle çakışmamalı.
 - Eğitim betikleri `training/` altında. Bir model değişikliği, Atlas-TR'de ve yazım testlerinde tabanından kötü değilse kabul edilir; sonuçlar `training/README.md` dosyasına yazılır.
+- Kod alanını, araçları ya da ajan döngüsünü (`src/main/services/chat.ts`, `files.ts`, `sql.ts`) değiştiren katkılar ajan test setiyle (`npm run eval:ajan`, [eval/ajan](eval/ajan/README.md)) ölçülür: değişiklikten önceki ve sonraki sonuçları karşılaştır.
 
 ## Lisans
 

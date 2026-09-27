@@ -20,3 +20,6 @@ Modelfile
 .env*
 coverage/
 *.tsbuildinfo
+
+# Ajan test setinin ilerleme kayıtları (sonuçlar .json ve .md olarak saklanır)
+eval/ajan/results/*.log

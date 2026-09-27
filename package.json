@@ -21,6 +21,7 @@
     "start": "electron-vite preview",
     "typecheck": "tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json",
     "test": "vitest run",
+    "eval:ajan": "vitest run --config eval/ajan/vitest.config.mts",
     "icons": "electron scripts/make-icons.cjs",
     "dist": "electron-vite build && electron-builder --win"
   },

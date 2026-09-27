@@ -4,7 +4,7 @@ Atlas'ta sırada ne var. Öncelik sırasıyla; tarih vermiyoruz, çünkü proje 
 
 ## Şimdi
 
-- **Ajan test seti.** Kod alanı için 25-30 küçük örnek proje ve her biri için otomatik denetim: test geçti mi, yanlış dosyaya yazdı mı, bir şey sildi mi. Her model ve kod değişikliği bununla ölçülecek; sürümler bu testten geçmeden çıkmayacak.
+- **Ajan test setini sürüm kapısı yapmak.** Set kuruldu ([eval/ajan](../eval/ajan)): 28 görev, gerçek servisler, gerçek modeller. Sırada her sürümden önce düzenli çalıştırmak, görevleri artırmak ve sonuçları zaman içinde izlemek var.
 - **Daha iyi düzenleme.** Satır numaralı dosya okuma ve boşluk farklarına dayanıklı eşleşme; küçük modellerin düzenleme başarısını en çok artıracak değişiklik.
 - **Komutlar için güvenli kip.** Komutları kısıtlı bir ortamda çalıştırmak ya da her komuttan önce klasörün anlık görüntüsünü almak. "Hep izin ver"in güvenle kullanılabilmesi için.
 - **SQLite ve belge ayrıştırma ayrı iş parçacığında.** Uzun bir sorgu ya da büyük bir belge uygulamayı dondurmasın.

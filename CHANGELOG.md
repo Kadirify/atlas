@@ -26,6 +26,8 @@
 - Veritabanı açılamazsa uygulama asılı kalmıyor, ne olduğunu söylüyor.
 
 ### Diğer
+- Ajan test seti (`npm run eval:ajan`): 28 görevle kod alanı ve veritabanı sohbetlerinde gerçek modelin iş bitirip bitirmediğini ölçer.
+- `.env` gibi gizli dosyaların adı geçen komutlar (`type .env`) da çalıştırılmıyor.
 - Kurulum dosyası küçüldü: kullanılmayan paketler, kaynak haritaları ve fazla dil dosyaları çıkarıldı.
 - Kurulum dosyasının adı `Atlas-Setup-x.y.z.exe`.
 

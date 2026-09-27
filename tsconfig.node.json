@@ -33,6 +33,7 @@
     "src/preload/**/*",
     "src/shared/**/*",
     "tests/**/*",
+    "eval/ajan/**/*.ts",
     "src/preload/index.d.ts"
   ]
 }

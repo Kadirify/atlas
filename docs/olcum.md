@@ -57,6 +57,10 @@ node eval/run.mjs --models "gemma4:e4b,kadirify/atlas-medium"
 
 Her model için `eval/results/<model>.json` yazılır ve `eval/RESULTS.md` yeniden üretilir.
 
+## Ajan test seti
+
+Atlas-TR modelin dilini ve bilgisini ölçer. Kod alanında ve veritabanı sohbetlerinde araç kullanan bir ajan olarak iş bitirip bitirmediğini ise ayrı bir set ölçer: testi çalıştırıp hatayı düzeltiyor mu, yanlış dosyaya yazıyor mu, silme isteğini geri çeviriyor mu. Ayrıntı ve sonuçlar: [eval/ajan](../eval/ajan/README.md).
+
 ## Sınırlar
 
 - **Küçük bir set.** 92 soruda bir sorudaki yarım puan genel sonucu oynatabiliyor; 1-2 puanlık farklar anlamlı değil. Seti en az 300 soruya çıkarmak yol haritamızda.
