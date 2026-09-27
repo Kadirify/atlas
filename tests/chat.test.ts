@@ -188,3 +188,53 @@ describe('duyurup duran cevaplar', () => {
     expect(announcesAction('Testler geçti; değişiklik tamam.')).toBe(false)
   })
 })
+
+import { writesReadQuery } from '../src/main/services/chat'
+
+describe('çalıştırılmadan yazılan sorgu', () => {
+  it('kod bloğundaki SELECT ve WITH yakalanır, değiştiren sorgu yakalanmaz', () => {
+    expect(writesReadQuery("```sql\nSELECT ad FROM urunler WHERE Comment = 'kampanya';\n```\nBu sorgu...")).toBe(true)
+    expect(writesReadQuery('```SQL\n  with x as (select 1) select * from x\n```')).toBe(true)
+    expect(writesReadQuery("```sql\nUPDATE urunler SET fiyat = 15 WHERE ad = 'Kalem';\n```")).toBe(false)
+    expect(writesReadQuery('Kalem ve Silgi kampanyada.')).toBe(false)
+  })
+})
+
+import { claimsChange } from '../src/main/services/chat'
+
+describe('reddedilen değişikliği yapılmış gibi söyleme', () => {
+  it('edilgen "eklendi / güncellendi" de yakalanır, olumsuzu yakalanmaz', () => {
+    expect(claimsChange("`notlar.txt` dosyasına 'Perşembe: toplantı' satırı eklendi.")).toBe(true)
+    expect(claimsChange('Defter ürününün fiyatı 30 TL olarak güncellendi.')).toBe(true)
+    expect(claimsChange('Onay verilmediği için satır eklenmedi.')).toBe(false)
+    expect(claimsChange('Fiyat güncellenmedi; değişiklik reddedildi.')).toBe(false)
+    expect(claimsWrite("`notlar.txt` dosyasına 'Perşembe: toplantı' satırı eklendi.")).toBe(true)
+    expect(claimsWrite('index.html dosyası oluşturuldu.')).toBe(true)
+  })
+})
+
+import { writesWriteQuery } from '../src/main/services/chat'
+
+describe('çalıştırılmadan yazılan değiştiren sorgu', () => {
+  it('kod bloğundaki UPDATE yakalanır, SELECT yakalanmaz', () => {
+    expect(writesWriteQuery('```sql\nUPDATE urunler SET fiyat = 15 WHERE id = 1;\n```\nGüncelledim.')).toBe(true)
+    expect(writesWriteQuery('```sql\nSELECT * FROM urunler\n```')).toBe(false)
+  })
+})
+
+import { wantsQueryText, withoutTrailingQuestion } from '../src/main/services/chat'
+
+describe('sorgu metni isteği ve sondaki soru', () => {
+  it('yalnızca sorgunun metnini isteyen mesajları tanır', () => {
+    expect(wantsQueryText('Kalem fiyatını 15 yapan UPDATE sorgusunu yaz, çalıştırma.')).toBe(true)
+    expect(wantsQueryText('Bunu nasıl yazarım?')).toBe(true)
+    expect(wantsQueryText('Kalem ürününün fiyatını 15 TL yap.')).toBe(false)
+  })
+
+  it('sondaki soru cümlelerini atar, öncesini korur', () => {
+    expect(withoutTrailingQuestion('Sorgu hazır.\n```sql\nUPDATE t SET a = 1\n```\nBu değişikliği onaylıyor musun?')).toBe('Sorgu hazır.\n```sql\nUPDATE t SET a = 1\n```')
+    expect(withoutTrailingQuestion('Dosyaları listeledim. README dosyasını da okuyayım mı?')).toBe('Dosyaları listeledim.')
+    expect(withoutTrailingQuestion('Okuyayım mı?')).toBe('')
+    expect(withoutTrailingQuestion('Tamam, bitti.')).toBe('Tamam, bitti.')
+  })
+})

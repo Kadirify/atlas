@@ -135,15 +135,18 @@ function fold(text: string): string {
  * Araç turlarında bağlam taşmasın: toplam metin sınırı aşınca eski araç sonuçları kısaltılır. Son turun sonuçları
  * (keepFrom'dan sonrası) ve kullanıcının ilk isteği olduğu gibi kalır; model gerekirse aracı yeniden çağırır.
  */
-export function compactToolResults(messages: OllamaMessage[], budget: number, keepFrom: number, note: string): void {
+export function compactToolResults(messages: OllamaMessage[], budget: number, keepFrom: number, note: string): number {
   let total = messages.reduce((n, m) => n + m.content.length, 0)
+  let trimmed = 0
   for (let i = 0; i < keepFrom && total > budget; i++) {
     const m = messages[i]
     if (m.role !== 'tool' || m.content.length <= 500) continue
     const short = `${m.content.slice(0, 300)}\n… ${note}`
     total -= m.content.length - short.length
     messages[i] = { ...m, content: short }
+    trimmed++
   }
+  return trimmed
 }
 
 /** Cevabın sonunda "şimdi şunu yapıyorum" diye bir işlem duyuruluyor mu (ama araç çağrılmamış) */
@@ -172,10 +175,48 @@ const CODE_DUMP_LINES = 8
 /** Cevap, dosyaya yazılması gereken bir kodu sohbete mi döküyor */
 /** Cevap bir dosyaya yazdığını söylüyor mu ("App.js dosyasına yazdım", "index.html olarak kaydettim") */
 const CLAIMS_WRITE =
-  /(dosyas[ıi]na[^.\n]{0,60}?(?:yazd[ıi]m|kaydettim|ekledim)|dosyas[ıi]n[ıi][^.\n]{0,40}?(?:oluşturdum|yazd[ıi]m|güncelledim)|olarak kaydettim|dosyalar[ıi] oluşturdum|(?:created|wrote|saved) (?:the )?(?:file|files)|(?:wrote|saved) (?:it|the code) (?:to|into|in))/i
+  /(dosyas[ıi]na[^.\n]{0,60}?(?:yazd[ıi]m|kaydettim|ekledim|yaz[ıi]ld[ıi]|kaydedildi|eklendi)|dosyas[ıi]n[ıi][^.\n]{0,40}?(?:oluşturdum|yazd[ıi]m|güncelledim)|dosyas[ıi] (?:[^.\n]{0,40}?)(?:oluşturuldu|güncellendi|düzenlendi|değiştirildi)|olarak kaydettim|olarak kaydedildi|dosyalar[ıi] oluşturdum|dosyalar[ıi]? oluşturuldu|(?:created|wrote|saved) (?:the )?(?:file|files)|(?:wrote|saved) (?:it|the code) (?:to|into|in))/i
 
 export function claimsWrite(text: string): boolean {
   return CLAIMS_WRITE.test(fold(text))
+}
+
+/** Bir değişikliği yaptığını söyleyen ifadeler (dosya ya da veritabanı; etken ve edilgen) */
+const CLAIMS_CHANGE =
+  /(eklendi|ekledim|yaz[ıi]ld[ıi]|yazd[ıi]m|kaydedildi|kaydettim|güncellendi|güncelledim|değiştirildi|değiştirdim|düzenlendi|düzenledim|oluşturuldu|oluşturdum|has been (?:added|updated|saved|written|changed|created)|i (?:added|updated|saved|wrote|changed|created))/i
+
+/** Cevap bir değişikliği yaptığını söylüyor mu (kullanıcı reddettiği halde "eklendi" demeyi yakalamak için) */
+export function claimsChange(text: string): boolean {
+  return CLAIMS_CHANGE.test(fold(text))
+}
+
+/** Kullanıcı yalnızca sorgunun metnini mi istiyor ("UPDATE sorgusunu yaz", "nasıl yazarım") */
+const WANTS_QUERY_TEXT =
+  /(sorgu(?:su|sunu|yu|lar[ıi]|lar[ıi]n[ıi])?\s+(?:yaz|ver|göster|hazırla|oluştur)|nasıl\s+(?:yaz|güncelle|ekle|değiştir)|örnek\s+(?:bir\s+)?sorgu|sql(?:'?ini|'?i)?\s+(?:yaz|ver|göster)|çalıştırma|(?:just\s+)?(?:write|show)\s+(?:me\s+)?(?:a|the)\s+(?:query|sql|statement)|how\s+(?:do|would|can)\s+i\s+(?:write|update|insert)|don'?t\s+run)/i
+
+export function wantsQueryText(userText: string): boolean {
+  return WANTS_QUERY_TEXT.test(fold(userText))
+}
+
+/** Metnin sonundaki soru cümlelerini atar ("... Bu değişikliği onaylıyor musun?") */
+export function withoutTrailingQuestion(text: string): string {
+  let out = text.trimEnd()
+  for (let i = 0; i < 3 && /\?\s*$/.test(out); i++) {
+    const end = out.length - 2
+    const cut = Math.max(out.lastIndexOf('. ', end), out.lastIndexOf('! ', end), out.lastIndexOf(': ', end), out.lastIndexOf('\n', end))
+    out = cut >= 0 ? out.slice(0, cut + 1).trimEnd() : ''
+  }
+  return out
+}
+
+/** Cevap veriyi değiştiren bir sorguyu (UPDATE, INSERT...) kod bloğu olarak yazıyor mu */
+export function writesWriteQuery(text: string): boolean {
+  return /```sql[^\n]*\n\s*(?:update|insert|merge|create|alter|exec|execute|replace|upsert)\b/i.test(text)
+}
+
+/** Cevap bir okuma sorgusunu (SELECT ya da WITH) kod bloğu olarak yazıyor mu */
+export function writesReadQuery(text: string): boolean {
+  return /```sql[^\n]*\n\s*(?:select|with)\b/i.test(text)
 }
 
 export function dumpsCode(text: string): boolean {
@@ -205,6 +246,11 @@ export interface ChatEvents {
   step(e: { conversationId: string; step: ToolStep }): void
   /** Model düşünürken düşüncesinin bir parçası */
   thinking(c: ChatChunk): void
+  /**
+   * Tanılama (isteğe bağlı): döngünün kendiliğinden yaptığı düzeltmeler. Arayüz kullanmaz; ajan test seti
+   * (eval/ajan) bunları sayar.
+   */
+  debug?(e: { conversationId: string; kind: 'nudge' | 'textToolCall' | 'retry' | 'compact'; detail: string }): void
 }
 
 /** Kullanıcının kim olduğunu modele anlatan satır; bilgi yoksa boş döner. */
@@ -533,7 +579,10 @@ export class ChatService {
             // Araç metin olarak yazıldıysa gerçek çağrıya çevrilir.
             if (withTools && tools && !r.looped && (r.stats.toolCalls?.length ?? 0) === 0) {
               const { calls, rest } = extractTextToolCalls(r.text, toolNames(tools))
-              if (calls.length > 0) return { ...r, text: rest, stats: { ...r.stats, toolCalls: calls } }
+              if (calls.length > 0) {
+                this.events.debug?.({ conversationId, kind: 'textToolCall', detail: calls.map((c) => c.name).join(', ') })
+                return { ...r, text: rest, stats: { ...r.stats, toolCalls: calls } }
+              }
             }
             return r
           } catch (err) {
@@ -541,6 +590,7 @@ export class ChatService {
             const cause = err instanceof PartialError ? err.original : err
             const message = `${err instanceof Error ? err.message : String(err)} ${cause instanceof Error ? cause.message : ''}`
             if (partial || controller.signal.aborted || attempt >= CRASH_RETRIES || !RUNNER_CRASH.test(message)) throw err
+            this.events.debug?.({ conversationId, kind: 'retry', detail: message.trim().slice(0, 200) })
             await new Promise((resolve) => setTimeout(resolve, 1500 * (attempt + 1) ** 2))
           }
         }
@@ -557,30 +607,71 @@ export class ChatService {
           const silent = !result.text.trim()
           // Bu cevapta bir dosya gerçekten değiştiyse model iş yapmıştır: sondaki "istersen şunu da yaparım" önerisi ve
           // yaptığını özetleyen kod parçası dürtülmez (yoksa "kodu dosyaya yaz" denip düzgün dosyanın üstüne yazılıyordu).
-          const changed = steps.some((s) => CHANGE_TOOLS.has(s.tool) && s.status === 'ok')
+          const changed = steps.some((s) => (CHANGE_TOOLS.has(s.tool) && s.status === 'ok') || s.changed === true)
           const asking = !silent && !changed && asksPermission(result.text)
+          // Kullanıcı bu turda bir değişikliği reddettiyse "eklendi / güncellendi" diyen cevap yanlıştır: düzeltilmeli,
+          // yeniden denenmemeli. (Model reddedilen düzenlemeden sonra "satır eklendi" diyebiliyordu.)
+          const denied = steps.some((s) => s.status === 'denied' && (CHANGE_TOOLS.has(s.tool) || s.tool === 'sql_query' || s.tool === 'run_command'))
+          const deniedClaim = !silent && denied && !changed && claimsChange(result.text)
+          // Kullanıcı reddettiyse model durmalı: "tekrar gönderiyorum" gibi bir cevap dürtülürse ısrar etmiş olur.
+          // Reddedilen bir işlemden sonra yalnızca yanlış "yaptım" iddiası düzeltilir.
+          if (denied && !deniedClaim) return
           // Klasöre yazma izni varken kodu sohbete döküp dosya oluşturmayan cevap: kod dosyalara yazılmalı.
-          const dumping = !silent && !!folder && canWrite && !changed && (dumpsCode(result.text) || claimsWrite(result.text))
-          if (silent ? steps.length === 0 : !announcesAction(result.text) && !asking && !dumping) return
+          const dumping =
+            !silent && !!folder && canWrite && !changed && !denied && (dumpsCode(result.text) || claimsWrite(result.text))
+          // Veritabanı bağlıyken okuma sorgusunu çalıştırmadan sohbete yazıp bırakan cevap: sorgu çalıştırılmalı.
+          const unrunQuery = !silent && !!connection && !dumping && !steps.some((s) => s.tool === 'sql_query') && writesReadQuery(result.text)
+          // Değiştiren sorguyu çalıştırmadan sohbete yazıp bırakan cevap: kullanıcı yalnızca sorgunun metnini istemediyse
+          // sorgu sql_query ile gönderilmeli (uygulama onay kartı gösterir; kullanıcı reddedebilir). Model bunu yapmadan
+          // "Kalem'in fiyatını güncelledim" diyebiliyordu.
+          const unrunWrite =
+            !silent && !!connection && !changed && writesWriteQuery(result.text) && !wantsQueryText(lastUser?.content ?? '')
+          if (silent ? steps.length === 0 : !announcesAction(result.text) && !asking && !dumping && !unrunQuery && !unrunWrite && !deniedClaim) return
           nudges++
-          if (dumping) {
+          this.events.debug?.({
+            conversationId,
+            kind: 'nudge',
+            detail: deniedClaim
+              ? 'deniedNotDone'
+              : dumping
+                ? 'codeToFiles'
+                : unrunQuery
+                  ? 'runQuery'
+                  : unrunWrite
+                    ? 'runWrite'
+                    : silent
+                      ? 'continueAfterTools'
+                      : asking
+                        ? 'dontAsk'
+                        : 'actDontTell'
+          })
+          // Yanlış ya da yarım cevap kullanıcıya kalmaz; yalnızca modele geri verilir.
+          if (deniedClaim || dumping || unrunQuery || unrunWrite) {
             // Sohbete dökülen kod modele geri verilir (dosyaya yazarken kullansın) ama cevapta tekrar gösterilmez.
             messages.push({ role: 'assistant', content: result.text })
             this.events.chunk({ conversationId, delta: '\n\n' })
           } else if (!silent) {
-            carry += `${result.text.trim()}\n\n`
+            // İzin sorup duran cevabın sondaki sorusu ("onaylıyor musun?") kullanıcıya kalmaz: iş zaten yapılacak.
+            const kept = (asking ? withoutTrailingQuestion(result.text) : result.text).trim()
+            if (kept) carry += `${kept}\n\n`
             messages.push({ role: 'assistant', content: result.text })
             this.events.chunk({ conversationId, delta: '\n\n' })
           }
           messages.push({
             role: 'user',
-            content: dumping
-              ? L().prompts.chat.codeToFiles
-              : silent
-                ? L().prompts.chat.continueAfterTools
-                : asking
-                  ? L().prompts.chat.dontAsk
-                  : L().prompts.chat.actDontTell
+            content: deniedClaim
+              ? L().prompts.chat.deniedNotDone
+              : dumping
+                ? L().prompts.chat.codeToFiles
+                : unrunQuery
+                  ? L().prompts.chat.runQuery
+                  : unrunWrite
+                    ? L().prompts.chat.runWrite
+                    : silent
+                      ? L().prompts.chat.continueAfterTools
+                      : asking
+                        ? L().prompts.chat.dontAsk
+                        : L().prompts.chat.actDontTell
           })
           result = await stream(true)
         }
@@ -612,7 +703,8 @@ export class ChatService {
         // Yalnızca planı güncelleyen turlar (birkaç kez) sınırdan sayılmaz.
         if (calls.every((c) => c.name === 'update_plan') && planOnly < MAX_PLAN_ONLY_ROUNDS) planOnly++
         else round++
-        compactToolResults(messages, budget, roundStart, L().prompts.chat.toolResultTrimmed)
+        const trimmed = compactToolResults(messages, budget, roundStart, L().prompts.chat.toolResultTrimmed)
+        if (trimmed > 0) this.events.debug?.({ conversationId, kind: 'compact', detail: String(trimmed) })
         // Sınıra gelindiyse son turda araç verilmez; model elindekiyle cevap yazar.
         const last = round >= MAX_TOOL_ROUNDS
         if (last) messages.push({ role: 'user', content: L().prompts.chat.toolLimit })

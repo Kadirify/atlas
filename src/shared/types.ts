@@ -312,6 +312,8 @@ export interface ToolStep {
   terminal?: { command: string; output: string; code: number | null }
   /** update_plan adımında modelin iş planı */
   plan?: PlanItem[]
+  /** Adım veriyi kalıcı olarak değiştirdi (ör. onaylanıp çalışan bir UPDATE) */
+  changed?: boolean
 }
 
 export interface PlanItem {

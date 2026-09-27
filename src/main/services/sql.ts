@@ -869,7 +869,8 @@ export class SqlService {
           this.events.result({ conversationId, sql, result })
           // Değiştiren sorgu satır da döndürdüyse (OUTPUT, RETURNING) model onları da görsün.
           const rows = result.rows.length > 0 ? `\n${formatForModel(result, t.result.more)}` : ''
-          return done(t.steps.wrote(result.affected ?? 0), t.result.wrote(result.affected ?? 0) + rows)
+          const wrote = done(t.steps.wrote(result.affected ?? 0), t.result.wrote(result.affected ?? 0) + rows)
+          return { ...wrote, step: { ...wrote.step, changed: true } }
         }
 
         const result = await this.withDriver(connectionId, (driver) => driver.read(sql, MAX_UI_ROWS, signal))

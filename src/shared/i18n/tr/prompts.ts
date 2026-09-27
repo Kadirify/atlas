@@ -35,6 +35,12 @@ export const prompts = {
     /** Geçmişteki asistan cevabına eklenen kısa iş kaydı: model bir sonraki turda neyi yaptığını bilsin */
     toolResultTrimmed: '(eski araç sonucu, yer açmak için kısaltıldı; gerekirse aracı yeniden çağır)',
     actionLog: (items: string) => `[Bu cevapta yapılanlar: ${items}]`,
+    deniedNotDone:
+      'Kullanıcı bu değişikliği onaylamadı; hiçbir şey değişmedi. Cevabını düzelt: yaptığını söyleme, neyin yapılmadığını kısaca söyle ve yeniden deneme.',
+    runWrite:
+      'Değişikliği sohbete yazıp yapılmış gibi söyleme: veritabanında hiçbir şey değişmedi. Sorguyu şimdi sql_query aracıyla gönder; uygulama kullanıcıya onay kartı gösterir. Sonucu ona göre söyle.',
+    runQuery:
+      'Sorguyu sohbete yazıp bırakma: sql_query aracıyla şimdi çalıştır ve sonucu kullanıcıya kısaca söyle. Okuma sorguları için izin gerekmez.',
     codeToFiles:
       'Kodu sohbete yazma: bu sohbete bir proje klasörü bağlı ve dosya yazabiliyorsun. Az önce yazdığın kodu klasöre kaydet: yeni dosyaları write_file ile oluştur, var olan bir dosyadaki küçük değişiklik için edit_file kullan; birden çok dosya gerekiyorsa (package.json, index.html, src/... gibi) her birini ayrı ayrı yaz. Bittiğinde hangi dosyaları oluşturduğunu ve nasıl çalıştırılacağını kısaca yaz.',
     dontAsk:

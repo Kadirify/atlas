@@ -31,6 +31,12 @@ export const prompts: Dict['prompts'] = {
     /** Short action log added to an earlier assistant reply so the model knows what it did */
     toolResultTrimmed: '(older tool result, shortened to save space; call the tool again if you need it)',
     actionLog: (items: string) => `[Done in this reply: ${items}]`,
+    deniedNotDone:
+      'The user did not approve this change; nothing was changed. Correct your reply: do not say you did it, say briefly what was not done, and do not try again.',
+    runWrite:
+      'Do not write the change in the chat as if it were done: nothing changed in the database. Send the statement now with the sql_query tool; the app shows the user an approval card. Report the result accordingly.',
+    runQuery:
+      'Do not just write the query in the chat: run it now with the sql_query tool and tell the user the result briefly. Reading needs no permission.',
     codeToFiles:
       'Do not write the code into the chat: a project folder is connected and you can write files. Save the code you just wrote into the folder: create new files with write_file and use edit_file for a small change in an existing file; if several files are needed (package.json, index.html, src/... and so on), write each one separately. When done, say briefly which files you created and how to run it.',
     dontAsk:
