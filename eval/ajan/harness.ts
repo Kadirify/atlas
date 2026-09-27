@@ -12,7 +12,7 @@
 import { execFile } from 'node:child_process'
 import { appendFile, mkdir, mkdtemp, readFile, rm, stat, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
-import { dirname, join } from 'node:path'
+import { basename, dirname, join } from 'node:path'
 import { DatabaseSync } from 'node:sqlite'
 import type { Message, ToolStep } from '../../src/shared/types'
 import { Db } from '../../src/main/db'
@@ -144,6 +144,8 @@ export interface Options {
   /** Başarısız görevlerin klasörlerini incelemek için silme */
   keepFailed: boolean
   out: string
+  /** Yarıda kalan çalıştırmanın sonuç dosyası: oradaki sonuçlar korunur, eksikler çalıştırılır */
+  resume: string | null
 }
 
 const DEFAULT_TIMEOUT_MS = 6 * 60 * 1000
@@ -163,6 +165,7 @@ export function optionsFromEnv(): Options {
     tasks: tasks.length > 0 ? tasks : null,
     gate: process.env.AJAN_GATE ? Number(process.env.AJAN_GATE) : null,
     keepFailed: process.env.AJAN_KEEP === '1',
+    resume: process.env.AJAN_RESUME || null,
     out: process.env.AJAN_OUT ?? join('eval', 'ajan', 'results')
   }
 }
@@ -533,12 +536,22 @@ export async function runSuite(options: Options): Promise<Summary> {
     tasks: tasks.length
   }
   await mkdir(options.out, { recursive: true })
-  const stamp = new Date().toISOString().slice(0, 16).replace(/[:T]/g, '-')
-  const jsonFile = join(options.out, `${stamp}.json`)
+  let stamp = new Date().toISOString().slice(0, 16).replace(/[:T]/g, '-')
+  let jsonFile = join(options.out, `${stamp}.json`)
   const results: RunResult[] = []
+  // Yarıda kalan bir çalıştırma sürdürülebilir: oradaki sonuçlar korunur, yalnızca eksik denemeler çalışır.
+  if (options.resume) {
+    const saved = JSON.parse(await readFile(options.resume, 'utf8')) as { results?: RunResult[] }
+    results.push(...(saved.results ?? []))
+    jsonFile = options.resume
+    stamp = basename(options.resume, '.json')
+  }
+  const done = (model: string, task: string, attempt: number): boolean =>
+    results.some((r) => r.model === model && r.task === task && (r.attempt === attempt || r.skipped !== null))
   const programs = new Map<string, boolean>()
 
   for (const model of options.models) {
+    if (tasks.every((t) => Array.from({ length: options.repeat }, (_, i) => i + 1).every((a) => done(model, t.id, a)))) continue
     // Model araçlı sohbetin bağlam boyuyla önceden yüklenir: yükleme süresi ilk görevin süresine eklenmesin.
     try {
       await chatOnce({ model, messages: [{ role: 'user', content: 'Merhaba' }], numPredict: 1, numCtx })
@@ -547,6 +560,7 @@ export async function runSuite(options: Options): Promise<Summary> {
       continue
     }
     for (const task of tasks) {
+      if (done(model, task.id, 1) && results.some((r) => r.model === model && r.task === task.id && r.skipped !== null)) continue
       if (task.needs) {
         if (!programs.has(task.needs)) programs.set(task.needs, (await shell(tmpdir(), `${task.needs} --version`)).code === 0)
         if (!programs.get(task.needs)) {
@@ -555,6 +569,7 @@ export async function runSuite(options: Options): Promise<Summary> {
         }
       }
       for (let attempt = 1; attempt <= options.repeat; attempt++) {
+        if (done(model, task.id, attempt)) continue
         const result = await runTask(task, model, attempt, options)
         results.push(result)
         const line = `${result.ok ? 'GEÇTİ' : 'KALDI'} ${model} ${task.id} #${attempt} (${result.seconds} sn, ${result.steps} adım)${result.notes.length ? ` ${result.notes.join('; ')}` : ''}`

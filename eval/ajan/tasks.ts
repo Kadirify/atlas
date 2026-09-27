@@ -248,7 +248,9 @@ console.log('Testler geçti')
       const js = (await ctx.read('app.js')) ?? ''
       ctx.expect(js, 'app.js yok')
       ctx.expect((await ctx.run('node --check app.js')).code === 0, 'app.js söz dizimi hatalı')
-      ctx.expect(/addEventListener|onclick/i.test(js) && /appendChild|\.append\(|innerHTML|insertAdjacent/i.test(js), 'düğme listeye bir şey eklemiyor')
+      // Düğme işlevi app.js'te (addEventListener) ya da HTML'de (onclick="ekle()") bağlanabilir; ikisi de doğru.
+      const handler = /addEventListener|onclick|onsubmit/i.test(js) || /\bon(?:click|submit)\s*=/i.test(html)
+      ctx.expect(handler && /appendChild|\.append\(|\.prepend\(|innerHTML|insertAdjacent/i.test(js), 'düğme listeye bir şey eklemiyor')
     }
   },
   {
