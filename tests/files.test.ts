@@ -100,12 +100,15 @@ describe('okuma araçları', () => {
 
   it('dosyayı okur; uzun dosyayı parça parça verir', async () => {
     expect((await run('read_file', { path: 'notlar.txt' })).result).toContain('Zümrüt-7')
-    await writeFile(join(root, 'uzun.txt'), 'a'.repeat(15_000) + 'SON')
+    // Metin dosyaları satır numaralı ve satır satır sayfalanır.
+    await writeFile(join(root, 'uzun.txt'), `${Array.from({ length: 999 }, (_, i) => `satır ${i + 1}`).join('\n')}\nSON\n`)
     const first = await run('read_file', { path: 'uzun.txt' })
-    expect(first.result).toContain('start: 12000')
+    expect(first.result).toContain('1| satır 1')
+    expect(first.result).toMatch(/line: 401/)
     expect(first.result).not.toContain('SON')
-    const second = await run('read_file', { path: 'uzun.txt', start: 12000 })
-    expect(second.result).toContain('SON')
+    const second = await run('read_file', { path: 'uzun.txt', line: 900 })
+    expect(second.result).toContain('900| satır 900')
+    expect(second.result).toContain('1000| SON')
     expect(second.step.label).toContain('devamı')
   })
 
@@ -480,5 +483,27 @@ describe('gizli dosyalar komutla da okunmaz', () => {
       expect(out.result).not.toContain('cokgizli')
     }
     expect(approvals).toEqual([])
+  })
+})
+
+describe('esnek düzenleme', () => {
+  it('satır numaralı ve girintisiz kopyalanan metinle de doğru düzenler', async () => {
+    await writeFile(join(root, 'kod.js'), 'function f() {\n  if (a) {\n    return 1\n  }\n}\n')
+    const out = await run('edit_file', { path: 'kod.js', old_text: '2| if (a) {\n3| return 1\n4| }', new_text: '2| if (a) {\n3| return 2\n4| }' })
+    expect(out.step.status).toBe('ok')
+    expect(await readFile(join(root, 'kod.js'), 'utf8')).toBe('function f() {\n  if (a) {\n    return 2\n  }\n}\n')
+  })
+
+  it('Python: girintisiz yazılan çok satırlı düzeltme girintiyi bozmaz', async () => {
+    await writeFile(join(root, 'hesap.py'), 'def ortalama(sayilar):\n    return sum(sayilar) / len(sayilar)\n')
+    const out = await run('edit_file', {
+      path: 'hesap.py',
+      old_text: 'return sum(sayilar) / len(sayilar)',
+      new_text: 'if not sayilar:\n    return 0\nreturn sum(sayilar) / len(sayilar)'
+    })
+    expect(out.step.status).toBe('ok')
+    expect(await readFile(join(root, 'hesap.py'), 'utf8')).toBe(
+      'def ortalama(sayilar):\n    if not sayilar:\n        return 0\n    return sum(sayilar) / len(sayilar)\n'
+    )
   })
 })

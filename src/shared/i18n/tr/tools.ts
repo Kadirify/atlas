@@ -47,8 +47,9 @@ export const tools = {
       pathArg: 'Klasöre göre göreli yol, ör. "raporlar/ocak.pdf". Kök klasör için ".".',
       listFolder: 'Bir klasördeki dosya ve alt klasörleri listeler.',
       readFile:
-        'Bir dosyanın içeriğini metin olarak okur. Metin, PDF, Word (.docx) ve Excel (.xlsx) dosyaları okunabilir. Uzun dosyalar parça parça gelir.',
-      readStartArg: 'Okumaya başlanacak karakter konumu; ilk okuma için 0.',
+        'Bir dosyanın içeriğini metin olarak okur. Metin, PDF, Word (.docx) ve Excel (.xlsx) dosyaları okunabilir. Metin dosyaları satır numaralı gelir ("12| kod"); uzun dosyalar parça parça gelir.',
+      readLineArg: 'Okumaya başlanacak satır (1\'den başlar). Uzun bir dosyanın devamını okumak için.',
+      readStartArg: 'Yalnızca PDF, Word ve Excel için: okumaya başlanacak karakter konumu.',
       searchFiles: 'Dosya adlarında ve dosya içeriklerinde arama yapar. Hangi dosyada ne yazdığını bulmak için kullan.',
       searchQueryArg: 'Aranacak kelime ya da kısa ifade.',
       writeFile: 'Bir metin dosyası oluşturur ya da var olanın içeriğini tamamen değiştirir. Kullanıcı onaylamadan yazılmaz.',
@@ -143,6 +144,8 @@ export const tools = {
       folderEntry: (name: string) => `[klasör] ${name}/`,
       moreItems: (count: number) => `(${count} öğe daha var)`,
       emptyFolder: 'Bu klasör boş.',
+      readMoreLines: (first: number, last: number, total: number) =>
+        `(Satır ${first}-${last} gösterildi; dosya ${total} satır. Devamı için line: ${last + 1} ver. Belirli bir adı arıyorsan search_files ile ara. Satır numaraları ("12| ") dosyanın parçası değildir; edit_file'a yazma.)`,
       readMore: (end: number, total: number) =>
         `(Dosyanın ${end}. karakterine kadar okundu, toplam ${total} karakter. Devamı için start: ${end} ver.)`,
       emptyFile: 'Dosya boş.',
@@ -169,6 +172,8 @@ export const tools = {
       edited: (path: string) => `"${path}" düzenlendi.`,
       editNotFound: (path: string) =>
         `old_text "${path}" dosyasında birebir bulunamadı. Önce read_file ile dosyanın güncel halini oku, değiştirmek istediğin kısmı boşlukları ve satır sonlarıyla aynen kopyala ve yeniden dene.`,
+      closest: (snippet: string) =>
+        `Dosyada buna en çok benzeyen yer:\n${snippet}\nold_text'i bu satırlardan birebir kopyala (satır numaraları olmadan) ve yeniden dene.`,
       editAmbiguous: (path: string, count: number) =>
         `old_text "${path}" dosyasında ${count} yerde geçiyor. Tek bir yeri gösterecek kadar çevresindeki satırları da ekleyip yeniden dene.`,
       changedMeanwhile: (path: string) =>

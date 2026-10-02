@@ -7,12 +7,15 @@ import { L, locale } from '../i18n'
 import { decodeText, extractText, TEXT_EXTENSIONS } from './attachments'
 import { classifyCommand } from '@shared/command'
 import { isSecretFile, runCommand } from './code'
+import { closestLines, numberedLines, relaxedReplace, stripLineNumbers } from './patch'
 import { scanHardware } from './hardware'
 import { cosine, EMBEDDING_MODEL, tokens, type MemoryService } from './memory'
 import * as ollama from './ollama'
 
 /** Tek seferde modele verilen en fazla dosya metni */
 const READ_LIMIT = 12_000
+/** Metin dosyası okunurken tek seferde en çok bu kadar satır verilir */
+const READ_LINES = 400
 const MAX_LIST = 200
 const MAX_WALK_FILES = 3000
 const MAX_DEPTH = 8
@@ -238,7 +241,12 @@ function readTools(): unknown[] {
   const pathArg = { type: 'string', description: d.pathArg }
   return [
     TOOL('list_folder', d.listFolder, { path: pathArg }, ['path']),
-    TOOL('read_file', d.readFile, { path: pathArg, start: { type: 'integer', description: d.readStartArg } }, ['path']),
+    TOOL(
+      'read_file',
+      d.readFile,
+      { path: pathArg, line: { type: 'integer', description: d.readLineArg }, start: { type: 'integer', description: d.readStartArg } },
+      ['path']
+    ),
     TOOL('search_files', d.searchFiles, { query: { type: 'string', description: d.searchQueryArg } }, ['query']),
     TOOL(
       'update_plan',
@@ -334,6 +342,12 @@ export async function testCommand(root: string): Promise<string | null> {
   if (entries.some((name) => /\.sln$/i.test(name))) return 'dotnet test'
   if (entries.some((name) => name === 'pytest.ini' || name === 'conftest.py')) return 'python -m pytest'
   return null
+}
+
+/** Bulunamayan düzenleme için dosyada en çok benzeyen yer (varsa) */
+function closestHint(content: string, oldText: string): string {
+  const near = closestLines(content, oldText)
+  return near ? L().tools.files.result.closest(near) : ''
 }
 
 export class FilesService {
@@ -553,12 +567,23 @@ export class FilesService {
           const info = await stat(full)
           if (info.isDirectory()) throw new FileToolError(t.errors.isFolder)
           if (info.size > MAX_READ_BYTES) throw new FileToolError(t.errors.tooLarge)
-          const text = (await extractText(basename(full), await readFile(full))).trim()
+          const rel = toRelative(root, full)
+          const bytes = await readFile(full)
+          // Metin dosyaları satır numaralı ve satır satır sayfalanarak verilir: model hatanın yerini search_files'ın
+          // gösterdiği satır numarasıyla görür, uzun dosyada "line" ile devam eder. Belgeler (PDF, Word, Excel)
+          // karakter konumuyla sayfalanır.
+          if (!DOCUMENT_EXTENSIONS.has(extname(full).toLowerCase())) {
+            const raw = await extractText(basename(full), bytes)
+            if (!raw.trim()) return done(t.step.read(rel, false), t.result.emptyFile)
+            const part = numberedLines(raw, Number(args.line) || 1, READ_LIMIT, READ_LINES)
+            const note = part.last < part.total ? `\n\n${t.result.readMoreLines(part.first, part.last, part.total)}` : ''
+            return done(t.step.read(rel, part.first > 1), part.body + note)
+          }
+          const text = (await extractText(basename(full), bytes)).trim()
           const start = Math.max(0, Math.floor(Number(args.start) || 0))
           const piece = text.slice(start, start + READ_LIMIT)
           const end = start + piece.length
           const note = end < text.length ? `\n\n${t.result.readMore(end, text.length)}` : ''
-          const rel = toRelative(root, full)
           return done(t.step.read(rel, start > 0), piece ? piece + note : t.result.emptyFile)
         }
 
@@ -626,19 +651,36 @@ export class FilesService {
           if (info.isDirectory()) throw new FileToolError(t.errors.pathIsFolder)
           if (info.size > MAX_GREP_BYTES) throw new FileToolError(t.errors.tooLarge)
           const before = await readEditable(full, rel)
-          let oldText = str(args.old_text)
-          let newText = str(args.new_text)
-          if (!oldText) throw new FileToolError(t.errors.editEmpty)
+          // Model read_file çıktısındaki satır numaralarını da kopyaladıysa atılır.
+          let { oldText, newText } = stripLineNumbers(str(args.old_text), str(args.new_text))
+          if (!oldText.trim()) throw new FileToolError(t.errors.editEmpty)
           // Dosya Windows satır sonu kullanıyorsa modelin yazdığı metin de ona çevrilir.
           if (before.includes('\r\n') && !oldText.includes('\r\n')) {
             oldText = oldText.replace(/\n/g, '\r\n')
             newText = newText.replace(/\r?\n/g, '\r\n')
           }
           const count = before.split(oldText).length - 1
-          if (count === 0) return done(t.step.editNotFound(rel), t.result.editNotFound(rel), 'error')
           if (count > 1) return done(t.step.editAmbiguous(rel), t.result.editAmbiguous(rel, count), 'error')
-          const at = before.indexOf(oldText)
-          const after = before.slice(0, at) + newText + before.slice(at + oldText.length)
+          let at = before.indexOf(oldText)
+          let after = before.slice(0, at) + newText + before.slice(at + oldText.length)
+          let length = newText.length
+          // Eski metin satırın girintisinden sonra başlıyor ve yeni metin çok satırlıysa birebir yerleştirmek alt
+          // satırları girintisiz bırakır (Python'da kod bozulur): satır bazlı, girintiyi koruyan yol denenir.
+          const lead = count === 1 ? before.slice(before.lastIndexOf('\n', at - 1) + 1, at) : ''
+          if (count === 1 && /^[ \t]+$/.test(lead) && /\n/.test(newText)) {
+            const loose = relaxedReplace(before, oldText, newText)
+            if (!('error' in loose)) ({ after, at, length } = loose)
+          }
+          if (count === 0) {
+            // Birebir yoksa girinti ve boşluk farkı yok sayılarak aranır; tek yer bulunursa orası değiştirilir.
+            const loose = relaxedReplace(before, oldText, newText)
+            if ('error' in loose) {
+              return loose.error === 'many'
+                ? done(t.step.editAmbiguous(rel), t.result.editAmbiguous(rel, loose.count), 'error')
+                : done(t.step.editNotFound(rel), [t.result.editNotFound(rel), closestHint(before, oldText)].filter(Boolean).join('\n\n'), 'error')
+            }
+            ;({ after, at, length } = loose)
+          }
           if (after === before) return done(t.step.unchanged(rel), t.result.unchanged)
           const approved = await this.allow({ id: randomUUID(), conversationId, kind: 'write', path: rel, before, after, protected: isProtectedPath(rel) }, signal)
           if (!approved) return done(t.step.denied(rel), t.result.writeDenied, 'denied')
@@ -647,7 +689,7 @@ export class FilesService {
           await writeFile(full, after, 'utf8')
           this.db.logFileAction({ folderId: folder.id, kind: 'write', path: rel, detail: t.log.contentChanged })
           this.remember(conversationId, folder.id, rel, before, after)
-          const { region, duplicate } = editedRegion(after, at, newText.length)
+          const { region, duplicate } = editedRegion(after, at, length)
           return done(t.step.edited(rel), [t.result.editedRegion(rel, region), duplicate ? t.result.duplicateLine(duplicate) : ''].filter(Boolean).join('\n\n'))
         }
 

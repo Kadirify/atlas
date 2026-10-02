@@ -41,8 +41,9 @@ export const tools: Dict['tools'] = {
       pathArg: 'Path relative to the folder, e.g. "reports/january.pdf". Use "." for the root folder.',
       listFolder: 'Lists the files and subfolders in a folder.',
       readFile:
-        'Reads the contents of a file as text. Text, PDF, Word (.docx) and Excel (.xlsx) files can be read. Long files come in parts.',
-      readStartArg: 'Character position to start reading from; 0 for the first read.',
+        'Reads the contents of a file as text. Text, PDF, Word (.docx) and Excel (.xlsx) files can be read. Text files come with line numbers ("12| code"); long files come in parts.',
+      readLineArg: 'Line to start reading from (starts at 1). To read the rest of a long file.',
+      readStartArg: 'Only for PDF, Word and Excel: character position to start reading from.',
       searchFiles: 'Searches file names and file contents. Use it to find out which file says what.',
       searchQueryArg: 'The word or short phrase to search for.',
       writeFile:
@@ -135,6 +136,8 @@ export const tools: Dict['tools'] = {
       folderEntry: (name: string) => `[folder] ${name}/`,
       moreItems: (count: number) => `(${count} more ${count === 1 ? 'item' : 'items'})`,
       emptyFolder: 'This folder is empty.',
+      readMoreLines: (first: number, last: number, total: number) =>
+        `(Lines ${first}-${last} shown; the file has ${total} lines. To read on, pass line: ${last + 1}. If you are looking for a name, search_files is faster. Line numbers ("12| ") are not part of the file; do not put them in edit_file.)`,
       readMore: (end: number, total: number) =>
         `(Read up to character ${end} of ${total}. To continue, pass start: ${end}.)`,
       emptyFile: 'The file is empty.',
@@ -164,6 +167,8 @@ export const tools: Dict['tools'] = {
       edited: (path: string) => `Edited "${path}".`,
       editNotFound: (path: string) =>
         `old_text was not found word for word in "${path}". Read the current file with read_file first, copy the part you want to change exactly (spaces and line breaks included) and try again.`,
+      closest: (snippet: string) =>
+        `The closest place in the file:\n${snippet}\nCopy old_text exactly from these lines (without line numbers) and try again.`,
       editAmbiguous: (path: string, count: number) =>
         `old_text appears in ${count} places in "${path}". Add enough surrounding lines to point to a single place and try again.`,
       changedMeanwhile: (path: string) =>
