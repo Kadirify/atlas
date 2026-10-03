@@ -507,3 +507,14 @@ describe('esnek düzenleme', () => {
     )
   })
 })
+
+describe('düzenleme dosyayı bozarsa', () => {
+  it('model JSON dosyasının bozulduğunu sonuçta görür', async () => {
+    await writeFile(join(root, 'ayar.json'), '{\n  "a": 1,\n  "b": 2\n}\n')
+    const out = await run('edit_file', { path: 'ayar.json', old_text: '"b": 2', new_text: '"b": 2,' })
+    expect(out.step.status).toBe('ok')
+    expect(out.result).toMatch(/geçerli değil|no longer valid/)
+    const fine = await run('edit_file', { path: 'ayar.json', old_text: '"b": 2,', new_text: '"b": 3' })
+    expect(fine.result).not.toMatch(/geçerli değil|no longer valid/)
+  })
+})

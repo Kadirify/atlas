@@ -35,6 +35,8 @@ export const prompts = {
     /** Geçmişteki asistan cevabına eklenen kısa iş kaydı: model bir sonraki turda neyi yaptığını bilsin */
     toolResultTrimmed: '(eski araç sonucu, yer açmak için kısaltıldı; gerekirse aracı yeniden çağır)',
     actionLog: (items: string) => `[Bu cevapta yapılanlar: ${items}]`,
+    claimedNotDone:
+      'Söylediğin değişiklik yapılmadı: bu cevapta hiçbir dosya ya da veritabanı kaydı değişmedi. Değişiklik gerekiyorsa şimdi ilgili araçla (edit_file, write_file ya da sql_query) yap; gerekmiyorsa yaptığını söyleme.',
     deniedNotDone:
       'Kullanıcı bu değişikliği onaylamadı; hiçbir şey değişmedi. Cevabını düzelt: yaptığını söyleme, neyin yapılmadığını kısaca söyle ve yeniden deneme.',
     runWrite:

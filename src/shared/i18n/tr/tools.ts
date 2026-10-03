@@ -172,6 +172,8 @@ export const tools = {
       edited: (path: string) => `"${path}" düzenlendi.`,
       editNotFound: (path: string) =>
         `old_text "${path}" dosyasında birebir bulunamadı. Önce read_file ile dosyanın güncel halini oku, değiştirmek istediğin kısmı boşlukları ve satır sonlarıyla aynen kopyala ve yeniden dene.`,
+      syntaxBroken: (path: string, problem: string) =>
+        `Dikkat: bu değişiklikten sonra "${path}" artık geçerli değil (${problem}). read_file ile dosyanın şimdiki halini oku ve hatayı düzelt.`,
       closest: (snippet: string) =>
         `Dosyada buna en çok benzeyen yer:\n${snippet}\nold_text'i bu satırlardan birebir kopyala (satır numaraları olmadan) ve yeniden dene.`,
       editAmbiguous: (path: string, count: number) =>

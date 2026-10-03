@@ -77,3 +77,16 @@ describe('closestLines', () => {
     expect(closestLines(content, 'tamamen alakasız bir şey')).toBeNull()
   })
 })
+
+import { syntaxError } from '../src/main/services/patch'
+
+describe('syntaxError', () => {
+  it('bozuk JSON ve JavaScript dosyasını yakalar, sağlamına ve modüllere dokunmaz', () => {
+    expect(syntaxError('a.json', '{"a": 1,}')).toBeTruthy()
+    expect(syntaxError('a.json', '{"a": 1}')).toBeNull()
+    expect(syntaxError('a.js', 'function f( {')).toBeTruthy()
+    expect(syntaxError('a.js', "const x = require('y')\nmodule.exports = { x }")).toBeNull()
+    expect(syntaxError('a.js', "import x from 'y'\nexport default x")).toBeNull()
+    expect(syntaxError('a.md', '{')).toBeNull()
+  })
+})

@@ -31,6 +31,8 @@ export const prompts: Dict['prompts'] = {
     /** Short action log added to an earlier assistant reply so the model knows what it did */
     toolResultTrimmed: '(older tool result, shortened to save space; call the tool again if you need it)',
     actionLog: (items: string) => `[Done in this reply: ${items}]`,
+    claimedNotDone:
+      'The change you described was not made: no file or database record changed in this reply. If the change is needed, make it now with the right tool (edit_file, write_file or sql_query); if not, do not say you made it.',
     deniedNotDone:
       'The user did not approve this change; nothing was changed. Correct your reply: do not say you did it, say briefly what was not done, and do not try again.',
     runWrite:

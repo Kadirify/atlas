@@ -167,6 +167,8 @@ export const tools: Dict['tools'] = {
       edited: (path: string) => `Edited "${path}".`,
       editNotFound: (path: string) =>
         `old_text was not found word for word in "${path}". Read the current file with read_file first, copy the part you want to change exactly (spaces and line breaks included) and try again.`,
+      syntaxBroken: (path: string, problem: string) =>
+        `Warning: after this change "${path}" is no longer valid (${problem}). Read its current content with read_file and fix the error.`,
       closest: (snippet: string) =>
         `The closest place in the file:\n${snippet}\nCopy old_text exactly from these lines (without line numbers) and try again.`,
       editAmbiguous: (path: string, count: number) =>

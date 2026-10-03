@@ -1,3 +1,6 @@
+import { extname } from 'node:path'
+import { Script } from 'node:vm'
+
 /**
  * Kod alanında okuma ve düzenlemeyi küçük modeller için kolaylaştıran saf yardımcılar.
  *
@@ -169,4 +172,19 @@ export function closestLines(content: string, oldText: string): string | null {
     .slice(from, to + 1)
     .map((line, k) => `${from + k + 1}| ${line}`)
     .join('\n')
+}
+
+/**
+ * Düzenlemeden sonra dosya bozulduysa hatanın kısa açıklaması: JSON için JSON.parse, CommonJS JavaScript için
+ * derleme (çalıştırmadan). Model düzenlemenin dosyayı bozduğunu hemen görsün. Başka türlerde ya da sorun yoksa null.
+ */
+export function syntaxError(path: string, text: string): string | null {
+  const ext = extname(path).toLowerCase()
+  try {
+    if (ext === '.json') JSON.parse(text.replace(/^\uFEFF/, ''))
+    else if (ext === '.cjs' || (ext === '.js' && !/^\s*(?:import|export)\s/m.test(text))) new Script(text.replace(/^#!.*/, ''), { filename: path })
+    return null
+  } catch (err) {
+    return (err instanceof Error ? err.message : String(err)).split('\n')[0].slice(0, 200)
+  }
 }

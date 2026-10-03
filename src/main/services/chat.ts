@@ -183,7 +183,7 @@ export function claimsWrite(text: string): boolean {
 
 /** Bir değişikliği yaptığını söyleyen ifadeler (dosya ya da veritabanı; etken ve edilgen) */
 const CLAIMS_CHANGE =
-  /(eklendi|ekledim|yaz[ıi]ld[ıi]|yazd[ıi]m|kaydedildi|kaydettim|güncellendi|güncelledim|değiştirildi|değiştirdim|düzenlendi|düzenledim|oluşturuldu|oluşturdum|has been (?:added|updated|saved|written|changed|created)|i (?:added|updated|saved|wrote|changed|created))/i
+  /(eklendi|ekledim|yaz[ıi]ld[ıi]|yazd[ıi]m|kaydedildi|kaydettim|güncellendi|güncelledim|değiştirildi|değiştirdim|düzenlendi|düzenledim|düzeltildi|düzelttim|kald[ıi]r[ıi]ld[ıi]|kald[ıi]rd[ıi]m|haline getirdim|haline getirildi|oluşturuldu|oluşturdum|has been (?:added|updated|saved|written|changed|created)|i (?:added|updated|saved|wrote|changed|created))/i
 
 /** Cevap bir değişikliği yaptığını söylüyor mu (kullanıcı reddettiği halde "eklendi" demeyi yakalamak için) */
 export function claimsChange(text: string): boolean {
@@ -626,14 +626,31 @@ export class ChatService {
           // "Kalem'in fiyatını güncelledim" diyebiliyordu.
           const unrunWrite =
             !silent && !!connection && !changed && writesWriteQuery(result.text) && !wantsQueryText(lastUser?.content ?? '')
-          if (silent ? steps.length === 0 : !announcesAction(result.text) && !asking && !dumping && !unrunQuery && !unrunWrite && !deniedClaim) return
+          // Hiçbir dosya ya da kayıt değişmediği halde "güncelledim / düzelttim" diyen cevap (değişikliği yalnızca sohbete
+          // yazmış): ya gerçekten yapılmalı ya da yapıldığı söylenmemeli.
+          const claimedNotDone =
+            !silent &&
+            !changed &&
+            !denied &&
+            !dumping &&
+            !unrunWrite &&
+            ((!!folder && canWrite) || !!connection) &&
+            claimsChange(result.text)
+          if (
+            silent
+              ? steps.length === 0
+              : !announcesAction(result.text) && !asking && !dumping && !unrunQuery && !unrunWrite && !deniedClaim && !claimedNotDone
+          )
+            return
           nudges++
           this.events.debug?.({
             conversationId,
             kind: 'nudge',
             detail: deniedClaim
               ? 'deniedNotDone'
-              : dumping
+              : claimedNotDone
+                ? 'claimedNotDone'
+                : dumping
                 ? 'codeToFiles'
                 : unrunQuery
                   ? 'runQuery'
@@ -646,7 +663,7 @@ export class ChatService {
                         : 'actDontTell'
           })
           // Yanlış ya da yarım cevap kullanıcıya kalmaz; yalnızca modele geri verilir.
-          if (deniedClaim || dumping || unrunQuery || unrunWrite) {
+          if (deniedClaim || claimedNotDone || dumping || unrunQuery || unrunWrite) {
             // Sohbete dökülen kod modele geri verilir (dosyaya yazarken kullansın) ama cevapta tekrar gösterilmez.
             messages.push({ role: 'assistant', content: result.text })
             this.events.chunk({ conversationId, delta: '\n\n' })
@@ -661,7 +678,9 @@ export class ChatService {
             role: 'user',
             content: deniedClaim
               ? L().prompts.chat.deniedNotDone
-              : dumping
+              : claimedNotDone
+                ? L().prompts.chat.claimedNotDone
+                : dumping
                 ? L().prompts.chat.codeToFiles
                 : unrunQuery
                   ? L().prompts.chat.runQuery

@@ -7,7 +7,7 @@ import { L, locale } from '../i18n'
 import { decodeText, extractText, TEXT_EXTENSIONS } from './attachments'
 import { classifyCommand } from '@shared/command'
 import { isSecretFile, runCommand } from './code'
-import { closestLines, numberedLines, relaxedReplace, stripLineNumbers } from './patch'
+import { closestLines, numberedLines, relaxedReplace, stripLineNumbers, syntaxError } from './patch'
 import { scanHardware } from './hardware'
 import { cosine, EMBEDDING_MODEL, tokens, type MemoryService } from './memory'
 import * as ollama from './ollama'
@@ -342,6 +342,13 @@ export async function testCommand(root: string): Promise<string | null> {
   if (entries.some((name) => /\.sln$/i.test(name))) return 'dotnet test'
   if (entries.some((name) => name === 'pytest.ini' || name === 'conftest.py')) return 'python -m pytest'
   return null
+}
+
+/** Değişiklik geçerli bir JSON ya da JavaScript dosyasını bozduysa modele verilecek uyarı (önceden de bozuksa boş) */
+function breakage(rel: string, before: string | null, after: string): string {
+  const problem = syntaxError(rel, after)
+  if (!problem || (before !== null && syntaxError(rel, before))) return ''
+  return L().tools.files.result.syntaxBroken(rel, problem)
 }
 
 /** Bulunamayan düzenleme için dosyada en çok benzeyen yer (varsa) */
@@ -690,7 +697,11 @@ export class FilesService {
           this.db.logFileAction({ folderId: folder.id, kind: 'write', path: rel, detail: t.log.contentChanged })
           this.remember(conversationId, folder.id, rel, before, after)
           const { region, duplicate } = editedRegion(after, at, length)
-          return done(t.step.edited(rel), [t.result.editedRegion(rel, region), duplicate ? t.result.duplicateLine(duplicate) : ''].filter(Boolean).join('\n\n'))
+          const broken = breakage(rel, before, after)
+          return done(
+            t.step.edited(rel),
+            [t.result.editedRegion(rel, region), duplicate ? t.result.duplicateLine(duplicate) : '', broken].filter(Boolean).join('\n\n')
+          )
         }
 
         case 'write_file': {
@@ -728,7 +739,9 @@ export class FilesService {
             path: rel,
             detail: existing ? t.log.contentChanged : t.log.fileCreated
           })
-          return existing ? done(t.step.updated(rel), t.result.updated(rel)) : done(t.step.created(rel), t.result.created(rel))
+          const broken = breakage(rel, before, content)
+          const written = existing ? done(t.step.updated(rel), t.result.updated(rel)) : done(t.step.created(rel), t.result.created(rel))
+          return broken ? { ...written, result: `${written.result}\n\n${broken}` } : written
         }
 
         case 'move_file': {

@@ -238,3 +238,11 @@ describe('sorgu metni isteği ve sondaki soru', () => {
     expect(withoutTrailingQuestion('Tamam, bitti.')).toBe('Tamam, bitti.')
   })
 })
+
+describe('değişiklik yapmadan "düzelttim" demek', () => {
+  it('düzelttim, kaldırdım, haline getirdim de yakalanır', () => {
+    expect(claimsChange('İki hatalı virgülü kaldırarak geçerli bir JSON haline getirdim.')).toBe(true)
+    expect(claimsChange('Hatayı düzelttim.')).toBe(true)
+    expect(claimsChange('Bu fonksiyon değeri günceller.')).toBe(false)
+  })
+})
