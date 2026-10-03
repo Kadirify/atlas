@@ -10,6 +10,13 @@ vi.mock('electron', () => ({
   clipboard: {}
 }))
 
+// Uygulama yalnızca Atlas modelleriyle çalışır; test setinde taban modeller de (gemma4:12b gibi) ölçülebilsin diye
+// bu kural kapatılır. Uygulamanın kendisi değişmez.
+vi.mock('../../src/main/services/catalog', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../../src/main/services/catalog')>()
+  return { ...actual, isAtlasModel: (name: string | null | undefined): name is string => !!name }
+})
+
 import { optionsFromEnv, runSuite } from './harness'
 
 it('ajan test seti', async () => {
