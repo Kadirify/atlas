@@ -188,3 +188,26 @@ export function syntaxError(path: string, text: string): string | null {
     return (err instanceof Error ? err.message : String(err)).split('\n')[0].slice(0, 200)
   }
 }
+
+/** "// ...", "# ... (diğer sabitler)", "/* geri kalanı aynı *\/" gibi, kodun atlandığını gösteren yer tutucu satırlar */
+const PLACEHOLDER_DOTS = /^\s*(?:\/\/|#|--|\/\*+|<!--|\*)?\s*(?:\.{3}|…)/
+const PLACEHOLDER_WORDS =
+  /^\s*(?:\/\/|#|--|\/\*+|<!--|\*)\s*\(?\s*(?:diğer|geri kalan|kalan[ıi]|önceki|mevcut kod|ayn[ıi] kal|değişmeden|kısalt[ıi]ld[ıi]|rest of|remaining|existing code|other (?:lines|code)|unchanged|omitted)/i
+
+function isPlaceholder(line: string): boolean {
+  const text = line.trim()
+  return (PLACEHOLDER_DOTS.test(text) && !/^\.{3}\w/.test(text)) || PLACEHOLDER_WORDS.test(text)
+}
+
+/**
+ * Var olan bir dosyanın üstüne yazılacak içerik dosyayı kesip kısaltıyor mu: model dosyanın tamamını görmeden
+ * write_file ile baştan yazınca satırların yerine "..." koyabiliyor ya da yarısını atabiliyor; dosyanın geri kalanı
+ * silinir. Kısa dosyalarda sorun aranmaz.
+ */
+export function looksTruncated(before: string, after: string): boolean {
+  const oldLines = before.split(/\r?\n/)
+  if (oldLines.length < 20) return false
+  const newLines = after.split(/\r?\n/)
+  if (newLines.some((line) => isPlaceholder(line) && !oldLines.some((old) => old.trim() === line.trim()))) return true
+  return oldLines.length > 100 && newLines.length < oldLines.length * 0.5
+}

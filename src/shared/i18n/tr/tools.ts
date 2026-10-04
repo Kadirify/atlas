@@ -136,6 +136,7 @@ export const tools = {
       edited: (path: string) => `Düzenlendi: ${path}`,
       editNotFound: (path: string) => `Düzenlenemedi, metin bulunamadı: ${path}`,
       changedMeanwhile: (path: string) => `Yazılmadı, dosya bu arada değişti: ${path}`,
+      writeTruncated: (path: string) => `Yazılmadı, yeni içerik dosyayı kısaltıyor: ${path}`,
       editAmbiguous: (path: string) => `Düzenlenemedi, metin birden çok yerde: ${path}`
     },
 
@@ -174,6 +175,8 @@ export const tools = {
         `old_text "${path}" dosyasında birebir bulunamadı. Önce read_file ile dosyanın güncel halini oku, değiştirmek istediğin kısmı boşlukları ve satır sonlarıyla aynen kopyala ve yeniden dene.`,
       syntaxBroken: (path: string, problem: string) =>
         `Dikkat: bu değişiklikten sonra "${path}" artık geçerli değil (${problem}). read_file ile dosyanın şimdiki halini oku ve hatayı düzelt.`,
+      writeTruncated: (path: string) =>
+        `"${path}" yazılmadı: yeni içerik dosyanın bazı kısımlarını "..." gibi yer tutucularla atlıyor ya da dosyanın yarısından kısa. Böyle yazılsaydı dosyanın geri kalanı silinirdi. Var olan dosyada yalnızca değişen satırları edit_file ile düzenle.`,
       closest: (snippet: string) =>
         `Dosyada buna en çok benzeyen yer:\n${snippet}\nold_text'i bu satırlardan birebir kopyala (satır numaraları olmadan) ve yeniden dene.`,
       editAmbiguous: (path: string, count: number) =>

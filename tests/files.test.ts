@@ -518,3 +518,14 @@ describe('düzenleme dosyayı bozarsa', () => {
     expect(fine.result).not.toMatch(/geçerli değil|no longer valid/)
   })
 })
+
+describe('dosyayı kısaltan üstüne yazma', () => {
+  it('yer tutucuyla kısaltılmış içerik yazılmaz, onaya bile sunulmaz', async () => {
+    const long = Array.from({ length: 120 }, (_, i) => `const S${i} = ${i}`).join('\n')
+    await writeFile(join(root, 'sabit.js'), long)
+    const out = await run('write_file', { path: 'sabit.js', content: 'const S0 = 0\n// ... diğer sabitler\nconst KDV = 0.2' })
+    expect(out.step.status).toBe('error')
+    expect(await readFile(join(root, 'sabit.js'), 'utf8')).toBe(long)
+    expect(approvals).toEqual([])
+  })
+})

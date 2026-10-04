@@ -7,7 +7,7 @@ import { L, locale } from '../i18n'
 import { decodeText, extractText, TEXT_EXTENSIONS } from './attachments'
 import { classifyCommand } from '@shared/command'
 import { isSecretFile, runCommand } from './code'
-import { closestLines, numberedLines, relaxedReplace, stripLineNumbers, syntaxError } from './patch'
+import { closestLines, looksTruncated, numberedLines, relaxedReplace, stripLineNumbers, syntaxError } from './patch'
 import { scanHardware } from './hardware'
 import { cosine, EMBEDDING_MODEL, tokens, type MemoryService } from './memory'
 import * as ollama from './ollama'
@@ -720,6 +720,9 @@ export class FilesService {
           if (existing && existing.size > MAX_GREP_BYTES) throw new FileToolError(t.errors.tooLarge)
           const before = existing ? await readEditable(full, rel) : null
           if (before === content) return done(t.step.unchanged(rel), t.result.unchanged)
+          // Var olan dosyayı "..." gibi yer tutucularla ya da yarısını atarak baştan yazmak dosyanın geri kalanını siler:
+          // onaya bile sunulmaz, model edit_file'a yönlendirilir.
+          if (before !== null && looksTruncated(before, content)) return done(t.step.writeTruncated(rel), t.result.writeTruncated(rel), 'error')
 
           const approved = await this.allow(
             { id: randomUUID(), conversationId, kind: 'write', path: rel, before, after: content, protected: isProtectedPath(rel) || isSecretFile(rel) },

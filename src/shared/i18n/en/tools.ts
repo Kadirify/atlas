@@ -129,6 +129,7 @@ export const tools: Dict['tools'] = {
       edited: (path: string) => `Edited: ${path}`,
       editNotFound: (path: string) => `Not edited, text not found: ${path}`,
       changedMeanwhile: (path: string) => `Not written, the file changed in the meantime: ${path}`,
+      writeTruncated: (path: string) => `Not written, the new content cuts the file short: ${path}`,
       editAmbiguous: (path: string) => `Not edited, text appears in several places: ${path}`
     },
 
@@ -169,6 +170,8 @@ export const tools: Dict['tools'] = {
         `old_text was not found word for word in "${path}". Read the current file with read_file first, copy the part you want to change exactly (spaces and line breaks included) and try again.`,
       syntaxBroken: (path: string, problem: string) =>
         `Warning: after this change "${path}" is no longer valid (${problem}). Read its current content with read_file and fix the error.`,
+      writeTruncated: (path: string) =>
+        `"${path}" was not written: the new content skips parts of the file with placeholders such as "..." or is less than half the file. Writing it would delete the rest of the file. In an existing file, change only the lines that need changing with edit_file.`,
       closest: (snippet: string) =>
         `The closest place in the file:\n${snippet}\nCopy old_text exactly from these lines (without line numbers) and try again.`,
       editAmbiguous: (path: string, count: number) =>

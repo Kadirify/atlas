@@ -90,3 +90,22 @@ describe('syntaxError', () => {
     expect(syntaxError('a.md', '{')).toBeNull()
   })
 })
+
+import { looksTruncated } from '../src/main/services/patch'
+
+describe('looksTruncated', () => {
+  const long = Array.from({ length: 150 }, (_, i) => `const SABIT_${i} = ${i}`).join('\n')
+
+  it('yer tutucuyla kısaltılmış ya da yarısı atılmış içeriği yakalar', () => {
+    expect(looksTruncated(long, 'const SABIT_0 = 0\n// ... (diğer sabitler)\nconst VARSAYILAN_KDV = 0.20')).toBe(true)
+    expect(looksTruncated(long, 'const SABIT_0 = 0\n...\nconst SABIT_149 = 149')).toBe(true)
+    expect(looksTruncated(long, long.split('\n').slice(0, 60).join('\n'))).toBe(true)
+  })
+
+  it('tam içeriğe, kısa dosyalara ve yayma (...args) sözdizimine dokunmaz', () => {
+    expect(looksTruncated(long, long.replace('SABIT_5 = 5', 'SABIT_5 = 6'))).toBe(false)
+    expect(looksTruncated('a\nb', '// ...')).toBe(false)
+    const withSpread = `${long}\nconst y = { ...x }\nf(...args)`
+    expect(looksTruncated(long, withSpread)).toBe(false)
+  })
+})
