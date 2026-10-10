@@ -1,4 +1,5 @@
 import { ChevronDown, ChevronRight, Code2, Database, ExternalLink, File, FileLock2, Folder as FolderIcon, FolderOpen, FolderPlus, MessageSquareQuote, PanelLeft, RefreshCw, ShieldCheck, Terminal, X } from 'lucide-react'
+import { hasCodeModel } from '../lib/codeModel'
 import { useCallback, useEffect, useState } from 'react'
 import type { CodeEntry, CodeFile } from '@shared/types'
 import { Button, IconButton, Notice } from '@/components/ui'
@@ -19,7 +20,7 @@ export default function CodeHome() {
   const installed = useApp((s) => s.installed)
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
-  const hasCodeModel = installed.some((m) => m.name.startsWith('atlas-code'))
+  const codeModelReady = hasCodeModel(installed.map((m) => m.name))
 
   useEffect(() => {
     void loadFolders()
@@ -67,7 +68,7 @@ export default function CodeHome() {
           ))}
         </ul>
 
-        {!hasCodeModel && (
+        {!codeModelReady && (
           <div className="mt-6">
             <Notice tone="info">{c.noCodeModel}</Notice>
           </div>

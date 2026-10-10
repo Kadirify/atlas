@@ -33,7 +33,7 @@ In the code area the model reads and edits files, runs tests and queries databas
 | **Atlas Strong** | 26/28 | 10/10 | 6 s |
 | Atlas Code | 18/28 | 4/10 | 38 s |
 
-We recommend **Atlas Strong** for the code area. Atlas Code is good at writing code and SQL in chat (Atlas-TR code score 98), but it often stumbles when using tools and is slow because it does not fully fit a 12 GB graphics card. The next training round targets this.
+That is why the code area opens with **Atlas Strong** when it is installed (otherwise Atlas Code, then Atlas Medium); you can change it from the chat's model picker. Atlas Code is good at writing code and SQL in chat (Atlas-TR code score 98), but it often stumbles when using tools and is slow because it does not fully fit a 12 GB graphics card. The next training round targets this.
 
 ## Use them anywhere
 

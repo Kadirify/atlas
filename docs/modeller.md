@@ -43,7 +43,7 @@ Kod alanında model dosya okur, düzenler, test çalıştırır ve veritabanına
 | **Atlas Strong** | 26/28 | 10/10 | 6 sn |
 | Atlas Code | 18/28 | 4/10 | 38 sn |
 
-Kod alanı için **Atlas Strong'u** öneriyoruz. Atlas Code kod yazma ve SQL sorularında iyi (Atlas-TR kod puanı 98), ama araç kullanırken sık takılıyor ve 12 GB ekran kartına tam sığmadığı için yavaş. Bir sonraki eğitim turu bunu hedefliyor.
+Kod alanı bu yüzden **Atlas Strong** kuruluysa onunla açılır (yoksa Atlas Code, o da yoksa Atlas Medium); istersen sohbetin model seçicisinden değiştirebilirsin. Atlas Code kod yazma ve SQL sorularında iyi (Atlas-TR kod puanı 98), ama araç kullanırken sık takılıyor ve 12 GB ekran kartına tam sığmadığı için yavaş. Bir sonraki eğitim turu bunu hedefliyor.
 
 ## Modelleri Atlas dışında kullanmak
 

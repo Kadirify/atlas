@@ -150,7 +150,7 @@ export const chat: Dict['chat'] = {
     ruleCommand: 'It asks for your approval before running a command such as tests, a build or git. If you always allow a command, it can also run files Atlas has edited.',
     ruleSql: 'In the database it runs SELECT queries by itself and asks for approval before anything that changes data.',
     ruleDelete: 'It has no delete tool: it does not delete files and does not run known deleting commands or DELETE, DROP and TRUNCATE. Those are left to you.',
-    noCodeModel: 'Atlas Code is not installed; the chat starts with your default model. For coding work, install Atlas Code from Settings → Models.',
+    noCodeModel: 'Atlas Strong is not installed; the chat starts with your default model. For coding work, install Atlas Strong from Settings → Models (needs a 12 GB graphics card).',
     projects: 'Projects',
     openFolder: 'Open a project folder',
     noProjects: 'No project has been opened yet. Start with "Open a project folder".',

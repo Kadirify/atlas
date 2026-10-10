@@ -26,6 +26,7 @@
 - Veritabanı açılamazsa uygulama asılı kalmıyor, ne olduğunu söylüyor.
 
 ### Diğer
+- Kod alanı artık Atlas Strong kuruluysa onunla açılıyor (yoksa Atlas Code, o da yoksa Medium); ajan test setinde kod alanında en başarılı ve en hızlı model.
 - Ajan test seti (`npm run eval:ajan`): 28 görevle kod alanı ve veritabanı sohbetlerinde gerçek modelin iş bitirip bitirmediğini ölçer.
 - `.env` gibi gizli dosyaların adı geçen komutlar (`type .env`) da çalıştırılmıyor.
 - Kurulum dosyası küçüldü: kullanılmayan paketler, kaynak haritaları ve fazla dil dosyaları çıkarıldı.

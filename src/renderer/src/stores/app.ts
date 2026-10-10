@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import { pickCodeModel } from '../lib/codeModel'
 import {
   DEFAULT_PERSONA_ID,
   type Conversation,
@@ -106,9 +107,6 @@ interface AppState {
   remove(id: string): Promise<void>
   clearError(id: string): void
 }
-
-/** Kod alanında tercih edilen modeller, sırayla */
-const CODE_MODEL_ORDER = [/(?:^|\/)atlas-code\b/, /(?:^|\/)atlas-(?:strong|guclu)\b/, /(?:^|\/)atlas-(?:medium|orta)\b/]
 
 function without<T>(record: Record<string, T>, key: string): Record<string, T> {
   const { [key]: _removed, ...rest } = record
@@ -277,10 +275,8 @@ export const useApp = create<AppState>((set, get) => ({
 
   async startCode(folderId) {
     const created = await window.api.conversations.create({ personaId: 'builtin:yazilim', private: false, folderId, sqlId: null })
-    // Atlas Code kuruluysa bu sohbet onunla çalışır; yoksa Strong, o da yoksa Medium; hiçbiri yoksa varsayılan model.
-    // Adlar yayımlanmış ("kadirify/atlas-code") ya da yerel ("atlas-code-agirlik:tur1") olabilir.
-    const names = get().installed.map((m) => m.name)
-    const codeModel = CODE_MODEL_ORDER.map((pattern) => names.find((n) => pattern.test(n))).find(Boolean)
+    // Atlas Strong kuruluysa bu sohbet onunla çalışır; yoksa Atlas Code, o da yoksa Medium; hiçbiri yoksa varsayılan model.
+    const codeModel = pickCodeModel(get().installed.map((m) => m.name))
     if (codeModel) await window.api.conversations.setModel(created.id, codeModel)
     await get().refreshConversations()
     set({ filesOpen: true, codeFile: null })

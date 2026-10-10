@@ -149,7 +149,7 @@ export const chat = {
     ruleCommand: 'Test, derleme ve git gibi komutları çalıştırmadan önce onayını ister. Bir komuta "hep izin ver" dersen, o komut Atlas\'ın düzenlediği dosyaları da çalıştırabilir.',
     ruleSql: 'Veritabanında SELECT sorgularını kendisi çalıştırır; değiştiren sorgular için onay ister.',
     ruleDelete: 'Silme aracı yoktur: dosya silmez, bilinen silme komutlarını ve DELETE, DROP, TRUNCATE sorgularını çalıştırmaz. Bunları sana bırakır.',
-    noCodeModel: 'Atlas Code kurulu değil; sohbet varsayılan modelinle başlar. Kod işleri için Ayarlar → Modeller\'den Atlas Code\'u kurmanı öneririm.',
+    noCodeModel: 'Atlas Strong kurulu değil; sohbet varsayılan modelinle başlar. Kod işleri için Ayarlar → Modeller\'den Atlas Strong\'u kurmanı öneririm (12 GB ekran kartı gerekir).',
     projects: 'Projeler',
     openFolder: 'Proje klasörü aç',
     noProjects: 'Henüz açılmış bir proje yok. "Proje klasörü aç" ile başla.',

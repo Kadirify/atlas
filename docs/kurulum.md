@@ -18,7 +18,8 @@ Kurulum sihirbazı bilgisayarını tarayıp bunu kendisi önerir. Kabaca:
 | Ekran kartı yok ya da 4-6 GB ekran kartı, 16 GB bellek | Atlas Light | 3,5 GB |
 | 8 GB ekran kartı | Atlas Medium | 7,3 GB |
 | 12 GB ve üstü ekran kartı | Atlas Strong | 9,2 GB |
-| Yazılım işleri, 12 GB ve üstü ekran kartı | Atlas Code | 9,0 GB |
+
+Kod alanı Atlas Strong kuruluysa onunla açılır; kod alanında en başarılı model o ([ölçüm](modeller.md#kod-alanında-hangisi)). Atlas Code (9,0 GB) sohbette kod yazmak ve SQL soruları için iyi, model seçicisinden seçilebilir.
 
 Birden fazla model kurup sohbet başına seçebilirsin. Modellerin ayrıntısı: [Atlas modelleri](modeller.md).
 
