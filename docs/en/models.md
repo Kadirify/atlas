@@ -24,6 +24,17 @@ Atlas only works with its own model family. Each model is an open base model fin
 
 Known weaknesses: Atlas Code's translation score dropped (100 → 83); Atlas Light lost a few points in casual chat and formal writing; the spelling test is rule-generated, so results on real human mistakes may differ.
 
+## Which one for the code area?
+
+In the code area the model reads and edits files, runs tests and queries databases. We measure this with a separate test suite ([eval/ajan](../../eval/ajan/README.md)): 28 small tasks (find and fix a bug, rename across files, refuse a delete, read a trigger and explain it...). Latest run (RTX 5070, each task once):
+
+| Model | Passed | Code tasks | Time per task |
+| --- | ---: | ---: | ---: |
+| **Atlas Strong** | 26/28 | 10/10 | 6 s |
+| Atlas Code | 18/28 | 4/10 | 38 s |
+
+We recommend **Atlas Strong** for the code area. Atlas Code is good at writing code and SQL in chat (Atlas-TR code score 98), but it often stumbles when using tools and is slow because it does not fully fit a 12 GB graphics card. The next training round targets this.
+
 ## Use them anywhere
 
 ```bash

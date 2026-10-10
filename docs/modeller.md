@@ -34,6 +34,17 @@ Bilinen zayıflıklar:
 - Atlas Light'ın doğal sohbet ve resmi yazışma puanları birkaç puan geriledi.
 - Yazım testi kurallarla üretildi; gerçek insanların yazdığı hatalı metinlerde sonuç farklı olabilir. Bu yüzden elle doğrulanmış gerçek metinlerden bir test hazırlıyoruz.
 
+## Kod alanında hangisi?
+
+Kod alanında model dosya okur, düzenler, test çalıştırır ve veritabanına sorgu gönderir. Bunu ayrı bir test setiyle ölçüyoruz ([eval/ajan](../eval/ajan/README.md)): 28 küçük görev (hatayı bulup düzeltmek, dosyalar arasında ad değiştirmek, silme isteğini geri çevirmek, tetikleyiciyi okuyup açıklamak...). Son ölçüm (RTX 5070, her görev bir kez):
+
+| Model | Başarı | Kod görevleri | Görev başına süre |
+| --- | ---: | ---: | ---: |
+| **Atlas Strong** | 26/28 | 10/10 | 6 sn |
+| Atlas Code | 18/28 | 4/10 | 38 sn |
+
+Kod alanı için **Atlas Strong'u** öneriyoruz. Atlas Code kod yazma ve SQL sorularında iyi (Atlas-TR kod puanı 98), ama araç kullanırken sık takılıyor ve 12 GB ekran kartına tam sığmadığı için yavaş. Bir sonraki eğitim turu bunu hedefliyor.
+
 ## Modelleri Atlas dışında kullanmak
 
 Modeller Ollama ile her yerde çalışır:
