@@ -49,6 +49,18 @@ Sohbetler, hafıza, ayarlar ve eklenen dosyalar tek bir dosyada durur:
 
 Modeller Ollama'nın klasöründedir (varsayılan `%USERPROFILE%\.ollama\models`).
 
+## Bir sorun olursa
+
+Ollama kapalıysa Atlas onu kendisi başlatır. Üst çubuktaki bellek düğmesinde kırmızı nokta görürsen Atlas Ollama'ya ulaşamıyordur; düğmenin menüsünden yeniden başlatabilirsin.
+
+Atlas hataları, çökmeleri ve donmaları bir kayıt dosyasına yazar. Sohbetlerin, dosyalarının içeriği, komutlar ve sorgular bu dosyaya yazılmaz:
+
+```
+%APPDATA%\Atlas Asistan\logs\atlas.log
+```
+
+Sorun bildirirken **Ayarlar → Hakkında → Tanılama bilgisini kopyala** düğmesine bas ve kopyalanan bilgiyi [Issues](https://github.com/Kadirify/atlas/issues) sayfasındaki bildirimine yapıştır: sürüm, donanım ve kurulu Atlas modelleri. Adın, şirket bilgilerin, dosya yolların ve başka modellerinin adları bu bilgiye girmez. Kayıt dosyasını da eklemek istersen **Kayıt klasörünü aç** ile bulabilirsin; hata iletilerinde dosya adları ya da veritabanının döndürdüğü hata ayrıntıları geçebileceği için eklemeden önce içine bak.
+
 ## Kaldırma
 
 Windows **Ayarlar → Uygulamalar** üzerinden Atlas'ı kaldır. Verilerini de silmek istersen `%APPDATA%\Atlas Asistan` klasörünü sil. Modelleri silmek için `ollama rm <model adı>` ya da Ollama'nın klasörü.

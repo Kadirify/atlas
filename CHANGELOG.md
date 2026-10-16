@@ -12,6 +12,7 @@
 - Yanlış PIN sayacı yeniden başlatınca sıfırlanmıyor.
 
 ### Düzeltmeler
+- Pencerenin sayfası çökerse boş kalmıyor, kendiliğinden yeniden yükleniyor.
 - Ollama kapalıysa Atlas onu kendisi başlatıyor: açılışta ve bir soru bağlanamadığında (sonra aynı istek yeniden deneniyor). Üst çubuktaki bellek düğmesinde Ollama kapalıyken kırmızı nokta ve "Ollama'yı başlat" düğmesi.
 - UTF-8 olmayan dosyalar düzenlenince bozulmuyor; onay beklerken değişen dosyanın üstüne yazılmıyor.
 - Geri alma taşımayı da kapsıyor, sonradan değişen dosyayı ezmiyor, yarıda hata olursa kaydı kaybetmiyor.
@@ -27,6 +28,7 @@
 - Veritabanı açılamazsa uygulama asılı kalmıyor, ne olduğunu söylüyor.
 
 ### Diğer
+- Hata kaydı: yakalanmamış hatalar, pencere ve alt süreç çökmeleri, uygulamanın donması ve Ollama'nın başlatılması `%APPDATA%\Atlas Asistan\logs` altına yazılıyor (sohbet içeriği yazılmaz). Ayarlar → Hakkında'da "Tanılama bilgisini kopyala" ve "Kayıt klasörünü aç".
 - Kod alanı artık Atlas Strong kuruluysa onunla açılıyor (yoksa Atlas Code, o da yoksa Medium); ajan test setinde kod alanında en başarılı ve en hızlı model.
 - Ajan test seti (`npm run eval:ajan`): 28 görevle kod alanı ve veritabanı sohbetlerinde gerçek modelin iş bitirip bitirmediğini ölçer.
 - `.env` gibi gizli dosyaların adı geçen komutlar (`type .env`) da çalıştırılmıyor.

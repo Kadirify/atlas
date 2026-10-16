@@ -4,7 +4,7 @@ import { mkdir, rm } from 'node:fs/promises'
 import { join } from 'node:path'
 import { Readable } from 'node:stream'
 import { pipeline } from 'node:stream/promises'
-import { app } from 'electron'
+import { app, shell } from 'electron'
 import type {
   BenchmarkResult,
   DownloadProgress,
@@ -13,6 +13,7 @@ import type {
   PullProgress
 } from '@shared/types'
 import { L } from '../i18n'
+import { log } from '../log'
 
 const BASE = 'http://127.0.0.1:11434'
 /**
@@ -183,13 +184,21 @@ export async function start(): Promise<OllamaStatus> {
   const exe = await findExecutable()
   if (!exe) return { installed: false, running: false, version: null }
   // Kurulu masaüstü uygulaması varsa o başlatılır (kullanıcının alıştığı tepsi simgesiyle); yoksa yalnızca sunucu.
-  const app = desktopApp()
-  const child = app
-    ? spawn(app, [], { detached: true, stdio: 'ignore', windowsHide: true })
-    : spawn(exe, ['serve'], { detached: true, stdio: 'ignore', windowsHide: true })
-  child.on('error', () => {})
-  child.unref()
-  await waitUntilRunning(20_000)
+  const desktop = desktopApp()
+  log('info', `Starting Ollama (${desktop ? 'desktop app' : 'ollama serve'})`)
+  if (desktop) {
+    // Windows kabuğu üzerinden açılır: doğrudan başlatılan süreç Atlas'ın açık tutamaçlarını (soketler, dosyalar)
+    // devralır ve Atlas kapandıktan sonra da serbest bırakmaz.
+    const error = await shell.openPath(desktop)
+    if (error) log('error', 'Ollama could not be started', error)
+  } else {
+    const child = spawn(exe, ['serve'], { detached: true, stdio: 'ignore', windowsHide: true })
+    child.on('error', (err) => log('error', 'Ollama could not be started', err))
+    child.unref()
+  }
+  const started = Date.now()
+  if (await waitUntilRunning(20_000)) log('info', `Ollama is running (after ${((Date.now() - started) / 1000).toFixed(1)} s)`)
+  else log('error', 'Ollama did not start within 20 s')
   return status()
 }
 

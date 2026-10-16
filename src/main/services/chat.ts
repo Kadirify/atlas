@@ -11,6 +11,7 @@ import type {
 } from '@shared/types'
 import { ATTACHMENT_CHAR_BUDGET, NEW_CONVERSATION_TITLE, type Db } from '../db'
 import { getLanguage, L, locale } from '../i18n'
+import { log } from '../log'
 import { attachmentsBlock } from './attachments'
 import { isAtlasModel } from './catalog'
 import { loopNotice, PartialError, streamGuarded } from './generate'
@@ -591,6 +592,7 @@ export class ChatService {
             const message = `${err instanceof Error ? err.message : String(err)} ${cause instanceof Error ? cause.message : ''}`
             if (partial || controller.signal.aborted || attempt >= CRASH_RETRIES || !RUNNER_CRASH.test(message)) throw err
             this.events.debug?.({ conversationId, kind: 'retry', detail: message.trim().slice(0, 200) })
+            log('warn', `Ollama request failed, retrying (${attempt + 1}/${CRASH_RETRIES})`, message.trim().slice(0, 300))
             // Ollama kapalıysa (bilgisayar yeniden başladı, kullanıcı kapattı) önce başlatılır, sonra yeniden denenir.
             if (isUnreachable(cause) || isUnreachable(err)) {
               if (await ensureRunning()) continue

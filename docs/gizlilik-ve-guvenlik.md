@@ -8,6 +8,7 @@ Atlas'ın var olma nedeni verinin senin bilgisayarında kalması. Bu sayfa veril
 | --- | --- |
 | Sohbetler, eklenen belgelerin metni ve aslı, ayarlar, bellek notları, veritabanı bağlantıları | `%APPDATA%\Atlas Asistan\atlas.db` (tek bir SQLite dosyası) |
 | Modeller | Ollama'nın klasörü (varsayılan `%USERPROFILE%\.ollama\models`) |
+| Hata kaydı: hatalar, çökmeler, donmalar (sohbet, dosya içeriği, komut ve sorgu metni yazılmaz) | `%APPDATA%\Atlas Asistan\logs` (en çok 4 MB; eskiler kendiliğinden silinir) |
 | Proje klasörlerin | Oldukları yerde; Atlas yalnızca senin bağladığın klasörün içinde çalışır |
 
 - **Veritabanı parolaları** Windows'un güvenli deposuyla (DPAPI) şifrelenerek saklanır; başka bir kullanıcı ya da başka bir bilgisayar çözemez.

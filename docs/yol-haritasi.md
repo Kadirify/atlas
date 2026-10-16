@@ -4,10 +4,8 @@ Atlas'ta sırada ne var. Öncelik sırasıyla; tarih vermiyoruz, çünkü proje 
 
 ## Şimdi: sağlamlık ve güvenlik
 
-- **Ollama'yı kendiliğinden başlatmak.** Ollama kapanırsa Atlas onu kendisi başlatsın; üst çubukta durum göstergesi.
 - **Komutlar için güvenli kip.** Her komuttan önce proje klasörünün anlık görüntüsü; komutun sildiği ya da değiştirdiği dosyaları tek tıkla geri alma. Atlas'ın değiştirdiği dosyaları çalıştıracak komutlar her seferinde sorulsun.
 - **Uygulamanın donmaması.** SQLite sorguları ve belge okuma ayrı iş parçacığında, süre ve boyut sınırıyla.
-- **Kayıt dosyası.** Hata bildirimine eklenebilecek kayıt ve tanılama bilgisi.
 - **İmzalı güncellemeler.** Kurulum dosyalarını ve model tariflerini imzalamak, uygulamada doğrulamak.
 - **Veritabanı bağlantılarında şifreleme varsayılan.**
 

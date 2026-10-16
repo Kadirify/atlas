@@ -474,6 +474,9 @@ function AboutTab({ onClose }: { onClose(): void }) {
   const [updateError, setUpdateError] = useState('')
   /** null: indirme başlamadı; 100: indirildi ve kuruluma hazır */
   const [downloadPercent, setDownloadPercent] = useState<number | null>(null)
+  const [diagnostics, setDiagnostics] = useState('')
+  const [preparing, setPreparing] = useState(false)
+  const [reportError, setReportError] = useState('')
   useEffect(() => {
     void window.api.app.version().then(setVersion)
     return window.api.app.onUpdateProgress((p) => setDownloadPercent((current) => (current === null ? current : Math.floor(p.percent))))
@@ -488,6 +491,18 @@ function AboutTab({ onClose }: { onClose(): void }) {
     } catch (e) {
       setDownloadPercent(null)
       setUpdateError(errorText(e))
+    }
+  }
+
+  async function copyDiagnostics(): Promise<void> {
+    setPreparing(true)
+    setReportError('')
+    try {
+      setDiagnostics(await window.api.app.diagnostics())
+    } catch (e) {
+      setReportError(errorText(e))
+    } finally {
+      setPreparing(false)
     }
   }
 
@@ -569,6 +584,25 @@ function AboutTab({ onClose }: { onClose(): void }) {
           {update?.modelsUpdated && <p className="text-ink-2">{a.modelsUpdated}</p>}
           {updateError && <p className="text-danger">{updateError}</p>}
         </div>
+      </section>
+      <section>
+        <h3 className="mb-1 text-sm font-semibold text-ink">{a.reportTitle}</h3>
+        <p className="mb-3 max-w-[52ch] text-[13px] text-ink-3">{a.reportHint}</p>
+        <div className="flex flex-wrap gap-2">
+          <Button disabled={preparing} onClick={() => void copyDiagnostics()}>
+            {preparing ? a.preparing : diagnostics ? a.copiedAgain : a.copyDiagnostics}
+          </Button>
+          <Button onClick={() => void window.api.app.openLogs().catch((e) => setReportError(errorText(e)))}>{a.openLogs}</Button>
+        </div>
+        {diagnostics && (
+          <div className="mt-3" role="status">
+            <p className="mb-1.5 text-[13px] text-ink-2">{a.copied}</p>
+            <pre className="max-h-[200px] overflow-auto rounded-xl border border-line bg-bg px-3 py-2 text-xs leading-relaxed whitespace-pre-wrap text-ink-2 select-text">
+              {diagnostics}
+            </pre>
+          </div>
+        )}
+        {reportError && <p className="mt-2 text-[13px] text-danger">{reportError}</p>}
       </section>
       <section>
         <h3 className="mb-1 text-sm font-semibold text-ink">{a.wizardTitle}</h3>

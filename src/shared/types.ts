@@ -965,6 +965,10 @@ export interface Api {
     version(): Promise<string>
     /** Sohbetlerin ve ayarların saklandığı klasör */
     dataPath(): Promise<string>
+    /** Hata bildirimi için tanılama bilgisini (sürüm, donanım, modeller; sohbet içeriği yok) hazırlar ve panoya kopyalar. */
+    diagnostics(): Promise<string>
+    /** Kayıt dosyalarının klasörünü dosya gezgininde açar. */
+    openLogs(): Promise<void>
     setTitleBarTheme(dark: boolean): Promise<void>
     /** Depodan yeni sürüme ve yeni model tariflerine bakar. Yalnızca kullanıcı isteyince çağrılır. */
     checkUpdates(): Promise<UpdateInfo>

@@ -156,7 +156,15 @@ export const settings = {
     modelsUpdated: 'Atlas model listesi yenilendi.',
     wizardTitle: 'Kurulum sihirbazı',
     wizardHint: 'Bilgisayarı yeniden tarar ve model önerir. Sohbetlerin silinmez.',
-    restartWizard: 'Sihirbazı yeniden başlat'
+    restartWizard: 'Sihirbazı yeniden başlat',
+    reportTitle: 'Sorun bildirmek',
+    reportHint:
+      'Bir sorunu bildirirken tanılama bilgisini ekle: sürüm, donanım ve kurulu Atlas modelleri. Sohbetlerin, adın ve dosya yolların girmez. Hatanın ayrıntısı kayıt dosyasındadır; eklemeden önce içine bakabilirsin.',
+    copyDiagnostics: 'Tanılama bilgisini kopyala',
+    copiedAgain: 'Yeniden kopyala',
+    preparing: 'Hazırlanıyor…',
+    copied: 'Panoya kopyalandı. Kopyalanan bilgi:',
+    openLogs: 'Kayıt klasörünü aç'
   },
 
   personas: {

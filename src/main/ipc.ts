@@ -38,6 +38,8 @@ import { sqlService } from './services/sql'
 import { isRunnable, listDir, readForView } from './services/code'
 import { resolveInside } from './services/files'
 import { buildApp, buildImproveMessages } from './services/studio'
+import { formatDiagnostics } from './services/diagnostics'
+import { log, logFolder, logSummary } from './log'
 import type { WhatsAppService } from './services/whatsapp'
 
 export type IpcResult<T> = { ok: true; data: T } | { ok: false; error: string }
@@ -84,11 +86,17 @@ function trustedSender(event: IpcMainInvokeEvent): boolean {
 /** Hatalar arayüze geçerli dilde düz mesaj olarak ulaşsın diye her cevap sarmalanır. */
 function handle<A extends unknown[], R>(channel: string, fn: (...args: A) => R | Promise<R>): void {
   ipcMain.handle(channel, async (event, ...args): Promise<IpcResult<R>> => {
+    let locked = false
     try {
-      if (!trustedSender(event)) throw new Error('untrusted sender')
-      if (isLocked() && !OPEN_WHEN_LOCKED.has(channel)) throw new Error(L().main.lock.locked)
+      if (!trustedSender(event)) throw new Error(`untrusted sender ${event.senderFrame?.url.slice(0, 80) ?? ''}`)
+      if (isLocked() && !OPEN_WHEN_LOCKED.has(channel)) {
+        locked = true
+        throw new Error(L().main.lock.locked)
+      }
       return { ok: true, data: await fn(...(args as A)) }
     } catch (err) {
+      // Kilitliyken reddedilen istekler olağandır; diğer hatalar kayda geçer (yalnızca hata iletisi, istek içeriği değil).
+      if (!locked) log('warn', `${channel} failed`, err instanceof Error ? `${err.name}: ${err.message}` : err)
       return { ok: false, error: ollama.describeError(err) }
     }
   })
@@ -614,6 +622,35 @@ export function registerIpc(
   })
   handle('app:dismissWhatsNew', () => db.setInternal('whatsNew', null))
   handle('app:dataPath', () => app.getPath('userData'))
+  handle('app:diagnostics', async () => {
+    const [hardware, status, installed, loaded] = await Promise.all([
+      scanHardware(),
+      ollama.status(),
+      ollama.listInstalled().catch(() => [] as InstalledModel[]),
+      ollama.listLoaded()
+    ])
+    const text = formatDiagnostics({
+      version: app.getVersion(),
+      packaged: app.isPackaged,
+      versions: { electron: process.versions.electron, chrome: process.versions.chrome, node: process.versions.node },
+      arch: process.arch,
+      hardware,
+      ollama: status,
+      installed,
+      loaded,
+      isAtlas: isAtlasModel,
+      embeddingModel: EMBEDDING_MODEL,
+      settings: db.getSettings(),
+      lockEnabled: desktop.lock.enabled(),
+      log: logSummary()
+    })
+    clipboard.writeText(text)
+    return text
+  })
+  handle('app:openLogs', async () => {
+    const error = await shell.openPath(logFolder() ?? app.getPath('userData'))
+    if (error) throw new Error(error)
+  })
   handle('app:checkUpdates', () => checkUpdates(app.getVersion(), recipesVersion(), app.getPath('userData')))
   handle('app:setTitleBarTheme', (dark: boolean) => titleBar(dark))
 }

@@ -156,7 +156,15 @@ export const settings: Dict['settings'] = {
     modelsUpdated: 'The Atlas model list was refreshed.',
     wizardTitle: 'Setup wizard',
     wizardHint: 'Scans this computer again and recommends a model. Your chats are kept.',
-    restartWizard: 'Run setup again'
+    restartWizard: 'Run setup again',
+    reportTitle: 'Reporting a problem',
+    reportHint:
+      'When you report a problem, include the diagnostic info: version, hardware and installed Atlas models. Your chats, name and file paths are not included. The error details are in the log file; you can look inside before attaching it.',
+    copyDiagnostics: 'Copy diagnostic info',
+    copiedAgain: 'Copy again',
+    preparing: 'Preparing…',
+    copied: 'Copied to the clipboard. This is what was copied:',
+    openLogs: 'Open log folder'
   },
 
   personas: {

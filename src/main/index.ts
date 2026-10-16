@@ -20,6 +20,7 @@ import { L } from './i18n'
 import { MemoryService } from './services/memory'
 import { WhatsAppService } from './services/whatsapp'
 import { initSql } from './services/sql'
+import { flushLog, initLog, log, watchEventLoop } from './log'
 
 const TITLE_BAR_HEIGHT = 40
 const isDev = !app.isPackaged && !!process.env.ELECTRON_RENDERER_URL
@@ -34,6 +35,14 @@ app.setPath('userData', testUserData || join(app.getPath('appData'), 'Atlas Asis
 // Windows görev çubuğunda doğru ad ve ikonla gruplansın.
 app.setAppUserModelId('com.atlasasistan.app')
 
+// Kayıt dosyası: hata bildirimine eklenebilsin diye yakalanmamış hatalar, çökmeler ve donmalar yazılır.
+initLog(join(app.getPath('userData'), 'logs'), { echo: !app.isPackaged })
+process.on('uncaughtException', (err) => log('error', 'Uncaught exception', err))
+process.on('unhandledRejection', (reason) => log('error', 'Unhandled rejection', reason))
+app.on('child-process-gone', (_event, d) => {
+  if (d.reason !== 'clean-exit') log('error', `Child process gone: ${d.type}${d.name ? ` (${d.name})` : ''}, ${d.reason}, exit code ${d.exitCode}`)
+})
+
 /** Uygulamanın adı "Chat System" iken oluşmuş veriyi yeni klasöre bir kez kopyalar. */
 function migrateOldData(dbPath: string): void {
   if (testUserData || existsSync(dbPath)) return
@@ -45,6 +54,8 @@ function migrateOldData(dbPath: string): void {
 }
 
 let mainWindow: BrowserWindow | null = null
+/** Çöken sayfanın en son yeniden yüklendiği an */
+let lastReload = 0
 /** Kullanıcı gerçekten çıkmak istedi (tepsi menüsü, sistem kapanışı); pencere tepsiye gizlenmez. */
 let quitting = false
 /** Pencere kapatılmak istendiğinde tepsiye gizlenecekse gizler ve true döner. */
@@ -97,6 +108,18 @@ function createWindow(show: boolean): void {
   mainWindow.once('ready-to-show', () => {
     if (show) mainWindow?.show()
   })
+  mainWindow.on('unresponsive', () => log('warn', 'Main window is not responding'))
+  mainWindow.on('responsive', () => log('info', 'Main window is responding again'))
+  // Sayfa çökerse boş pencere kalmasın: yeniden yüklenir (art arda çöküyorsa dakikada bir kez).
+  mainWindow.webContents.on('render-process-gone', (_event, d) => {
+    log('error', `Main window renderer gone: ${d.reason}, exit code ${d.exitCode}`)
+    if (d.reason === 'clean-exit' || Date.now() - lastReload < 60_000) return
+    lastReload = Date.now()
+    const win = mainWindow
+    setTimeout(() => {
+      if (win && !win.isDestroyed()) win.webContents.reload()
+    }, 500)
+  })
   mainWindow.on('close', (event) => {
     if (!quitting && hideToTray()) event.preventDefault()
   })
@@ -140,6 +163,7 @@ if (!app.requestSingleInstanceLock()) {
   }
 
   void app.whenReady().then(() => {
+    log('info', `Atlas ${app.getVersion()} started (Electron ${process.versions.electron}, ${process.platform} ${process.getSystemVersion()}, ${app.isPackaged ? 'installed' : 'development'})`)
     // Paketli sürümde Electron'un varsayılan menüsü (yeniden yükleme, geliştirici araçları kısayolları) kaldırılır.
     if (app.isPackaged) Menu.setApplicationMenu(null)
     // Sayfalar hiçbir izin (kamera, mikrofon, konum...) istemez; yalnızca panoya kopyalama açıktır.
@@ -226,6 +250,7 @@ if (!app.requestSingleInstanceLock()) {
       },
       error: (e) => {
         setWriting(e.conversationId, false)
+        log('warn', 'Reply failed', e.error)
         broadcast('chat:error', e)
         notifyReply(e.conversationId, null)
       },
@@ -291,6 +316,10 @@ if (!app.requestSingleInstanceLock()) {
 
     // Bilgisayar boş kalınca ya da Windows oturumu kilitlenince Atlas da kilitlenir.
     powerMonitor.on('lock-screen', () => void lock.lock())
+    // Ana süreç donarsa (uzun süren bir iş arayüzü bekletirse) kayda geçer; uykuda geçen süre sayılmaz.
+    let lastSuspend = 0
+    powerMonitor.on('suspend', () => (lastSuspend = Date.now()))
+    const stopWatching = watchEventLoop(() => lastSuspend)
     const idleTimer = setInterval(() => {
       const minutes = db.getSettings().lockAfterMinutes
       if (minutes > 0 && lock.enabled() && !lock.isLocked() && powerMonitor.getSystemIdleTime() >= minutes * 60) lock.lock()
@@ -343,6 +372,7 @@ if (!app.requestSingleInstanceLock()) {
       closing = true
       event.preventDefault()
       clearInterval(idleTimer)
+      stopWatching()
       panel.destroy()
       tray.destroy()
       chat.stopAll()
@@ -350,11 +380,14 @@ if (!app.requestSingleInstanceLock()) {
       // Durdurulan cevapların yazılan kısmı ve dosya değişikliklerinin geri alma kaydı kaydedilsin diye kısa süre beklenir.
       void chat.settle(2000).finally(() => {
         db.close()
+        log('info', 'Atlas closed')
+        flushLog()
         app.quit()
       })
     })
   }).catch((err: unknown) => {
     // Veritabanı açılamaz ya da güncellenemezse pencere hiç açılmadan beklemesin: ne olduğu söylenir ve uygulama kapanır.
+    log('error', 'Startup failed', err)
     const t = L().main.notify
     dialog.showErrorBox(t.startupTitle, t.startupFailed(err instanceof Error ? err.message : String(err), app.getPath('userData')))
     app.exit(1)
