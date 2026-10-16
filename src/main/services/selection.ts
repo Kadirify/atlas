@@ -126,7 +126,7 @@ export class SelectionHelper {
       try {
         // Tam yol: PATH ya da çalışma klasöründeki aynı adlı bir dosya araya giremesin.
         child = spawn(
-          join(process.env.SystemRoot ?? 'C:\Windows', 'System32', 'WindowsPowerShell', 'v1.0', 'powershell.exe'),
+          join(process.env.SystemRoot ?? 'C:\\Windows', 'System32', 'WindowsPowerShell', 'v1.0', 'powershell.exe'),
           ['-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass', '-EncodedCommand', Buffer.from(SCRIPT, 'utf16le').toString('base64')],
           { windowsHide: true }
         )

@@ -1,5 +1,5 @@
 import { copyFileSync, existsSync, mkdirSync } from 'node:fs'
-import { listLoaded, unloadModel } from './services/ollama'
+import { ensureRunning, listLoaded, unloadModel } from './services/ollama'
 import { join } from 'node:path'
 import { app, BrowserWindow, dialog, Menu, nativeTheme, powerMonitor, session, shell } from 'electron'
 import icon from '../../resources/icon.png?asset'
@@ -332,6 +332,8 @@ if (!app.requestSingleInstanceLock()) {
     panel.registerShortcuts()
     const settings = db.getSettings()
     createWindow(!(startHidden && settings.closeToTray && settings.setupDone && tray.available()))
+    // Kurulum bittiyse Ollama arka planda başlatılır (kapalıysa): ilk soruda beklenmesin, "çalışmıyor" hatası çıkmasın.
+    if (settings.setupDone) void ensureRunning()
 
     app.on('activate', () => showWindow())
     let closing = false

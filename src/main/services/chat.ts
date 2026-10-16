@@ -16,7 +16,7 @@ import { isAtlasModel } from './catalog'
 import { loopNotice, PartialError, streamGuarded } from './generate'
 import { memoryBlock, type MemoryService } from './memory'
 import type { FilesService } from './files'
-import { chatOnce, describeError, OllamaError, supportsTools, supportsVision, type OllamaMessage, type ToolCall } from './ollama'
+import { chatOnce, describeError, ensureRunning, isUnreachable, OllamaError, supportsTools, supportsVision, type OllamaMessage, type ToolCall } from './ollama'
 import { addressLine, builtinPersonas, findPersona, personaInstructions } from './personas'
 import type { WhatsAppService } from './whatsapp'
 import { sqlService } from './sql'
@@ -591,6 +591,11 @@ export class ChatService {
             const message = `${err instanceof Error ? err.message : String(err)} ${cause instanceof Error ? cause.message : ''}`
             if (partial || controller.signal.aborted || attempt >= CRASH_RETRIES || !RUNNER_CRASH.test(message)) throw err
             this.events.debug?.({ conversationId, kind: 'retry', detail: message.trim().slice(0, 200) })
+            // Ollama kapalıysa (bilgisayar yeniden başladı, kullanıcı kapattı) önce başlatılır, sonra yeniden denenir.
+            if (isUnreachable(cause) || isUnreachable(err)) {
+              if (await ensureRunning()) continue
+              throw err
+            }
             await new Promise((resolve) => setTimeout(resolve, 1500 * (attempt + 1) ** 2))
           }
         }

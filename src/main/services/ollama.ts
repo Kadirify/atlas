@@ -137,7 +137,7 @@ function findExecutable(): Promise<string | null> {
     const candidate = local ? join(local, 'Programs', 'Ollama', 'ollama.exe') : null
     if (candidate && existsSync(candidate)) return Promise.resolve(candidate)
   }
-  const finder = process.platform === 'win32' ? join(process.env.SystemRoot ?? 'C:\Windows', 'System32', 'where.exe') : 'which'
+  const finder = process.platform === 'win32' ? join(process.env.SystemRoot ?? 'C:\\Windows', 'System32', 'where.exe') : 'which'
   return new Promise((resolve) => {
     execFile(finder, ['ollama'], { windowsHide: true, timeout: 5000 }, (err, stdout) => {
       const first = stdout?.split('\n')[0]?.trim()
@@ -171,15 +171,55 @@ async function waitUntilRunning(timeoutMs: number): Promise<boolean> {
   return false
 }
 
+/** Ollama'nın Windows masaüstü uygulaması (tepsi simgesi; sunucuyu kendisi yönetir ve kendini günceller) */
+function desktopApp(): string | null {
+  if (process.platform !== 'win32' || !process.env.LOCALAPPDATA) return null
+  const app = join(process.env.LOCALAPPDATA, 'Programs', 'Ollama', 'ollama app.exe')
+  return existsSync(app) ? app : null
+}
+
 export async function start(): Promise<OllamaStatus> {
   if (await runningVersion()) return status()
   const exe = await findExecutable()
   if (!exe) return { installed: false, running: false, version: null }
-  const child = spawn(exe, ['serve'], { detached: true, stdio: 'ignore', windowsHide: true })
+  // Kurulu masaüstü uygulaması varsa o başlatılır (kullanıcının alıştığı tepsi simgesiyle); yoksa yalnızca sunucu.
+  const app = desktopApp()
+  const child = app
+    ? spawn(app, [], { detached: true, stdio: 'ignore', windowsHide: true })
+    : spawn(exe, ['serve'], { detached: true, stdio: 'ignore', windowsHide: true })
   child.on('error', () => {})
   child.unref()
   await waitUntilRunning(20_000)
   return status()
+}
+
+let starting: Promise<boolean> | null = null
+
+/**
+ * Ollama çalışmıyorsa başlatır. Aynı anda birden çok istek gelirse tek başlatma yapılır. Çalışıyorsa ya da
+ * başlatılabildiyse true.
+ */
+export function ensureRunning(): Promise<boolean> {
+  starting ??= (async () => {
+    try {
+      if (await runningVersion()) return true
+      return (await start()).running
+    } finally {
+      starting = null
+    }
+  })()
+  return starting
+}
+
+/** Hata, Ollama'ya hiç bağlanılamadığını mı gösteriyor (kapalı ya da başlamamış) */
+export function isUnreachable(err: unknown): boolean {
+  for (let e: unknown = err, depth = 0; e && depth < 4; depth++) {
+    const code = (e as { code?: unknown }).code
+    const message = e instanceof Error ? e.message : typeof e === 'string' ? e : ''
+    if (code === 'ECONNREFUSED' || /ECONNREFUSED|fetch failed|connect ECONN/i.test(message)) return true
+    e = (e as { cause?: unknown; original?: unknown }).cause ?? (e as { original?: unknown }).original
+  }
+  return false
 }
 
 /** Resmi kurulum dosyasını indirir ve sessiz modda çalıştırır (şimdilik sadece Windows). */

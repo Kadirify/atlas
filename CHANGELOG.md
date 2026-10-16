@@ -12,6 +12,7 @@
 - Yanlış PIN sayacı yeniden başlatınca sıfırlanmıyor.
 
 ### Düzeltmeler
+- Ollama kapalıysa Atlas onu kendisi başlatıyor: açılışta ve bir soru bağlanamadığında (sonra aynı istek yeniden deneniyor). Üst çubuktaki bellek düğmesinde Ollama kapalıyken kırmızı nokta ve "Ollama'yı başlat" düğmesi.
 - UTF-8 olmayan dosyalar düzenlenince bozulmuyor; onay beklerken değişen dosyanın üstüne yazılmıyor.
 - Geri alma taşımayı da kapsıyor, sonradan değişen dosyayı ezmiyor, yarıda hata olursa kaydı kaybetmiyor.
 - Durdur, izin verilmiş işlemleri, komutları ve veritabanı sorgularını gerçekten durduruyor.

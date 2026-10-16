@@ -266,7 +266,10 @@ export const chat: Dict['chat'] = {
     onGpu: (percent: number) => (percent >= 100 ? 'on the graphics card' : percent <= 0 ? 'on the processor' : `${percent}% on the graphics card`),
     unload: 'Unload',
     unloadAll: 'Unload all from memory',
-    hint: 'Free the memory before starting a game or a heavy program. The model loads again by itself on your next question.'
+    hint: 'Free the memory before starting a game or a heavy program. The model loads again by itself on your next question.',
+    ollamaDown: 'Ollama is not running, so Atlas cannot reach the models. It starts by itself when you ask something; you can also start it now.',
+    ollamaStart: 'Start Ollama',
+    ollamaStarting: 'Starting…'
   },
 
   model: {

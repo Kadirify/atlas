@@ -17,10 +17,30 @@ export default function MemoryMenu() {
   const [open, setOpen] = useState(false)
   const [models, setModels] = useState<LoadedModel[]>([])
   const [busy, setBusy] = useState(false)
+  /** Ollama'ya bağlanılabiliyor mu; null: henüz bilinmiyor */
+  const [running, setRunning] = useState<boolean | null>(null)
+  const [starting, setStarting] = useState(false)
   const root = useRef<HTMLDivElement>(null)
 
   const refresh = (): void => {
-    void window.api.models.loaded().then(setModels, () => setModels([]))
+    void window.api.ollama.status().then(
+      (s) => {
+        setRunning(s.running)
+        if (s.running) void window.api.models.loaded().then(setModels, () => setModels([]))
+        else setModels([])
+      },
+      () => setRunning(false)
+    )
+  }
+
+  async function startOllama(): Promise<void> {
+    setStarting(true)
+    try {
+      setRunning((await window.api.ollama.start()).running)
+    } finally {
+      setStarting(false)
+      refresh()
+    }
   }
 
   useEffect(() => {
@@ -69,7 +89,7 @@ export default function MemoryMenu() {
         aria-haspopup="dialog"
         aria-expanded={open}
         aria-label={m.button}
-        title={models.length > 0 ? `${m.button}: ${m.size(decimal(total, 1))}` : m.button}
+        title={running === false ? m.ollamaDown : models.length > 0 ? `${m.button}: ${m.size(decimal(total, 1))}` : m.button}
         onClick={() => setOpen((o) => !o)}
         className={cn(
           'relative flex h-8 w-8 items-center justify-center rounded-md text-ink-3 transition-colors hover:bg-surface-2 hover:text-ink',
@@ -77,12 +97,23 @@ export default function MemoryMenu() {
         )}
       >
         <Cpu size={15} aria-hidden />
-        {models.length > 0 && <span className="absolute top-1.5 right-1.5 h-1.5 w-1.5 rounded-full bg-teal" aria-hidden />}
+        {running === false ? (
+          <span className="absolute top-1.5 right-1.5 h-1.5 w-1.5 rounded-full bg-danger" aria-hidden />
+        ) : (
+          models.length > 0 && <span className="absolute top-1.5 right-1.5 h-1.5 w-1.5 rounded-full bg-teal" aria-hidden />
+        )}
       </button>
       {open && (
         <div role="dialog" aria-label={m.title} className="absolute top-9 left-0 z-30 w-[300px] rounded-xl border border-line bg-surface p-3 shadow-pop">
           <h3 className="text-[13px] font-semibold text-ink">{m.title}</h3>
-          {models.length === 0 ? (
+          {running === false ? (
+            <>
+              <p className="mt-2 text-[13px] leading-relaxed text-ink-3">{m.ollamaDown}</p>
+              <Button size="sm" variant="secondary" className="mt-2 w-full" disabled={starting} onClick={() => void startOllama()}>
+                {starting ? m.ollamaStarting : m.ollamaStart}
+              </Button>
+            </>
+          ) : models.length === 0 ? (
             <p className="mt-2 text-[13px] leading-relaxed text-ink-3">{m.empty}</p>
           ) : (
             <>

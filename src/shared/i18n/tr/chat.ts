@@ -265,7 +265,10 @@ export const chat = {
     onGpu: (percent: number) => (percent >= 100 ? 'ekran kartında' : percent <= 0 ? 'işlemcide' : `%${percent} ekran kartında`),
     unload: 'Boşalt',
     unloadAll: 'Hepsini bellekten boşalt',
-    hint: 'Oyun ya da ağır bir program açmadan önce belleği boşaltabilirsin. Sonraki soruda model kendiliğinden yeniden yüklenir.'
+    hint: 'Oyun ya da ağır bir program açmadan önce belleği boşaltabilirsin. Sonraki soruda model kendiliğinden yeniden yüklenir.',
+    ollamaDown: 'Ollama çalışmıyor; Atlas modellere ulaşamıyor. Bir soru sorduğunda kendiliğinden başlatılır, istersen şimdi başlat.',
+    ollamaStart: 'Ollama\'yı başlat',
+    ollamaStarting: 'Başlatılıyor…'
   },
 
   model: {
