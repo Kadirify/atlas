@@ -1,29 +1,37 @@
 # Yol haritası
 
-Atlas'ta sırada ne var. Öncelik sırasıyla; tarih vermiyoruz, çünkü proje gönüllü vakitle ilerliyor.
+Atlas'ta sırada ne var. Öncelik sırasıyla; tarih vermiyoruz, çünkü proje gönüllü vakitle ilerliyor. Kod alanını ve modelleri etkileyen her değişiklik [ajan test setiyle](../eval/ajan/README.md) ve [Atlas-TR](olcum.md) ile ölçülerek yapılıyor.
 
-## Şimdi
+## Şimdi: sağlamlık ve güvenlik
 
-- **Ajan test setini sürüm kapısı yapmak.** Set kuruldu ([eval/ajan](../eval/ajan)): 28 görev, gerçek servisler, gerçek modeller. Sırada her sürümden önce düzenli çalıştırmak, görevleri artırmak ve sonuçları zaman içinde izlemek var.
-- **Daha iyi düzenleme.** Satır numaralı dosya okuma ve boşluk farklarına dayanıklı eşleşme; küçük modellerin düzenleme başarısını en çok artıracak değişiklik.
-- **Komutlar için güvenli kip.** Komutları kısıtlı bir ortamda çalıştırmak ya da her komuttan önce klasörün anlık görüntüsünü almak. "Hep izin ver"in güvenle kullanılabilmesi için.
-- **SQLite ve belge ayrıştırma ayrı iş parçacığında.** Uzun bir sorgu ya da büyük bir belge uygulamayı dondurmasın.
+- **Ollama'yı kendiliğinden başlatmak.** Ollama kapanırsa Atlas onu kendisi başlatsın; üst çubukta durum göstergesi.
+- **Komutlar için güvenli kip.** Her komuttan önce proje klasörünün anlık görüntüsü; komutun sildiği ya da değiştirdiği dosyaları tek tıkla geri alma. Atlas'ın değiştirdiği dosyaları çalıştıracak komutlar her seferinde sorulsun.
+- **Uygulamanın donmaması.** SQLite sorguları ve belge okuma ayrı iş parçacığında, süre ve boyut sınırıyla.
+- **Kayıt dosyası.** Hata bildirimine eklenebilecek kayıt ve tanılama bilgisi.
 - **İmzalı güncellemeler.** Kurulum dosyalarını ve model tariflerini imzalamak, uygulamada doğrulamak.
+- **Veritabanı bağlantılarında şifreleme varsayılan.**
 
-## Yakında
+## Yakında: kod alanı ve modeller
 
+- **Ajan test setini büyütmek ve sürüm kapısı yapmak:** 28 görevden 50'ye; her sürümden önce tekrarlı ölçüm.
 - **Kod alanında git:** değişiklikleri git farkı olarak görmek, commit mesajı önerisi, dal açma.
-- **Onay bekleyen işler çubuğu:** "Atlas onayını bekliyor (2)" ve karta tek tıkla gitmek.
-- **Atlas-TR'yi büyütmek:** 92 sorudan 300-500 soruya; uygulamanın gerçek koşullarında ölçüm; elle doğrulanmış gerçek yazım hataları.
-- **Araç kullanımı için eğitim:** doğrulanmış başarılı ajan konuşmalarıyla Atlas Strong ve Atlas Code için yeni ince ayar turu.
-- **Sürekli tümleştirme:** her değişiklikte test; sürüm etiketinde otomatik kurulum dosyası.
-- **Kayıt ve tanılama:** hata bildirimine eklenebilecek kayıt dosyası.
+- **Proje haritası:** klasör bağlanınca dosya yapısı ve fonksiyonların kısa özeti; model aramaya daha az adım harcasın.
+- **Onay bekleyen işler çubuğu** ve "hep izin ver" denmiş komutları tek tek kaldırma.
+- **Atlas Code için araç kullanımı eğitimi:** doğrulanmış başarılı ajan konuşmalarıyla yeni ince ayar turu. Atlas Strong için de aynısı.
+- **Atlas-TR'yi büyütmek:** 92 sorudan 300'e; elle doğrulanmış gerçek yazım hataları.
+
+## Sonra: sohbet ve belgeler
+
+- Cevap sürümleri ve cevap üzerinde hızlı işlemler (kısalt, resmileştir, tabloya çevir).
+- Taranmış (metinsiz) PDF desteği; PDF görünümünde sayfa araçları.
+- Word belgesini biçimini koruyarak düzenlemek.
+- Sohbetleri klasörlere ayırmak; PowerPoint ve e-posta dosyaları; ekran görüntüsü alıp sormak.
+- Komut paleti (Ctrl+K), sesli okuma, hatırlatmalar.
 
 ## Daha sonra
 
-- Veritabanı dosyasını şifreleme (uygulama kilidiyle birlikte).
-- Uzun belgelerde "tümünü düzelt" için ilerleme ve kısmi uygulama.
-- macOS ve Linux sürümleri.
-- Daha fazla dil.
+- Sohbet verisini şifrelemek (uygulama kilidiyle birlikte).
+- Kod imzalama ve otomatik sürüm hattı.
+- macOS ve Linux sürümleri; daha fazla dil.
 
 Bir öneri ya da hata için [Issues](https://github.com/Kadirify/atlas/issues) sayfasını kullanabilirsin.
