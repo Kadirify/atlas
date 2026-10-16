@@ -883,6 +883,16 @@ export class Db {
     this.db.prepare('DELETE FROM folders WHERE id = ?').run(id)
   }
 
+  /** Geri alma kayıtlarının anlık görüntü deposundan kullandığı içerik özetleri (kullanılmayanlar silinebilir) */
+  undoBlobs(): Set<string> {
+    const keep = new Set<string>()
+    const rows = this.db.prepare("SELECT undo FROM messages WHERE undo IS NOT NULL AND undo LIKE '%beforeBlob%'").all() as Row[]
+    for (const row of rows) {
+      for (const entry of JSON.parse(row.undo as string) as UndoEntry[]) if (entry.beforeBlob) keep.add(entry.beforeBlob)
+    }
+    return keep
+  }
+
   /** Bir cevabın geri alma kaydını verir ve siler (geri alma bir kez yapılır) */
   getUndo(messageId: string): UndoEntry[] {
     const row = this.db.prepare('SELECT undo FROM messages WHERE id = ?').get(messageId) as Row | undefined

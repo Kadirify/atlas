@@ -8,6 +8,7 @@ Atlas'ın var olma nedeni verinin senin bilgisayarında kalması. Bu sayfa veril
 | --- | --- |
 | Sohbetler, eklenen belgelerin metni ve aslı, ayarlar, bellek notları, veritabanı bağlantıları | `%APPDATA%\Atlas Asistan\atlas.db` (tek bir SQLite dosyası) |
 | Modeller | Ollama'nın klasörü (varsayılan `%USERPROFILE%\.ollama\models`) |
+| Komutlar için güvenli kip: komuttan önceki dosyaların kopyaları (geri alma için) | `%LOCALAPPDATA%\Atlas Asistan\snapshots` (hiçbir geri alma kaydının kullanmadığı kopyalar açılışta silinir) |
 | Hata kaydı: hatalar, çökmeler, donmalar (sohbet, dosya içeriği, komut ve sorgu metni yazılmaz) | `%APPDATA%\Atlas Asistan\logs` (en çok 4 MB; eskiler kendiliğinden silinir) |
 | Proje klasörlerin | Oldukları yerde; Atlas yalnızca senin bağladığın klasörün içinde çalışır |
 
@@ -42,9 +43,10 @@ Bu kurallar modele verilen talimatlarda değil, uygulamanın kodunda durur. Mode
 - Bir cevapta yaptığı değişiklikleri tek düğmeyle geri alırsın. Atlas'tan sonra dosyayı sen değiştirdiysen geri alma senin değişikliğine dokunmaz.
 
 ### Komutlar
-- Her komut (test, derleme, git) çalışmadan önce onay kartıyla sorulur. "Bu komuta hep izin ver" dersen o birebir aynı komut o sohbette yeniden sorulmaz.
+- Her komut (test, derleme, git) çalışmadan önce onay kartıyla sorulur. "Bu komuta hep izin ver" dersen o birebir aynı komut o sohbette yeniden sorulmaz; ama Atlas o zamandan beri sana sormadan bir dosya değiştirdiyse (düzenlemelere de "hep izin ver" dediysen) komut uyarıyla yeniden sorulur, çünkü o dosyayı çalıştırabilir.
 - Bilinen silme ve yok etme komutları (`rm`, `del`, `rd`, `format`, `git clean`, `git reset --hard`, `git push --force`...) ve bunları gizleme hileleri hiç çalıştırılmaz. PowerShell ve betik çalıştırıcıları kapalıdır.
-- **Sınır:** bu bir yasak listesidir ve bir komutun çalıştırdığı dosyanın içinde ne olduğunu bilemez. Onayladığın `npm test`, test dosyasının içindeki her şeyi çalıştırır. Bu yüzden "hep izin ver"i yalnızca güvendiğin projelerde kullan ve önemli projelerde git gibi bir sürüm kontrolü kullan.
+- **Güvenli kip:** yasak listesi bir komutun çalıştırdığı dosyanın içinde ne olduğunu bilemez; onayladığın `npm test`, test dosyasının içindeki her şeyi çalıştırır. Bu yüzden Atlas her komuttan önce proje klasörünün anlık görüntüsünü alır. Komuttan sonra silinen, değişen ve oluşan dosyalar terminal çıktısının altında listelenir, Atlas da bunu sana söyler. Cevabın altındaki **Geri al** komutun yaptıklarını da geri alır: silinen ve değişen dosyalar eski haline döner, komutun oluşturduğu dosyalar çöp kutusuna gider.
+- Güvenli kibin sınırları: `node_modules`, `dist`, `build`, `bin`, `obj` gibi bağımlılık ve derleme klasörlerine ve noktayla başlayan klasörlere (`.git` dahil) bakılmaz. 8 MB'tan büyük dosyaların ve `.env` gibi gizli dosyaların önceki hali saklanmaz; bunlar değişirse "geri getirilemez" diye ayrıca söylenir. Önemli projelerde yine de git gibi bir sürüm kontrolü kullan.
 
 ### Veritabanı
 - **SELECT** sorguları onaysız çalışır; veritabanı tarafında da salt okunur ya da geri alınan bir işlem içinde, tek ifade olarak.

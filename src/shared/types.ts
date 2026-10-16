@@ -308,12 +308,23 @@ export interface ToolStep {
   /** Kullanıcıya gösterilen kısa açıklama: "Okundu: rapor.pdf" */
   label: string
   status: 'ok' | 'error' | 'denied'
-  /** Komut adımlarında çalıştırılan komut ve terminal çıktısı */
-  terminal?: { command: string; output: string; code: number | null }
+  /** Komut adımlarında çalıştırılan komut ve terminal çıktısı; effects: komutun klasörde değiştirdikleri */
+  terminal?: { command: string; output: string; code: number | null; effects?: CommandEffectsSummary }
   /** update_plan adımında modelin iş planı */
   plan?: PlanItem[]
   /** Adım veriyi kalıcı olarak değiştirdi (ör. onaylanıp çalışan bir UPDATE) */
   changed?: boolean
+}
+
+/** Bir komutun proje klasöründe değiştirdikleri (güvenli kip) */
+export interface CommandEffectsSummary {
+  changed: string[]
+  deleted: string[]
+  created: string[]
+  /** Saklanamadığı için (çok büyük, gizli ya da okunamayan) geri getirilemeyecek dosyalar */
+  lost: string[]
+  /** Liste kısaltıldı ya da klasörün bir kısmına bakılamadı */
+  partial: boolean
 }
 
 export interface PlanItem {
@@ -341,6 +352,11 @@ export interface FileApproval {
    * "hep izin ver" bunu kapsamaz, kart her seferinde kırmızı uyarıyla sorulur.
    */
   protected?: boolean
+  /**
+   * Bu komuta "hep izin ver" denmişti ama Atlas o zamandan beri sorulmadan dosya değiştirdi: komut o dosyaları
+   * çalıştırabileceği için yeniden soruluyor.
+   */
+  recheck?: boolean
 }
 
 export interface FileAction {
@@ -573,6 +589,10 @@ export interface UndoEntry {
   movedFrom?: string
   /** Atlas'ın yazdığı son içeriğin özeti; dosya sonradan değiştiyse geri alma onu ezmez */
   afterHash?: string
+  /** Komuttan önceki içerik anlık görüntü deposunda saklandıysa özeti; geri alırken oradan yazılır */
+  beforeBlob?: string
+  /** Dosyayı bir komut sildi; geri alırken yerinde yeni bir dosya yoksa geri getirilir */
+  deleted?: boolean
 }
 
 export interface SearchHit {

@@ -4,8 +4,7 @@ Atlas'ta sırada ne var. Öncelik sırasıyla; tarih vermiyoruz, çünkü proje 
 
 ## Şimdi: sağlamlık ve güvenlik
 
-- **Komutlar için güvenli kip.** Her komuttan önce proje klasörünün anlık görüntüsü; komutun sildiği ya da değiştirdiği dosyaları tek tıkla geri alma. Atlas'ın değiştirdiği dosyaları çalıştıracak komutlar her seferinde sorulsun.
-- **Uygulamanın donmaması.** SQLite sorguları ve belge okuma ayrı iş parçacığında, süre ve boyut sınırıyla.
+- **Uygulamanın donmaması.** Belge okuma ayrı iş parçacığında, süre ve boyut sınırıyla (SQLite sorguları artık ayrı süreçte).
 - **İmzalı güncellemeler.** Kurulum dosyalarını ve model tariflerini imzalamak, uygulamada doğrulamak.
 - **Veritabanı bağlantılarında şifreleme varsayılan.**
 

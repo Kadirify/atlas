@@ -1,11 +1,9 @@
-import { createHash } from 'node:crypto'
-import { readFile, rename, rm, stat, writeFile, mkdir } from 'node:fs/promises'
+import { readFile, rename, rm, stat, writeFile } from 'node:fs/promises'
 import { realpath } from 'node:fs/promises'
-import { join, dirname } from 'node:path'
+import { join } from 'node:path'
 import { app, BrowserWindow, clipboard, dialog, ipcMain, shell, type IpcMainInvokeEvent } from 'electron'
 import type {
   ImproveRequest,
-  UndoEntry,
   InstalledModel,
   Level,
   MemoryCategory,
@@ -430,41 +428,10 @@ export function registerIpc(
   handle('folders:actions', (folderId: string) => db.listFileActions(folderId))
   handle('folders:respond', (approvalId: string, approved: boolean, remember?: boolean) => files.respond(approvalId, approved, remember === true))
   handle('folders:trust', (conversationId: string) => files.trustState(conversationId))
-  // Kullanıcı bir cevaptaki dosya değişikliklerini geri alır. Atlas'ın oluşturduğu dosyalar silinmez, çöp kutusuna gider.
+  // Kullanıcı bir cevaptaki dosya değişikliklerini (komutların yaptıkları dahil) geri alır.
   handle('folders:undo', async (messageId: string) => {
     const id = String(messageId)
-    const left: UndoEntry[] = []
-    let restored = 0
-    // Sondan başa: en son yapılan değişiklik önce geri alınır (önce düzenleyip sonra taşıdıysa doğru çözülsün).
-    for (const entry of [...db.getUndo(id)].reverse()) {
-      const folder = db.getFolder(entry.folderId)
-      if (!folder) continue
-      try {
-        const full = await resolveInside(folder.path, entry.path)
-        if (entry.movedFrom) {
-          const back = await resolveInside(folder.path, entry.movedFrom)
-          // Dosya artık orada değilse ya da eski yerinde yeni bir dosya varsa dokunulmaz.
-          if (!(await stat(full).catch(() => null)) || (await stat(back).catch(() => null))) continue
-          await mkdir(dirname(back), { recursive: true })
-          await rename(full, back)
-        } else {
-          const now = await readFile(full).catch(() => null)
-          // Atlas'tan sonra dosya değiştiyse (kullanıcı ya da başka bir cevap düzenlediyse) o değişiklik ezilmez.
-          if (entry.afterHash && (!now || createHash('sha256').update(now).digest('hex') !== entry.afterHash)) continue
-          if (entry.before === null) {
-            if (now) await shell.trashItem(full)
-          } else {
-            await mkdir(dirname(full), { recursive: true })
-            await writeFile(full, entry.before, 'utf8')
-          }
-        }
-        db.logFileAction({ folderId: folder.id, kind: 'write', path: entry.path, detail: L().main.folders.undone })
-        restored++
-      } catch {
-        // Kilitli dosya gibi geçici bir hata: kayıt kalır, kullanıcı yeniden deneyebilir.
-        left.unshift(entry)
-      }
-    }
+    const { restored, left } = await files.undo(db.getUndo(id), (full) => shell.trashItem(full))
     db.setUndo(id, left)
     return restored
   })

@@ -156,6 +156,13 @@ export const tools: Dict['tools'] = {
       trashed: (path: string) => `Sent "${path}" to the recycle bin.`,
       commandRan: (code: number | null, timedOut: boolean, output: string) =>
         `${timedOut ? 'The command hit the 2-minute time limit and was stopped.' : `The command finished. Exit code: ${code ?? 'unknown'}.`}\nOutput:\n${output || '(no output)'}`,
+      effectsWarning: 'WARNING: This command touched files in the project folder.',
+      effectsDeleted: (files: string) => `- DELETED files: ${files}`,
+      effectsChanged: (files: string) => `- CHANGED files: ${files}`,
+      effectsLost: (files: string) => `- The earlier versions of these could not be kept (too large or secret), so they cannot be brought back: ${files}`,
+      effectsTell:
+        'You must tell the user this in your reply: name the files that were deleted or changed and add that the "Undo" button under the reply brings them back. Do not skip this even if the command looks successful.',
+      effectsCreated: (files: string) => `New files the command created: ${files}`,
       commandDenied: 'The user did not approve this command; it was not run. Do not insist.',
       secretCommand: (name: string) =>
         `This command was not run: "${name}" is a secret file that may contain passwords or keys. Atlas cannot read or show these files and must not try another way. Tell the user they can open the file themselves.`,

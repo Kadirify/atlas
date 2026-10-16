@@ -13,6 +13,8 @@ import type { FileApproval, Folder } from '../src/shared/types'
 import { Db } from '../src/main/db'
 import { setLanguage } from '../src/main/i18n'
 import { chunkText, FilesService, resolveInside, walk } from '../src/main/services/files'
+import { SnapshotStore } from '../src/main/services/snapshot'
+import { isSecretFile } from '../src/main/services/code'
 import type { MemoryService } from '../src/main/services/memory'
 
 const noSemantic = { hasSemantic: async () => false } as unknown as MemoryService
@@ -471,6 +473,82 @@ describe('Kod alanı araçları', () => {
   it('ATLAS.md varsa proje talimatı olarak talimata eklenir', async () => {
     await writeFile(join(root, 'ATLAS.md'), 'Bu projede yalnızca TypeScript kullan.')
     expect(await service.promptBlock(folder, true)).toContain('Bu projede yalnızca TypeScript kullan.')
+  })
+})
+
+describe('komutlar için güvenli kip', () => {
+  let store: string
+  beforeEach(async () => {
+    store = await mkdtemp(join(tmpdir(), 'atlas-depo-'))
+  })
+  afterEach(async () => {
+    await rm(store, { recursive: true, force: true })
+  })
+
+  const safeService = (remember = false): FilesService => {
+    const s: FilesService = new FilesService(
+      db,
+      {
+        approval: (a) => {
+          approvals.push(a)
+          queueMicrotask(() => s.respond(a.id, answer, remember))
+        },
+        indexProgress: () => {}
+      },
+      noSemantic,
+      new SnapshotStore(store, isSecretFile)
+    )
+    return s
+  }
+
+  it('komutun çalıştırdığı kod dosya silip bozsa da Geri al hepsini geri getirir', async () => {
+    const safe = safeService()
+    // Atlas'ın değiştirdiği bir "test" dosyası: içinde silme kodu var; komut süzgeci bunu göremez.
+    await writeFile(
+      join(root, 'temizle.js'),
+      "const fs = require('fs')\nfs.rmSync('raporlar/ocak.md')\nfs.writeFileSync('notlar.txt', 'bozuldu')\nfs.writeFileSync('cikti.log', 'yeni dosya')\n"
+    )
+    const out = await safe.execute('sohbet', folder, { name: 'run_command', arguments: { command: 'node temizle.js' } }, new AbortController().signal, true)
+    expect(out.step.status).toBe('ok')
+    expect(out.step.terminal?.effects).toEqual({ changed: ['notlar.txt'], deleted: ['raporlar/ocak.md'], created: ['cikti.log'], lost: [], partial: false })
+    // Model de bilir: beklemediği bir silme olduysa kullanıcıya söylesin.
+    expect(out.result).toContain('raporlar/ocak.md')
+    expect(out.result).toContain('Geri al')
+
+    const { restored, left } = await safe.undo(safe.takeEdits('sohbet'), (full) => rm(full))
+    expect(restored).toBe(3)
+    expect(left).toEqual([])
+    expect(await readFile(join(root, 'raporlar', 'ocak.md'), 'utf8')).toContain('Ocak raporu')
+    expect(await readFile(join(root, 'notlar.txt'), 'utf8')).toContain('Zümrüt-7')
+    expect(await stat(join(root, 'cikti.log')).catch(() => null)).toBeNull()
+  })
+
+  it('komuttan sonra kullanıcının değiştirdiği dosya geri alırken ezilmez', async () => {
+    const safe = safeService()
+    await writeFile(join(root, 'boz.js'), "require('fs').writeFileSync('notlar.txt', 'komut yazdı')\n")
+    await safe.execute('sohbet', folder, { name: 'run_command', arguments: { command: 'node boz.js' } }, new AbortController().signal, true)
+    await writeFile(join(root, 'notlar.txt'), 'kullanıcı yazdı')
+    await safe.undo(safe.takeEdits('sohbet'), (full) => rm(full))
+    expect(await readFile(join(root, 'notlar.txt'), 'utf8')).toBe('kullanıcı yazdı')
+  })
+
+  it('"hep izin ver" denmiş komut, Atlas sorulmadan dosya değiştirdiyse yeniden sorulur', async () => {
+    const safe = safeService(true)
+    const exec = (name: string, args: Record<string, unknown>) =>
+      safe.execute('sohbet', folder, { name, arguments: args }, new AbortController().signal, true)
+    await exec('run_command', { command: 'echo merhaba' })
+    await exec('run_command', { command: 'echo merhaba' })
+    expect(approvals.map((a) => a.kind)).toEqual(['command'])
+    // İlk düzenleme sorulur (kullanıcı görür), "hep izin ver" denir; ikincisi sorulmadan yapılır.
+    await exec('write_file', { path: 'bir.txt', content: '1' })
+    await exec('write_file', { path: 'iki.txt', content: '2' })
+    expect(approvals.map((a) => a.kind)).toEqual(['command', 'write'])
+    await exec('run_command', { command: 'echo merhaba' })
+    expect(approvals.map((a) => a.kind)).toEqual(['command', 'write', 'command'])
+    expect(approvals[2].recheck).toBe(true)
+    // Yeniden onaylandıktan sonra, arada sorulmadan düzenleme yoksa sorulmaz.
+    await exec('run_command', { command: 'echo merhaba' })
+    expect(approvals).toHaveLength(3)
   })
 })
 

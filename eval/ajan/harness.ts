@@ -19,6 +19,8 @@ import { Db } from '../../src/main/db'
 import { setLanguage } from '../../src/main/i18n'
 import { asksPermission, ChatService, claimsWrite } from '../../src/main/services/chat'
 import { FilesService } from '../../src/main/services/files'
+import { SnapshotStore } from '../../src/main/services/snapshot'
+import { isSecretFile } from '../../src/main/services/code'
 import { scanHardware, toolContextSize } from '../../src/main/services/hardware'
 import { MemoryService } from '../../src/main/services/memory'
 import { chatOnce } from '../../src/main/services/ollama'
@@ -81,6 +83,8 @@ export interface CheckContext {
   says(...words: string[]): boolean
   /** Bu cevapta bir dosya değişti mi (yazma, düzenleme, taşıma, klasör) */
   changed(): boolean
+  /** Kullanıcının cevabın altındaki "Geri al"a basması; geri alınan değişiklik sayısı */
+  undo(): Promise<number>
 }
 
 export interface RunResult {
@@ -214,6 +218,8 @@ export function wilson(k: number, n: number): [number, number] {
 async function runTask(task: Task, model: string, attempt: number, options: Options): Promise<RunResult> {
   const started = Date.now()
   const dir = await mkdtemp(join(tmpdir(), `atlas-ajan-${task.id}-`))
+  // Komutlar için güvenli kipin deposu (uygulamadaki gibi): görev bitince silinir.
+  const store = await mkdtemp(join(tmpdir(), `atlas-ajan-depo-`))
   const db = new Db(':memory:')
   let chat: ChatService | null = null
   let keep = false
@@ -247,7 +253,8 @@ async function runTask(task: Task, model: string, attempt: number, options: Opti
         },
         indexProgress: () => {}
       },
-      memory
+      memory,
+      new SnapshotStore(store, isSecretFile)
     )
     initSql(db, {
       approval: (a) => {
@@ -341,7 +348,13 @@ async function runTask(task: Task, model: string, attempt: number, options: Opti
         const text = fold(reply)
         return words.some((w) => text.includes(fold(w)))
       },
-      changed
+      changed,
+      undo: async () => {
+        if (!outcome.message) return 0
+        const { restored, left } = await files.undo(db.getUndo(outcome.message.id), (full) => rm(full, { recursive: true, force: true }))
+        db.setUndo(outcome.message.id, left)
+        return restored
+      }
     }
     if (timedOut) notes.push(`süre doldu (${Math.round(timeoutMs / 1000)} sn)`)
     else if (outcome.error) notes.push(`hata: ${outcome.error.replace(/\s+/g, ' ').slice(0, 160)}`)
@@ -383,6 +396,7 @@ async function runTask(task: Task, model: string, attempt: number, options: Opti
     db.close()
     // Arka planda kalan bir süreç klasörü tutuyorsa silinemeyebilir; önemsenmez.
     if (!keep) await rm(dir, { recursive: true, force: true, maxRetries: 5, retryDelay: 300 }).catch(() => {})
+    await rm(store, { recursive: true, force: true, maxRetries: 5, retryDelay: 300 }).catch(() => {})
   }
 }
 

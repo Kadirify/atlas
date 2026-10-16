@@ -42,6 +42,7 @@ src/
       code.ts           Kod alanı: dosya ağacı, dosya görüntüleme, komut çalıştırma
       sql.ts            Veritabanı bağlantıları ve sürücüler (mssql, pg, mysql2, node:sqlite)
       sqliteRunner.ts   SQLite sorgusunu ayrı süreçte çalıştırma; Durdur'da ve 30 sn'de kapatma
+      snapshot.ts       Komutlar için güvenli kip: komuttan önce klasörün anlık görüntüsü, sonra farkı
       diagnostics.ts    Hata bildirimi için tanılama bilgisi
       memory.ts         Kalıcı hafıza: öğrenme, gömme (embedding), anlamca arama
       attachments.ts    Ek dosyalardan metin çıkarma (PDF, Word, Excel)

@@ -1,7 +1,7 @@
 import { createHash, randomUUID } from 'node:crypto'
 import { lstat, mkdir, readdir, readFile, realpath, rename, stat, writeFile } from 'node:fs/promises'
 import { basename, dirname, extname, join, relative, resolve, sep } from 'node:path'
-import type { FileApproval, Folder, FolderCapability, IndexProgress, PlanItem, ToolStep, UndoEntry } from '@shared/types'
+import type { CommandEffectsSummary, FileApproval, Folder, FolderCapability, IndexProgress, PlanItem, ToolStep, UndoEntry } from '@shared/types'
 import type { Db, FileChunkRow } from '../db'
 import { L, locale } from '../i18n'
 import { decodeText, extractText, TEXT_EXTENSIONS } from './attachments'
@@ -11,6 +11,7 @@ import { closestLines, looksTruncated, numberedLines, relaxedReplace, stripLineN
 import { scanHardware } from './hardware'
 import { cosine, EMBEDDING_MODEL, tokens, type MemoryService } from './memory'
 import * as ollama from './ollama'
+import type { CommandEffects, SnapshotStore } from './snapshot'
 
 /** Tek seferde modele verilen en fazla dosya metni */
 const READ_LIMIT = 12_000
@@ -344,6 +345,51 @@ export async function testCommand(root: string): Promise<string | null> {
   return null
 }
 
+interface Trust {
+  edits: boolean
+  /** İzin verilen komut → izin verildiği andaki sorulmadan düzenleme sayısı */
+  commands: Map<string, number>
+  unseen: number
+}
+
+/** Arayüzde ve kayıtta gösterilecek kadarı (her türden en çok 50 dosya) */
+const MAX_EFFECT_NAMES = 50
+
+export function summarize(effects: CommandEffects): CommandEffectsSummary | null {
+  const { changed, deleted, created } = effects
+  if (changed.length + deleted.length + created.length === 0) return null
+  const lost = [...changed.filter((c) => !c.before || !c.after), ...deleted.filter((d) => !d.before)].map((e) => e.path)
+  const names = (list: { path: string }[]): string[] => list.slice(0, MAX_EFFECT_NAMES).map((e) => e.path)
+  return {
+    changed: names(changed),
+    deleted: names(deleted),
+    created: names(created),
+    lost: lost.slice(0, MAX_EFFECT_NAMES),
+    partial: effects.partial || [changed, deleted, created].some((list) => list.length > MAX_EFFECT_NAMES)
+  }
+}
+
+/**
+ * Modele komutun klasörde yaptıklarını söyler. Silinen ya da değişen dosyalar bir uyarıdır (test kodu veri silmiş
+ * olabilir) ve kullanıcıya söylenmelidir; yeni dosyalar yalnızca bilgidir.
+ */
+function effectsForModel(s: CommandEffectsSummary): { warning: string | null; info: string | null } {
+  const t = L().tools.files.result
+  const list = (paths: string[]): string => paths.slice(0, 20).join(', ') + (paths.length > 20 ? ', …' : '')
+  const warning =
+    s.deleted.length || s.changed.length
+      ? [
+          t.effectsWarning,
+          ...(s.deleted.length ? [t.effectsDeleted(list(s.deleted))] : []),
+          ...(s.changed.length ? [t.effectsChanged(list(s.changed))] : []),
+          ...(s.lost.length ? [t.effectsLost(list(s.lost))] : []),
+          t.effectsTell
+        ].join('\n')
+      : null
+  const info = s.created.length ? t.effectsCreated(list(s.created)) : null
+  return { warning, info }
+}
+
 /** Değişiklik geçerli bir JSON ya da JavaScript dosyasını bozduysa modele verilecek uyarı (önceden de bozuksa boş) */
 function breakage(rel: string, before: string | null, after: string): string {
   const problem = syntaxError(rel, after)
@@ -361,9 +407,10 @@ export class FilesService {
   private pending = new Map<string, (approved: boolean) => void>()
   /**
    * Sohbet başına verilen kalıcı izinler (uygulama kapanınca unutulur): dosya düzenlemeleri ve birebir aynı komutlar.
-   * Silme hiçbir izinle açılmaz.
+   * Silme hiçbir izinle açılmaz. unseen: sorulmadan (izinle) yapılan düzenleme sayısı; komut izni verildiği andaki
+   * sayıyla birlikte saklanır, arada sorulmadan düzenleme olduysa komut yeniden sorulur.
    */
-  private trust = new Map<string, { edits: boolean; commands: Set<string> }>()
+  private trust = new Map<string, Trust>()
   /** Onay bekleyen işlemlerin sohbeti ve türü; "hep izin ver" denince neyin hatırlanacağını bilmek için */
   private pendingInfo = new Map<string, { conversationId: string; kind: FileApproval['kind']; command?: string; protected?: boolean }>()
   /** Süren cevapta değiştirilen dosyaların ilk halleri (aynı dosya ikinci kez değişirse ilk hal korunur) */
@@ -402,14 +449,85 @@ export class FilesService {
     this.turnEdits.set(conversationId, list)
     this.events.edited?.({ conversationId, folderId, path: to, before: null })
   }
+  /** Komutun klasörde yaptıkları geri alınabilsin: değişen ve silinen dosyaların önceki hali depodadır. */
+  private rememberCommand(conversationId: string, folderId: string, effects: CommandEffects): void {
+    const list = this.turnEdits.get(conversationId) ?? []
+    // Önceki içerik saklanmadıysa ya da şimdiki içerik okunamadıysa (sonradan değişti mi bilinemez) dokunulmaz.
+    for (const c of effects.changed) if (c.before && c.after) list.push({ folderId, path: c.path, before: null, beforeBlob: c.before, afterHash: c.after })
+    for (const d of effects.deleted) if (d.before) list.push({ folderId, path: d.path, before: null, beforeBlob: d.before, deleted: true })
+    // Komutun oluşturduğu dosyalar geri alırken (değişmedilerse) çöp kutusuna gider; Atlas'ın oluşturduklarıyla aynı.
+    for (const c of effects.created) if (c.after) list.push({ folderId, path: c.path, before: null, afterHash: c.after })
+    this.turnEdits.set(conversationId, list)
+    for (const path of [...effects.changed, ...effects.deleted, ...effects.created].map((e) => e.path)) {
+      this.events.edited?.({ conversationId, folderId, path, before: null })
+    }
+  }
+
   private capabilityCache: FolderCapability | null = null
   private chunks = new Map<string, FileChunkRow[]>()
 
   constructor(
     private db: Db,
     private events: FileEvents,
-    private memory: MemoryService
+    private memory: MemoryService,
+    /** Komutlar için güvenli kip; verilmezse komutlardan önce anlık görüntü alınmaz */
+    private snapshots?: SnapshotStore
   ) {}
+
+  /**
+   * Bir cevaptaki değişiklikleri sondan başa geri alır (önce düzenleyip sonra taşıdıysa doğru çözülsün). Atlas'ın ya da
+   * komutun oluşturduğu dosyalar silinmez, `trash` ile çöp kutusuna gider. Sonradan değişen dosyalar ezilmez.
+   * left: geçici bir hata (kilitli dosya) yüzünden geri alınamayanlar; kullanıcı yeniden deneyebilir.
+   */
+  async undo(entries: UndoEntry[], trash: (full: string) => Promise<void>): Promise<{ restored: number; left: UndoEntry[] }> {
+    const left: UndoEntry[] = []
+    let restored = 0
+    for (const entry of [...entries].reverse()) {
+      const folder = this.db.getFolder(entry.folderId)
+      if (!folder) continue
+      try {
+        const full = await resolveInside(folder.path, entry.path)
+        if (entry.movedFrom) {
+          const back = await resolveInside(folder.path, entry.movedFrom)
+          // Dosya artık orada değilse ya da eski yerinde yeni bir dosya varsa dokunulmaz.
+          if (!(await stat(full).catch(() => null)) || (await stat(back).catch(() => null))) continue
+          await mkdir(dirname(back), { recursive: true })
+          await rename(full, back)
+        } else {
+          const now = await readFile(full).catch(() => null)
+          const nowHash = now ? createHash('sha256').update(now).digest('hex') : null
+          if (entry.deleted) {
+            // Komutun sildiği dosya: yerinde sonradan yeni bir dosya oluştuysa dokunulmaz.
+            if (now) continue
+          } else if (entry.afterHash && nowHash !== entry.afterHash) {
+            // Atlas'tan (ya da komuttan) sonra dosya değiştiyse o değişiklik ezilmez.
+            continue
+          }
+          if (entry.beforeBlob) {
+            const bytes = await this.snapshots?.read(entry.beforeBlob)
+            if (!bytes) continue
+            await mkdir(dirname(full), { recursive: true })
+            await writeFile(full, bytes)
+          } else if (entry.before === null) {
+            if (now) await trash(full)
+          } else {
+            await mkdir(dirname(full), { recursive: true })
+            await writeFile(full, entry.before, 'utf8')
+          }
+        }
+        this.db.logFileAction({ folderId: folder.id, kind: 'write', path: entry.path, detail: L().main.folders.undone })
+        restored++
+      } catch {
+        left.unshift(entry)
+      }
+    }
+    return { restored, left }
+  }
+
+  /** Hiçbir geri alma kaydının kullanmadığı anlık görüntü içeriklerini siler (uygulama açılırken). */
+  async pruneSnapshots(): Promise<number> {
+    return this.snapshots ? this.snapshots.prune(this.db.undoBlobs()) : 0
+  }
 
   /** Zayıf bilgisayarlarda küçük modeller araçları güvenilir kullanamadığı için özellik kısılır. */
   async capability(): Promise<FolderCapability> {
@@ -467,18 +585,22 @@ export class FilesService {
     // Korunan dosyaların kartı "hep izin ver" iznini açmaz.
     if (approved && remember && info && !info.protected) {
       const trust = this.trustFor(info.conversationId)
-      if (info.kind === 'command' && info.command) trust.commands.add(info.command)
+      if (info.kind === 'command' && info.command) trust.commands.set(info.command, trust.unseen)
       else if (info.kind === 'write' || info.kind === 'move' || info.kind === 'mkdir') trust.edits = true
+    } else if (approved && info?.kind === 'command' && info.command) {
+      // Yeniden sorulan izinli komut onaylandı: izin yerinde kalır, bu ana kadarki düzenlemeler görülmüş sayılır.
+      const trust = this.trust.get(info.conversationId)
+      if (trust?.commands.has(info.command)) trust.commands.set(info.command, trust.unseen)
     }
     this.pendingInfo.delete(approvalId)
     this.pending.get(approvalId)?.(approved)
     this.pending.delete(approvalId)
   }
 
-  private trustFor(conversationId: string): { edits: boolean; commands: Set<string> } {
+  private trustFor(conversationId: string): Trust {
     let trust = this.trust.get(conversationId)
     if (!trust) {
-      trust = { edits: false, commands: new Set() }
+      trust = { edits: false, commands: new Map(), unseen: 0 }
       this.trust.set(conversationId, trust)
     }
     return trust
@@ -487,7 +609,7 @@ export class FilesService {
   /** Bu sohbette verilen kalıcı izinler (arayüzde gösterilir ve geri alınır) */
   trustState(conversationId: string): { edits: boolean; commands: string[] } {
     const trust = this.trust.get(conversationId)
-    return { edits: trust?.edits ?? false, commands: [...(trust?.commands ?? [])] }
+    return { edits: trust?.edits ?? false, commands: [...(trust?.commands.keys() ?? [])] }
   }
 
   revokeTrust(conversationId: string): void {
@@ -499,8 +621,15 @@ export class FilesService {
     // Kullanıcı durdurduysa izin verilmiş işlemler de yapılmaz.
     if (signal.aborted) return false
     const trust = this.trust.get(approval.conversationId)
-    const trusted = approval.kind === 'command' ? trust?.commands.has(approval.path) : (approval.kind === 'write' || approval.kind === 'move') && trust?.edits
-    if (trusted && !approval.protected) return true
+    if (approval.kind === 'command') {
+      const since = trust?.commands.get(approval.path)
+      if (since !== undefined && since === trust?.unseen) return true
+      // İzin verilmişti ama Atlas o zamandan beri sorulmadan dosya değiştirdi: komut o dosyaları çalıştırabilir.
+      if (since !== undefined) approval = { ...approval, recheck: true }
+    } else if ((approval.kind === 'write' || approval.kind === 'move') && trust?.edits && !approval.protected) {
+      trust.unseen++
+      return true
+    }
     this.pendingInfo.set(approval.id, {
       conversationId: approval.conversationId,
       kind: approval.kind,
@@ -622,14 +751,27 @@ export class FilesService {
           if (secret) return done(t.step.secretCommand(secret), t.result.secretCommand(secret), 'denied')
           const approved = await this.allow({ id: randomUUID(), conversationId, kind: 'command', path: command }, signal)
           if (!approved) return done(t.step.denied(short), t.result.commandDenied, 'denied')
+          // Güvenli kip: komuttan önce klasörün anlık görüntüsü alınır; komut (ya da çalıştırdığı kod) bir dosyayı
+          // silerse ya da bozarsa cevabın "Geri al"ı onu geri getirir.
+          const snapshot = this.snapshots ? await this.snapshots.take(root).catch(() => null) : null
           const outcome = await runCommand(root, command, signal, (chunk) => this.events.commandOutput?.({ conversationId, stepId: id, command, chunk }))
+          const effects = snapshot ? await this.snapshots!.diff(snapshot).catch(() => null) : null
+          if (effects) this.rememberCommand(conversationId, folder.id, effects)
+          const summary = effects ? summarize(effects) : null
           this.db.logFileAction({ folderId: folder.id, kind: 'command', path: command.slice(0, 500), detail: t.log.commandRan(outcome.code) })
+          // Silinen ya da değişen dosya varsa uyarı sonucun başına konur: model "testler geçti" deyip geçmesin.
+          const told = summary ? effectsForModel(summary) : null
           return done(
             t.step.commandRan(short, outcome.code, outcome.timedOut),
-            t.result.commandRan(outcome.code, outcome.timedOut, outcome.output),
+            [told?.warning, t.result.commandRan(outcome.code, outcome.timedOut, outcome.output), told?.info].filter(Boolean).join('\n\n'),
             outcome.code === 0 && !outcome.timedOut ? 'ok' : 'error',
             // Kullanıcı terminal çıktısını adımın altında görür; uzun çıktının sonu saklanır.
-            { command, output: outcome.output.length > 8000 ? `…\n${outcome.output.slice(-8000)}` : outcome.output, code: outcome.timedOut ? null : outcome.code }
+            {
+              command,
+              output: outcome.output.length > 8000 ? `…\n${outcome.output.slice(-8000)}` : outcome.output,
+              code: outcome.timedOut ? null : outcome.code,
+              ...(summary ? { effects: summary } : {})
+            }
           )
         }
 

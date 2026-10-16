@@ -3,6 +3,8 @@
 ## Yayımlanmamış
 
 ### Güvenlik
+- Komutlar için güvenli kip: her komuttan önce proje klasörünün anlık görüntüsü alınıyor. Onaylanan bir komut (ya da çalıştırdığı test kodu) dosya silerse, değiştirirse ya da oluşturursa terminal çıktısının altında listeleniyor, model de bunu kullanıcıya söylüyor; cevabın "Geri al"ı komutun yaptıklarını da geri alıyor.
+- "Hep izin ver" denmiş bir komut, Atlas o zamandan beri sorulmadan dosya değiştirdiyse uyarıyla yeniden soruluyor: komut o dosyaları çalıştırabilir.
 - SQL sorguları bağlı veritabanının kendi yazım kurallarıyla inceleniyor; okuma gibi görünen hileli bir sorgu artık yazma ya da silme çalıştıramıyor. PostgreSQL okumaları tek ifadeye zorlanıyor.
 - Komut süzgeci gizleme hilelerini (`r^d`, `%windir:~0,0%rd`, `type nul>dosya`) yakalıyor; PowerShell ve betik çalıştırıcıları kapalı.
 - Komutlar cmd.exe'nin tam yoluyla çalışıyor; proje klasöründeki `git.bat` gibi bir dosya PATH'teki programın yerine geçemiyor.

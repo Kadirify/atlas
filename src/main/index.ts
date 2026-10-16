@@ -21,6 +21,8 @@ import { MemoryService } from './services/memory'
 import { WhatsAppService } from './services/whatsapp'
 import { initSql } from './services/sql'
 import { flushLog, initLog, log, watchEventLoop } from './log'
+import { SnapshotStore } from './services/snapshot'
+import { isSecretFile } from './services/code'
 
 const TITLE_BAR_HEIGHT = 40
 const isDev = !app.isPackaged && !!process.env.ELECTRON_RENDERER_URL
@@ -184,6 +186,12 @@ if (!app.requestSingleInstanceLock()) {
     db.syncBuiltinApps(builtinApps(getLanguage()))
     const memory = new MemoryService(db)
     const whatsapp = new WhatsAppService(db, memory)
+    // Komutlar için güvenli kip: komuttan önceki dosyalar burada saklanır. Dolaşan profille (Roaming) sunuculara
+    // taşınmasın diye yerel uygulama verisinde durur.
+    const snapshots = new SnapshotStore(
+      testUserData || !process.env.LOCALAPPDATA ? join(userData, 'snapshots') : join(process.env.LOCALAPPDATA, 'Atlas Asistan', 'snapshots'),
+      isSecretFile
+    )
     const files = new FilesService(
       db,
       {
@@ -194,8 +202,11 @@ if (!app.requestSingleInstanceLock()) {
         commandOutput: (e) => broadcast('folders:commandOutput', e),
         indexProgress: (p) => broadcast('folders:indexProgress', p)
       },
-      memory
+      memory,
+      snapshots
     )
+    // Artık hiçbir geri alma kaydının kullanmadığı eski dosya kopyaları silinir.
+    void files.pruneSnapshots().then((n) => n > 0 && log('info', `Removed ${n} unused snapshot files`), (err) => log('warn', 'Snapshot cleanup failed', err))
     initSql(db, {
       approval: (a) => {
         broadcast('sql:approval', a)

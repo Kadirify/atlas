@@ -162,6 +162,13 @@ export const tools = {
       commandRan: (code: number | null, timedOut: boolean, output: string) =>
         `${timedOut ? 'Komut 2 dakikalık süre sınırını aştı ve durduruldu.' : `Komut bitti. Çıkış kodu: ${code ?? 'bilinmiyor'}.`}\nÇıktı:\n${output || '(çıktı yok)'}`,
       commandDenied: 'Kullanıcı bu komutu onaylamadı; çalıştırılmadı. Üsteleme.',
+      effectsWarning: 'DİKKAT: Bu komut proje klasöründeki dosyalara dokundu.',
+      effectsDeleted: (files: string) => `- SİLİNEN dosyalar: ${files}`,
+      effectsChanged: (files: string) => `- DEĞİŞEN dosyalar: ${files}`,
+      effectsLost: (files: string) => `- Bunların önceki hali saklanamadı (çok büyük ya da gizli dosya), geri getirilemez: ${files}`,
+      effectsTell:
+        'Cevabında bunu kullanıcıya mutlaka söyle: hangi dosyaların silindiğini ya da değiştiğini yaz ve cevabın altındaki "Geri al" düğmesiyle geri getirebileceğini ekle. Komut başarılı görünse de bunu atlama.',
+      effectsCreated: (files: string) => `Komutun oluşturduğu yeni dosyalar: ${files}`,
       secretCommand: (name: string) =>
         `Bu komut çalıştırılmadı: "${name}" parola ya da anahtar içerebilecek gizli bir dosya. Atlas bu dosyaların içeriğini okuyamaz ve gösteremez; başka bir yolla da deneme. Kullanıcıya dosyayı kendisinin açabileceğini söyle.`,
       commandForbidden: (reason: string) =>

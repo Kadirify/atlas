@@ -318,6 +318,12 @@ export const chat: Dict['chat'] = {
     exitCode: (code: number) => (code === 0 ? 'succeeded' : `failed (${code})`),
     timedOut: 'timed out',
     noOutput: '(no output)',
+    effects: (changed: number, deleted: number, created: number) =>
+      [changed && `${changed} ${changed === 1 ? 'file' : 'files'} changed`, deleted && `${deleted} deleted`, created && `${created} new`].filter(Boolean).join(', '),
+    effectsUndo: 'Undo under the reply undoes these too.',
+    effectsLost: (files: string) => `The earlier version was not kept, so this cannot be brought back: ${files}`,
+    effectsDeleted: 'deleted',
+    effectsCreated: 'new',
     label: 'File tools used'
   },
 
@@ -345,6 +351,9 @@ export const chat: Dict['chat'] = {
     moveTo: 'to:',
     trashNote: "The file isn't deleted permanently. You can restore it from the trash.",
     protectedWarning: 'Other programs may run this file automatically. Review it carefully.'
+,
+    recheckWarning:
+      'You chose "always allow" for this command, but since then Atlas changed files without asking you. The command may run those files, so you are asked again.'
   },
 
   folder: {

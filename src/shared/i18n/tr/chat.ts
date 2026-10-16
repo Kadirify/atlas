@@ -317,6 +317,12 @@ export const chat = {
     exitCode: (code: number) => (code === 0 ? 'başarılı' : `hata (${code})`),
     timedOut: 'süre doldu',
     noOutput: '(çıktı yok)',
+    effects: (changed: number, deleted: number, created: number) =>
+      [changed && `${changed} dosya değişti`, deleted && `${deleted} dosya silindi`, created && `${created} yeni dosya`].filter(Boolean).join(', '),
+    effectsUndo: 'Cevabın altındaki Geri al bunları da geri alır.',
+    effectsLost: (files: string) => `Önceki hali saklanamadığı için geri getirilemez: ${files}`,
+    effectsDeleted: 'silindi',
+    effectsCreated: 'yeni',
     label: 'Kullanılan dosya araçları'
   },
 
@@ -343,7 +349,9 @@ export const chat = {
     commandNote: 'Komut proje klasöründe çalışır ve çıktısı Atlas\'a verilir. En çok 2 dakika sürebilir.',
     moveTo: 'şuraya:',
     trashNote: 'Dosya kalıcı olarak silinmez; çöp kutusundan geri alınabilir.',
-    protectedWarning: 'Bu dosya başka programlar tarafından kendiliğinden çalıştırılabilir; dikkatle bak.'
+    protectedWarning: 'Bu dosya başka programlar tarafından kendiliğinden çalıştırılabilir; dikkatle bak.',
+    recheckWarning:
+      'Bu komuta "hep izin ver" demiştin, ama Atlas o zamandan beri sana sormadan dosya değiştirdi. Komut o dosyaları çalıştırabilir; bu yüzden yeniden soruluyor.'
   },
 
   folder: {

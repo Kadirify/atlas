@@ -130,6 +130,37 @@ function TerminalOutput({ terminal }: { terminal: NonNullable<ToolStep['terminal
           {terminal.output || t.chat.steps.noOutput}
         </pre>
       )}
+      {terminal.effects && <CommandEffects effects={terminal.effects} />}
+    </div>
+  )
+}
+
+/** Komutun proje klasöründe değiştirdikleri (güvenli kip): neyin değiştiği ve geri alınabileceği */
+function CommandEffects({ effects }: { effects: NonNullable<NonNullable<ToolStep['terminal']>['effects']> }) {
+  const t = useT()
+  const s = t.chat.steps
+  const files = [
+    ...effects.deleted.map((path) => ({ path, note: s.effectsDeleted })),
+    ...effects.changed.map((path) => ({ path, note: '' })),
+    ...effects.created.map((path) => ({ path, note: s.effectsCreated }))
+  ]
+  const risky = effects.deleted.length + effects.changed.length > 0
+  return (
+    <div className="border-t border-white/10 px-3 py-2 font-sans text-[12.5px] leading-relaxed text-[#cbd5e1]">
+      <p className={cn('font-medium', effects.deleted.length > 0 ? 'text-[#fca5a5]' : 'text-[#c7d2fe]')}>
+        {s.effects(effects.changed.length, effects.deleted.length, effects.created.length)}
+        {effects.partial && ' …'}
+      </p>
+      <ul className="mt-1 max-h-[120px] overflow-auto font-mono text-[12px] text-[#94a3b8]">
+        {files.map((f) => (
+          <li key={f.path} className="truncate">
+            {f.path}
+            {f.note && <span className="font-sans text-[#64748b]"> ({f.note})</span>}
+          </li>
+        ))}
+      </ul>
+      {effects.lost.length > 0 && <p className="mt-1 text-[#fca5a5]">{s.effectsLost(effects.lost.join(', '))}</p>}
+      {risky && <p className="mt-1 text-[#94a3b8]">{s.effectsUndo}</p>}
     </div>
   )
 }
@@ -225,6 +256,12 @@ export function ApprovalCard({ approval }: { approval: FileApproval }) {
         <p className="mt-2 flex items-start gap-2 rounded-lg bg-danger-soft px-3 py-2 text-[13px] leading-relaxed font-medium text-danger">
           <ShieldAlert size={15} className="mt-0.5 shrink-0" aria-hidden />
           {t.chat.approval.protectedWarning}
+        </p>
+      )}
+      {approval.recheck && (
+        <p className="mt-2 flex items-start gap-2 rounded-lg bg-warn-soft px-3 py-2 text-[13px] leading-relaxed font-medium text-warn">
+          <ShieldAlert size={15} className="mt-0.5 shrink-0" aria-hidden />
+          {t.chat.approval.recheckWarning}
         </p>
       )}
       <div className="mt-4 flex gap-2">

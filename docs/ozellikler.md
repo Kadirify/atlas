@@ -46,7 +46,8 @@ Sol menüdeki **Kod** bölümünden bir proje klasörü açarsın. Atlas o proje
 - Atlas dosyaları kendisi okur ve arar; iş birden çok adımlıysa önce bir **plan** yazar ve adımları işaretleyerek ilerler.
 - Dosyadaki değişikliği satır satır gösterip onayını ister. "Bu sohbette hep izin ver" dersen düzenlemeleri bir daha sormaz.
 - Test, derleme, kurulum gibi komutları onayınla çalıştırır; çıktıyı canlı gösterir, hata varsa düzeltip yeniden dener.
-- Bir cevapta yaptığı bütün dosya değişikliklerini tek düğmeyle **geri alırsın**.
+- **Güvenli kip:** her komuttan önce proje klasörünün anlık görüntüsü alınır. Komut (ya da çalıştırdığı test kodu) bir dosyayı silerse ya da değiştirirse terminalin altında görürsün.
+- Bir cevapta yaptığı bütün dosya değişikliklerini, komutların yaptıkları dahil, tek düğmeyle **geri alırsın**.
 - Proje köküne `ATLAS.md` koyarsan ("Bu projede TypeScript kullan" gibi) Atlas bu kuralları her seferinde okur.
 - **Silme aracı yok**: Atlas dosya silmez, bilinen silme komutlarını çalıştırmaz; bunu senin yapman gerektiğini söyler. Komutların sınırları için: [Gizlilik ve güvenlik](gizlilik-ve-guvenlik.md).
 - `package.json`, `.git`, `.bat` gibi başka programların kendiliğinden çalıştırdığı dosyalar "hep izin ver" desen de her seferinde sorulur.
