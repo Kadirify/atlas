@@ -50,7 +50,7 @@ beforeEach(() => {
   connectionId = service.save({ name: 'Örnek', engine: 'sqlite', file }).id
 })
 
-afterEach(() => rmSync(dir, { recursive: true, force: true }))
+afterEach(() => rmSync(dir, { recursive: true, force: true, maxRetries: 20, retryDelay: 100 }))
 
 describe('SqlService: bağlantılar', () => {
   it('bağlantıyı saklar, listeler, şemayı okur ve siler', async () => {
@@ -81,6 +81,22 @@ describe('SqlService: bağlantılar', () => {
 })
 
 describe('SqlService: Atlas araçları', () => {
+  it('bitmeyen sorgu Durdur ile hemen kesilir; adım "durduruldu" görünür', async () => {
+    const controller = new AbortController()
+    const started = Date.now()
+    setTimeout(() => controller.abort(), 500)
+    const out = await service.execute(
+      'sohbet-1',
+      connectionId,
+      { name: 'sql_query', arguments: { sql: 'WITH RECURSIVE c(x) AS (SELECT 1 UNION ALL SELECT x + 1 FROM c) SELECT count(*) FROM c' } },
+      controller.signal
+    )
+    expect(Date.now() - started).toBeLessThan(1500)
+    expect(out.step.status).toBe('error')
+    expect(out.step.label).toBe('Sorgu durduruldu')
+    expect(out.result).toContain('yarıda kesildi')
+  })
+
   it('SELECT onay istemeden çalışır ve sonucu panele bildirir', async () => {
     const out = await run('sql_query', { sql: 'SELECT ad, maas FROM personel WHERE maas > 45000 ORDER BY maas' })
     expect(out.step.status).toBe('ok')

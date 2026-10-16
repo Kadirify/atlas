@@ -12,6 +12,7 @@
 - Yanlış PIN sayacı yeniden başlatınca sıfırlanmıyor.
 
 ### Düzeltmeler
+- Bağlanan SQLite dosyalarındaki sorgular ayrı bir süreçte çalışıyor: uzun ya da hiç bitmeyen bir sorgu (ör. sonsuz `WITH RECURSIVE`) artık uygulamayı dondurmuyor. Durdur sorguyu hemen kesiyor; 30 saniyede bitmeyen sorgu kendiliğinden duruyor.
 - Pencerenin sayfası çökerse boş kalmıyor, kendiliğinden yeniden yükleniyor.
 - Ollama kapalıysa Atlas onu kendisi başlatıyor: açılışta ve bir soru bağlanamadığında (sonra aynı istek yeniden deneniyor). Üst çubuktaki bellek düğmesinde Ollama kapalıyken kırmızı nokta ve "Ollama'yı başlat" düğmesi.
 - UTF-8 olmayan dosyalar düzenlenince bozulmuyor; onay beklerken değişen dosyanın üstüne yazılmıyor.

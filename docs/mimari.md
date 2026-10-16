@@ -31,7 +31,9 @@ src/
     ipc.ts              Arayüzden gelen bütün istekler (handle('kanal', ...))
     panel.ts            Kısayolla açılan küçük soru penceresi
     tray.ts             Sistem tepsisi simgesi ve menüsü
+    log.ts              Kayıt dosyası: hatalar, çökmeler, donmalar
     db/index.ts         SQLite (node:sqlite): göçler ve sorgular
+    workers/sqlite.ts   Bağlanan SQLite dosyalarındaki sorgular (ayrı süreçte çalışır)
     services/
       chat.ts           Sohbet döngüsü: istem, geçmiş, akış, araç çağrıları, hafıza
       ollama.ts         Ollama istemcisi: akış, model indirme, oluşturma, bellek
@@ -39,6 +41,8 @@ src/
       files.ts          Klasör araçları: listele, oku, ara, düzenle, yaz, taşı, komut
       code.ts           Kod alanı: dosya ağacı, dosya görüntüleme, komut çalıştırma
       sql.ts            Veritabanı bağlantıları ve sürücüler (mssql, pg, mysql2, node:sqlite)
+      sqliteRunner.ts   SQLite sorgusunu ayrı süreçte çalıştırma; Durdur'da ve 30 sn'de kapatma
+      diagnostics.ts    Hata bildirimi için tanılama bilgisi
       memory.ts         Kalıcı hafıza: öğrenme, gömme (embedding), anlamca arama
       attachments.ts    Ek dosyalardan metin çıkarma (PDF, Word, Excel)
       export.ts         Sohbeti Word, PDF ve Markdown'a çevirme

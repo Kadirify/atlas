@@ -1,12 +1,13 @@
 import { randomUUID } from 'node:crypto'
 import { existsSync } from 'node:fs'
-import { DatabaseSync } from 'node:sqlite'
 import { safeStorage } from 'electron'
 import { classifySql } from '@shared/sql'
 import { SQL_ENGINES, type SqlObjectType, type SqlApproval, type SqlConnection, type SqlConnectionInput, type SqlEngine, type SqlResult, type SqlTable, type SqlValue, type ToolStep } from '@shared/types'
 import type { Db } from '../db'
 import { L } from '../i18n'
 import type { ToolCall } from './ollama'
+import { runSqlite, SqliteJobError } from './sqliteRunner'
+import type { SqliteJob } from '../workers/sqlite'
 
 /** Arayüze en çok bu kadar satır gönderilir */
 const MAX_UI_ROWS = 500
@@ -52,7 +53,7 @@ interface Driver {
   close(): Promise<void>
 }
 
-/** MySQL okumalarında sorgu süre sınırı (SQL Server ve PostgreSQL'de bağlantı ayarıyla verilir) */
+/** MySQL ve SQLite sorgularında süre sınırı (SQL Server ve PostgreSQL'de bağlantı ayarıyla verilir) */
 const QUERY_TIMEOUT_MS = 30_000
 /** Yazma sorgusu satır döndürürse (OUTPUT, RETURNING) en çok bu kadarı gösterilir */
 const WRITE_ROWS = 200
@@ -89,85 +90,25 @@ function cell(value: unknown): SqlValue {
 
 function sqliteDriver(file: string): Driver {
   if (!existsSync(file)) throw new SqlError(L().tools.sql.errors.noFile(file))
-  const open = (readOnly: boolean): DatabaseSync => new DatabaseSync(file, { readOnly })
+  // Her iş ayrı bir süreçte çalışır: sonsuz ya da çok uzun bir sorgu uygulamayı dondurmaz, Durdur'da ve süre dolunca kesilir.
+  const run = async <T>(job: SqliteJob, signal?: AbortSignal): Promise<T> => {
+    checkAborted(signal)
+    try {
+      return await runSqlite<T>(job, { signal, timeoutMs: QUERY_TIMEOUT_MS })
+    } catch (e) {
+      if (!(e instanceof SqliteJobError)) throw e
+      const errors = L().tools.sql.errors
+      if (e.kind === 'stopped') throw new SqlError(errors.interrupted)
+      if (e.kind === 'timeout') throw new SqlError(errors.timeout(QUERY_TIMEOUT_MS / 1000))
+      throw new SqlError(e.message)
+    }
+  }
   return {
-    async schema() {
-      const db = open(true)
-      try {
-        const tables = db
-          .prepare("SELECT name, type FROM sqlite_master WHERE type IN ('table', 'view') AND name NOT LIKE 'sqlite_%' ORDER BY name")
-          .all() as { name: string; type: string }[]
-        return tables.slice(0, MAX_SCHEMA_TABLES).map((t) => ({
-          schema: '',
-          name: t.name,
-          type: (t.type === 'view' ? 'view' : 'table') as SqlObjectType,
-          columns: (db.prepare(`PRAGMA table_info("${t.name.replace(/"/g, '""')}")`).all() as { name: string; type: string; notnull: number; pk: number }[]).map(
-            (c) => ({ name: c.name, type: c.type || 'ANY', nullable: !c.notnull, key: c.pk > 0 })
-          )
-        }))
-          .concat(
-            (db.prepare("SELECT name, tbl_name FROM sqlite_master WHERE type = 'trigger' ORDER BY name").all() as { name: string; tbl_name: string }[]).map((tr) => ({
-              schema: '',
-              name: tr.name,
-              type: 'trigger' as const,
-              parent: tr.tbl_name,
-              columns: []
-            }))
-          )
-      } finally {
-        db.close()
-      }
-    },
-    async definition(object) {
-      const db = open(true)
-      try {
-        const row = db.prepare('SELECT sql FROM sqlite_master WHERE name = ?').get(object.name) as { sql?: string } | undefined
-        return row?.sql ?? ''
-      } finally {
-        db.close()
-      }
-    },
-    async read(sql, maxRows, signal) {
-      // Salt okunur bağlantı: sorgu ne olursa olsun dosya değişemez. (SQLite eşzamanlı çalışır; başladıktan sonra durdurulamaz.)
-      checkAborted(signal)
-      const db = open(true)
-      const started = Date.now()
-      try {
-        const statement = db.prepare(sql)
-        const rows: SqlValue[][] = []
-        let columns: string[] = []
-        let total = 0
-        for (const row of statement.iterate() as Iterable<Record<string, unknown>>) {
-          if (total === 0) columns = Object.keys(row)
-          total++
-          if (rows.length < maxRows) rows.push(columns.map((c) => cell(row[c])))
-          else break
-        }
-        if (columns.length === 0) columns = (statement as unknown as { columns?: () => { name: string }[] }).columns?.().map((c) => c.name) ?? []
-        return { columns, rows, rowCount: rows.length, truncated: total > rows.length, ms: Date.now() - started }
-      } finally {
-        db.close()
-      }
-    },
-    async write(sql, signal) {
-      checkAborted(signal)
-      const db = open(false)
-      const started = Date.now()
-      try {
-        db.exec('BEGIN')
-        try {
-          db.exec(sql)
-          const affected = (db.prepare('SELECT total_changes() AS n').get() as { n: number }).n
-          db.exec('COMMIT')
-          return { columns: [], rows: [], rowCount: 0, truncated: false, affected, ms: Date.now() - started }
-        } catch (e) {
-          db.exec('ROLLBACK')
-          throw e
-        }
-      } finally {
-        db.close()
-      }
-    },
+    schema: () => run<SqlTable[]>({ op: 'schema', file, maxTables: MAX_SCHEMA_TABLES }),
+    definition: (object) => run<string>({ op: 'definition', file, name: object.name }),
+    // Salt okunur bağlantıyla açılır: sorgu ne olursa olsun dosya değişemez.
+    read: (sql, maxRows, signal) => run<SqlResult>({ op: 'read', file, sql, maxRows, maxCellChars: MAX_CELL_CHARS }, signal),
+    write: (sql, signal) => run<SqlResult>({ op: 'write', file, sql }, signal),
     async close() {}
   }
 }
@@ -880,7 +821,8 @@ export class SqlService {
       return done(call.name, t.result.unknownTool(call.name), 'error')
     } catch (e) {
       const message = e instanceof Error ? e.message : String(e)
-      return done(t.steps.failed, t.result.failed(message), 'error')
+      // Kullanıcı durdurduysa adım "hata verdi" değil "durduruldu" görünür.
+      return done(signal.aborted ? t.steps.stopped : t.steps.failed, t.result.failed(message), 'error')
     }
   }
 }

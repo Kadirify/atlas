@@ -7,7 +7,13 @@ const shared = { '@shared': resolve('src/shared') }
 
 export default defineConfig({
   main: {
-    resolve: { alias: shared }
+    resolve: { alias: shared },
+    // SQLite işleri ayrı süreçte çalışır (services/sqliteRunner); onun dosyası da ana sürecin yanına derlenir.
+    build: {
+      rollupOptions: {
+        input: { index: resolve('src/main/index.ts'), sqliteWorker: resolve('src/main/workers/sqlite.ts') }
+      }
+    }
   },
   preload: {
     resolve: { alias: shared }

@@ -267,7 +267,8 @@ ${region}`,
       wrote: (rows: number) => `Onaylandı ve çalıştı: ${rows} satır etkilendi`,
       denied: (sql: string) => `Reddedildi: ${sql}`,
       forbidden: (keywords: string) => `Çalıştırılmadı: ${keywords} işlemini Atlas yapamaz`,
-      failed: 'Sorgu hata verdi'
+      failed: 'Sorgu hata verdi',
+      stopped: 'Sorgu durduruldu'
     },
     result: {
       key: 'anahtar',
@@ -299,6 +300,8 @@ ${region}`,
       connect: (message: string) => `Veritabanına bağlanılamadı: ${message}`,
       unreachable: (host: string, port: number) => `Sunucuya ulaşılamadı (${host}, port ${port}). Sunucunun çalıştığını, adresin ve portun doğru olduğunu kontrol et.`,
       stopped: 'Cevap durduruldu; sorgu çalıştırılmadı.',
+      interrupted: 'Cevap durduruldu; sorgu yarıda kesildi.',
+      timeout: (seconds: number) => `Sorgu ${seconds} saniyede bitmediği için durduruldu. Daha dar bir sorgu dene (WHERE, LIMIT).`,
       panelReadOnly: 'Buradan yalnızca SELECT sorguları çalıştırılır. Değiştiren sorguları Atlas\'a yazdır; onay kartıyla çalışır. Silme işlemlerini kendi aracınla yap.'
     }
   },

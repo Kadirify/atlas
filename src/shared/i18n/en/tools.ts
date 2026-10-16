@@ -262,7 +262,8 @@ ${region}`,
       wrote: (rows: number) => (rows === 1 ? 'Approved and ran: 1 row affected' : `Approved and ran: ${rows} rows affected`),
       denied: (sql: string) => `Declined: ${sql}`,
       forbidden: (keywords: string) => `Not run: Atlas cannot do ${keywords}`,
-      failed: 'The query failed'
+      failed: 'The query failed',
+      stopped: 'The query was stopped'
     },
     result: {
       key: 'key',
@@ -294,6 +295,8 @@ ${region}`,
       connect: (message: string) => `Could not connect to the database: ${message}`,
       unreachable: (host: string, port: number) => `Could not reach the server (${host}, port ${port}). Check that the server is running and that the address and port are right.`,
       stopped: 'The reply was stopped; the query was not run.',
+      interrupted: 'The reply was stopped; the query was cut short.',
+      timeout: (seconds: number) => `The query was stopped because it did not finish in ${seconds} seconds. Try a narrower query (WHERE, LIMIT).`,
       panelReadOnly: 'Only SELECT queries run from here. Have Atlas write changing statements; they run with an approval card. Run delete operations in your own tool.'
     }
   },
