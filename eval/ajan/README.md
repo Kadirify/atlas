@@ -36,7 +36,7 @@ $env:AJAN_MODELS = 'atlas-code:latest,gemma4:12b'; $env:AJAN_REPEAT = '3'; npm r
 | `AJAN_TASKS` | Yalnızca bu görevler (ör. `test-duzelt,sql-csv`) |
 | `AJAN_GATE` | Sürüm kapısı: başarı oranı bunun altındaki model testi düşürür (ör. `0.7`) |
 | `AJAN_KEEP` | `1` ise başarısız görevlerin klasörleri silinmez, incelenebilir |
-| `AJAN_OUT` | Sonuç klasörü (varsayılan `eval/ajan/results`) |
+| `AJAN_OUT` | Sonuç klasörü (varsayılan `eval/ajan/results`). Verilirse `RESULTS.md` güncellenmez |
 
 Bir görev RTX 5070'te Atlas Strong ile 20-60 saniye, Atlas Code ile 40-120 saniye sürer. Bütün set iki modelle yaklaşık bir saat.
 

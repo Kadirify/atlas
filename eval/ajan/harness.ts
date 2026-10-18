@@ -598,7 +598,8 @@ export async function runSuite(options: Options): Promise<Summary> {
   const summary = summarize(results, options.models)
   const markdown = report(summary, meta, tasks)
   await writeFile(join(options.out, `${stamp}.md`), markdown)
-  // Bütün görevlerle yapılan çalıştırma, depodaki özet tabloyu günceller.
-  if (!options.tasks) await writeFile(join('eval', 'ajan', 'RESULTS.md'), markdown)
+  // Bütün görevlerle ve varsayılan sonuç klasörüyle yapılan çalıştırma depodaki özet tabloyu günceller; AJAN_OUT
+  // verilmişse (elle yapılan bir ara ölçüm) özete dokunulmaz.
+  if (!options.tasks && !process.env.AJAN_OUT) await writeFile(join('eval', 'ajan', 'RESULTS.md'), markdown)
   return summary
 }
