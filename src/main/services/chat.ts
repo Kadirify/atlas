@@ -182,13 +182,24 @@ export function claimsWrite(text: string): boolean {
   return CLAIMS_WRITE.test(fold(text))
 }
 
-/** Bir değişikliği yaptığını söyleyen ifadeler (dosya ya da veritabanı; etken ve edilgen) */
+/**
+ * Bir değişikliği yaptığını söyleyen ifadeler (dosya ya da veritabanı; etken ve edilgen). Tam kelime olarak aranır:
+ * "sipariş oluşturulduğunda" bir açıklamadır, "oluşturuldu" iddiası değildir.
+ */
 const CLAIMS_CHANGE =
-  /(eklendi|ekledim|yaz[ıi]ld[ıi]|yazd[ıi]m|kaydedildi|kaydettim|güncellendi|güncelledim|değiştirildi|değiştirdim|düzenlendi|düzenledim|düzeltildi|düzelttim|kald[ıi]r[ıi]ld[ıi]|kald[ıi]rd[ıi]m|haline getirdim|haline getirildi|oluşturuldu|oluşturdum|has been (?:added|updated|saved|written|changed|created)|i (?:added|updated|saved|wrote|changed|created))/i
+  /(?<!\p{L})(?:eklendi|ekledim|yaz[ıi]ld[ıi]|yazd[ıi]m|kaydedildi|kaydettim|güncellendi|güncelledim|değiştirildi|değiştirdim|düzenlendi|düzenledim|düzeltildi|düzelttim|kald[ıi]r[ıi]ld[ıi]|kald[ıi]rd[ıi]m|haline getirdim|haline getirildi|oluşturuldu|oluşturdum|has been (?:added|updated|saved|written|changed|created)|i (?:added|updated|saved|wrote|changed|created))(?!\p{L})/iu
+
+/** İddia aranırken atılan kısımlar: kod blokları, satır içi kod ve çift tırnak içi (ör. önerilen bir commit mesajı) */
+function prose(text: string): string {
+  return text
+    .replace(/```[\s\S]*?(?:```|$)/g, ' ')
+    .replace(/`[^`\n]*`/g, ' ')
+    .replace(/"[^"\n]*"|“[^”\n]*”/g, ' ')
+}
 
 /** Cevap bir değişikliği yaptığını söylüyor mu (kullanıcı reddettiği halde "eklendi" demeyi yakalamak için) */
 export function claimsChange(text: string): boolean {
-  return CLAIMS_CHANGE.test(fold(text))
+  return CLAIMS_CHANGE.test(fold(prose(text)))
 }
 
 /** Kullanıcı yalnızca sorgunun metnini mi istiyor ("UPDATE sorgusunu yaz", "nasıl yazarım") */

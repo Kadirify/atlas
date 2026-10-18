@@ -211,6 +211,19 @@ describe('reddedilen değişikliği yapılmış gibi söyleme', () => {
     expect(claimsWrite("`notlar.txt` dosyasına 'Perşembe: toplantı' satırı eklendi.")).toBe(true)
     expect(claimsWrite('index.html dosyası oluşturuldu.')).toBe(true)
   })
+
+  it('açıklama ve öneri iddia sayılmaz: tam kelime, kod ve tırnak dışı', () => {
+    // Bir tetikleyiciyi ya da tabloyu anlatırken geçen ekli fiiller
+    expect(claimsChange('Bir sipariş oluşturulduğunda tetikleyici stoğu düşürür.')).toBe(false)
+    expect(claimsChange('Sipariş iptal edildiğinde stok geri eklenir ve hareket tablosuna kayıt düşülür.')).toBe(false)
+    // Önerilen commit mesajı
+    expect(claimsChange('Önerim:\n```\nİndirimli fiyat fonksiyonu eklendi\n```')).toBe(false)
+    expect(claimsChange('Commit mesajı: "İndirimli fiyat fonksiyonu eklendi"')).toBe(false)
+    expect(claimsChange('Kısa bir mesaj: `indirimliFiyat eklendi`')).toBe(false)
+    // Gerçek iddialar yine yakalanır
+    expect(claimsChange("Kalem'in fiyatı 15 TL olarak güncellendi.")).toBe(true)
+    expect(claimsChange('Dosyayı düzelttim.')).toBe(true)
+  })
 })
 
 import { writesWriteQuery } from '../src/main/services/chat'

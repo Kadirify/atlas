@@ -5,7 +5,7 @@ import type { CommandEffectsSummary, FileApproval, Folder, FolderCapability, Ind
 import type { Db, FileChunkRow } from '../db'
 import { L, locale } from '../i18n'
 import { decodeText, extractText, TEXT_EXTENSIONS } from './attachments'
-import { classifyCommand } from '@shared/command'
+import { classifyCommand, OVERWRITE_REDIRECT } from '@shared/command'
 import { isSecretFile, runCommand } from './code'
 import { closestLines, looksTruncated, numberedLines, relaxedReplace, stripLineNumbers, syntaxError } from './patch'
 import { scanHardware } from './hardware'
@@ -745,6 +745,8 @@ export class FilesService {
           const short = command.replace(/\s+/g, ' ').slice(0, 80)
           const verdict = classifyCommand(command)
           // Silen ya da yok eden komutlar onaya bile sunulmaz.
+          // Çıktıyı dosyaya "> dosya" ile yazmak isteyen komut silme değildir: modele doğru yol söylenir.
+          if (verdict.forbidden && verdict.reason === OVERWRITE_REDIRECT) return done(t.step.redirectForbidden, t.result.redirectForbidden, 'denied')
           if (verdict.forbidden) return done(t.step.commandForbidden(verdict.reason || short), t.result.commandForbidden(verdict.reason), 'denied')
           // Gizli dosyaları (.env, anahtarlar) okuyan ya da gösteren komutlar da: read_file'ın yasağı "type .env" ile aşılmasın.
           const secret = command.split(/[\s"'`|&<>;(),=]+/).find((part) => part && isSecretFile(part))

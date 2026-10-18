@@ -13,6 +13,9 @@ export interface CommandVerdict {
 }
 
 /** Bundan uzun komutlar incelenmeden reddedilir (uzun metinde kalıp aramak uygulamayı kilitleyebilir). */
+/** Üstüne yazan yönlendirmenin (>) yasak nedeni; dosya araçları bu durumda modele başka bir yol gösterir */
+export const OVERWRITE_REDIRECT = 'dosyanın üstüne yazan yönlendirme (>)'
+
 const MAX_COMMAND_LENGTH = 2000
 
 /** Tek başına bir kelime olarak geçtiğinde silme anlamına gelen komutlar */
@@ -44,7 +47,7 @@ const DELETE_PATTERNS: [RegExp, string][] = [
   [/\b(?:os\.remove|os\.unlink|os\.rmdir|shutil\.rmtree|shutil\.move)\b|\bopen\s*\([^)]*,\s*['"][wx]/i, 'dosya silen ya da üstüne yazan kod'],
   [/\[(?:system\.)?io\.(?:file|directory)\]::delete/i, 'dosya silen kod'],
   // Dosyanın üstüne yazan yönlendirme: "> dosya", "1>dosya", "nul>dosya". Ekleme (>>), "2>&1" ve "> nul" serbest.
-  [/(?<![>\d&])\d?>(?![>&])\s*(?!(?:nul|\/dev\/null|\$null)\b)[^\s>&|]/i, 'dosyanın üstüne yazan yönlendirme (>)'],
+  [/(?<![>\d&])\d?>(?![>&])\s*(?!(?:nul|\/dev\/null|\$null)\b)[^\s>&|]/i, OVERWRITE_REDIRECT],
   [/\b(?:mv|move|move-item|ren|rename|rename-item|cp|copy|copy-item|xcopy|robocopy)\b[^&|;\n]*\s(?:\/mir\b|\/purge\b|\/mov\b|\/move\b|-force\b|-f\b|\/y\b)/i, 'üstüne yazan taşıma ya da kopyalama'],
   [/\b(?:shutdown|reboot|restart-computer|stop-computer|taskkill|stop-process|kill|pkill|killall|reg\s+(?:delete|add|import)|sc\s+(?:delete|config|create)|net\s+(?:user|localgroup)|schtasks|vssadmin|bcdedit|takeown|icacls|attrib|chmod|chown|fsutil|setx)\b/i, 'sistemi değiştiren komut'],
   [/\b(?:iex|invoke-expression)\b/i, 'Invoke-Expression'],

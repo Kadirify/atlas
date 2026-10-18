@@ -129,6 +129,7 @@ export const tools = {
       commandRan: (command: string, code: number | null, timedOut: boolean) =>
         timedOut ? `Komut süre sınırını aştı ve durduruldu: ${command}` : code === 0 ? `Komut çalıştı: ${command}` : `Komut hata verdi (${code ?? '?'}): ${command}`,
       commandForbidden: (reason: string) => `Çalıştırılmadı: Atlas silen komutları çalıştıramaz (${reason})`,
+      redirectForbidden: 'Çalıştırılmadı: dosyanın üstüne yazan ">" yönlendirmesi kapalı',
       secretCommand: (name: string) => `Çalıştırılmadı: komut gizli bir dosyaya erişiyor (${name})`,
       deleteForbidden: (path: string) => `Silinmedi: Atlas dosya silemez (${path})`,
       unknownTool: (name: string) => `Bilinmeyen araç: ${name}`,
@@ -171,6 +172,8 @@ export const tools = {
       effectsCreated: (files: string) => `Komutun oluşturduğu yeni dosyalar: ${files}`,
       secretCommand: (name: string) =>
         `Bu komut çalıştırılmadı: "${name}" parola ya da anahtar içerebilecek gizli bir dosya. Atlas bu dosyaların içeriğini okuyamaz ve gösteremez; başka bir yolla da deneme. Kullanıcıya dosyayı kendisinin açabileceğini söyle.`,
+      redirectForbidden:
+        'Bu komut çalıştırılmadı: ">" yönlendirmesi bir dosyanın üstüne yazar ve Atlas\'ta kapalıdır. Bu bir silme isteği değil; kullanıcıya "yapamam" deme. Komutu yönlendirme olmadan çalıştır, çıktıyı dosyaya kaydetmek gerekiyorsa çıktıyı write_file aracıyla yaz.',
       commandForbidden: (reason: string) =>
         `Bu komut çalıştırılmadı (${reason}): Atlas silen, üstüne yazan ya da sistemi değiştiren komutları çalıştıramaz ve başka bir yolla da denememelisin. Kullanıcıya "Maalesef silme işlemlerini ben yapamam; bunu sen kendin çalıştırabilirsin" de ve komutu kod bloğu içinde ver.`,
       deleteForbidden: (path: string) =>

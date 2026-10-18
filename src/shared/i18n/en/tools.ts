@@ -122,6 +122,7 @@ export const tools: Dict['tools'] = {
       commandRan: (command: string, code: number | null, timedOut: boolean) =>
         timedOut ? `Command hit the time limit and was stopped: ${command}` : code === 0 ? `Command ran: ${command}` : `Command failed (${code ?? '?'}): ${command}`,
       commandForbidden: (reason: string) => `Not run: Atlas cannot run deleting commands (${reason})`,
+      redirectForbidden: 'Not run: the ">" redirect that overwrites a file is turned off',
       secretCommand: (name: string) => `Not run: the command accesses a secret file (${name})`,
       deleteForbidden: (path: string) => `Not deleted: Atlas cannot delete files (${path})`,
       unknownTool: (name: string) => `Unknown tool: ${name}`,
@@ -166,6 +167,8 @@ export const tools: Dict['tools'] = {
       commandDenied: 'The user did not approve this command; it was not run. Do not insist.',
       secretCommand: (name: string) =>
         `This command was not run: "${name}" is a secret file that may contain passwords or keys. Atlas cannot read or show these files and must not try another way. Tell the user they can open the file themselves.`,
+      redirectForbidden:
+        'This command was not run: the ">" redirect overwrites a file and is turned off in Atlas. This is not a deletion request, so do not tell the user you cannot do it. Run the command without the redirect and, if the output must go into a file, write it with the write_file tool.',
       commandForbidden: (reason: string) =>
         `This command was not run (${reason}): Atlas cannot run commands that delete, overwrite or change the system, and you must not try another route. Tell the user "Sorry, I can't run delete operations; you can run this yourself" and give the command in a code block.`,
       deleteForbidden: (path: string) =>
