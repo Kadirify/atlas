@@ -13,7 +13,7 @@ Atlas'ta sırada ne var. Öncelik sırasıyla; tarih vermiyoruz, çünkü proje 
 - **Ajan test setini büyütmek ve sürüm kapısı yapmak:** 28 görevden 50'ye; her sürümden önce tekrarlı ölçüm.
 - **Kod alanında git:** değişiklikleri git farkı olarak görmek, commit mesajı önerisi, dal açma.
 - **Proje haritası:** klasör bağlanınca dosya yapısı ve fonksiyonların kısa özeti; model aramaya daha az adım harcasın.
-- **Onay bekleyen işler çubuğu** ve "hep izin ver" denmiş komutları tek tek kaldırma.
+- "Hep izin ver" denmiş komutları tek tek kaldırma.
 - **Atlas Code için araç kullanımı eğitimi:** doğrulanmış başarılı ajan konuşmalarıyla yeni ince ayar turu. Atlas Strong için de aynısı.
 - **Atlas-TR'yi büyütmek:** 92 sorudan 300'e; elle doğrulanmış gerçek yazım hataları.
 

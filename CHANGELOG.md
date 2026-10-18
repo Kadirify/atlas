@@ -31,6 +31,7 @@
 - Veritabanı açılamazsa uygulama asılı kalmıyor, ne olduğunu söylüyor.
 
 ### Diğer
+- Onay bekleyen işler: onay kartı ekranda değilse mesaj kutusunun üstünde "Atlas onayını bekliyor" çubuğu ve karta atlama; başka bir sohbette bekleyen onay varsa o sohbete geçiş.
 - Hata kaydı: yakalanmamış hatalar, pencere ve alt süreç çökmeleri, uygulamanın donması ve Ollama'nın başlatılması `%APPDATA%\Atlas Asistan\logs` altına yazılıyor (sohbet içeriği yazılmaz). Ayarlar → Hakkında'da "Tanılama bilgisini kopyala" ve "Kayıt klasörünü aç".
 - Kod alanı artık Atlas Strong kuruluysa onunla açılıyor (yoksa Atlas Code, o da yoksa Medium); ajan test setinde kod alanında en başarılı ve en hızlı model.
 - Ajan test seti (`npm run eval:ajan`): 28 görevle kod alanı ve veritabanı sohbetlerinde gerçek modelin iş bitirip bitirmediğini ölçer.

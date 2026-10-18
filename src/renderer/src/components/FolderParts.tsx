@@ -232,7 +232,7 @@ export function ApprovalCard({ approval }: { approval: FileApproval }) {
           : t.chat.approval.trash
 
   return (
-    <div className="rounded-xl border border-accent bg-surface p-4" role="alertdialog" aria-label={title}>
+    <div className="rounded-xl border border-accent bg-surface p-4 outline-none focus-visible:ring-2 focus-visible:ring-accent" role="alertdialog" aria-label={title} data-approval tabIndex={-1}>
       <h3 className="text-sm font-semibold text-ink">{title}</h3>
       <p className="mt-1 font-mono text-[13px] break-all text-ink-2">
         {approval.path}

@@ -46,6 +46,7 @@ Sol menüdeki **Kod** bölümünden bir proje klasörü açarsın. Atlas o proje
 - Atlas dosyaları kendisi okur ve arar; iş birden çok adımlıysa önce bir **plan** yazar ve adımları işaretleyerek ilerler.
 - Dosyadaki değişikliği satır satır gösterip onayını ister. "Bu sohbette hep izin ver" dersen düzenlemeleri bir daha sormaz.
 - Test, derleme, kurulum gibi komutları onayınla çalıştırır; çıktıyı canlı gösterir, hata varsa düzeltip yeniden dener.
+- Onayını bekleyen bir iş varsa, kart ekranda değilken ya da başka bir sohbetteyken bile mesaj kutusunun üstünde görürsün ve tek tıkla karta gidersin.
 - **Güvenli kip:** her komuttan önce proje klasörünün anlık görüntüsü alınır. Komut (ya da çalıştırdığı test kodu) bir dosyayı silerse ya da değiştirirse terminalin altında görürsün.
 - Bir cevapta yaptığı bütün dosya değişikliklerini, komutların yaptıkları dahil, tek düğmeyle **geri alırsın**.
 - Proje köküne `ATLAS.md` koyarsan ("Bu projede TypeScript kullan" gibi) Atlas bu kuralları her seferinde okur.

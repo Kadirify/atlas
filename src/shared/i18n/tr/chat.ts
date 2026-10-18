@@ -31,6 +31,14 @@ export const chat = {
     done: 'Cevap hazır'
   },
 
+  approvalBar: {
+    here: (n: number) => (n > 1 ? `Atlas ${n} işlem için onayını bekliyor` : 'Atlas onayını bekliyor'),
+    goToCard: 'Karta git',
+    elsewhere: (title: string) => `Başka bir sohbette Atlas onayını bekliyor: ${title}`,
+    elsewhereMany: (n: number) => `${n} sohbette Atlas onayını bekliyor`,
+    open: 'Sohbete git'
+  },
+
   message: {
     edit: 'Mesajı düzenle',
     editHint: 'Gönderince sonraki cevaplar silinir ve yeniden yazılır.',

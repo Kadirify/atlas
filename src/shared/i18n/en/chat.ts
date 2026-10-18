@@ -29,6 +29,14 @@ export const chat: Dict['chat'] = {
     done: 'Reply ready'
   },
 
+  approvalBar: {
+    here: (n: number) => (n > 1 ? `Atlas is waiting for your approval on ${n} actions` : 'Atlas is waiting for your approval'),
+    goToCard: 'Go to card',
+    elsewhere: (title: string) => `Atlas is waiting for your approval in another chat: ${title}`,
+    elsewhereMany: (n: number) => `Atlas is waiting for your approval in ${n} chats`,
+    open: 'Open chat'
+  },
+
   message: {
     edit: 'Edit message',
     editHint: 'Sending this deletes the responses that follow and writes them again.',
@@ -319,7 +327,13 @@ export const chat: Dict['chat'] = {
     timedOut: 'timed out',
     noOutput: '(no output)',
     effects: (changed: number, deleted: number, created: number) =>
-      [changed && `${changed} ${changed === 1 ? 'file' : 'files'} changed`, deleted && `${deleted} deleted`, created && `${created} new`].filter(Boolean).join(', '),
+      [
+        changed && `${changed} ${changed === 1 ? 'file' : 'files'} changed`,
+        deleted && `${deleted} ${deleted === 1 ? 'file' : 'files'} deleted`,
+        created && `${created} new ${created === 1 ? 'file' : 'files'}`
+      ]
+        .filter(Boolean)
+        .join(', '),
     effectsUndo: 'Undo under the reply undoes these too.',
     effectsLost: (files: string) => `The earlier version was not kept, so this cannot be brought back: ${files}`,
     effectsDeleted: 'deleted',

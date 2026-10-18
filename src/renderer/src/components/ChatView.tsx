@@ -1,4 +1,4 @@
-import { ArrowDown, ArrowUp, Brain, Check, ChevronDown, Copy, Download, EyeOff, Lightbulb, Pencil, Plus, RefreshCw, ShieldCheck, Square, Undo2, X } from 'lucide-react'
+import { ArrowDown, ArrowUp, Brain, Check, ChevronDown, Copy, Download, EyeOff, Lightbulb, Pencil, Plus, RefreshCw, ShieldAlert, ShieldCheck, Square, Undo2, X } from 'lucide-react'
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { DEFAULT_PERSONA_ID, EXPORT_FORMATS, UNTITLED_CONVERSATION, type ExportFormat, type Message, type Persona } from '@shared/types'
 import { CodeViewer, FilesToggle, FileTree } from '@/components/CodeParts'
@@ -276,6 +276,49 @@ function ThoughtBox({ text, done }: { text: string; done: boolean }) {
 
 /** Sohbet başına yazılmış ama gönderilmemiş metin; "" yeni sohbetin taslağıdır. Uygulama açıkken saklanır. */
 const drafts = new Map<string, string>()
+
+/**
+ * Onay bekleyen işler: bu sohbetteki kart görünmüyorsa (kullanıcı yukarı kaydırdıysa) mesaj kutusunun üstünde çubuk ve
+ * karta atlama; başka bir sohbette bekleyen varsa ona geçiş. Onay verilmeden cevap ilerlemez.
+ */
+function ApprovalBar({ activeId, cardVisible, onJump }: { activeId: string | null; cardVisible: boolean; onJump(): void }) {
+  const t = useT()
+  const a = t.chat.approvalBar
+  const fileHere = useApp((s) => (activeId ? (s.approvals[activeId]?.length ?? 0) : 0))
+  const sqlHere = useSql((s) => (activeId ? (s.approvals[activeId]?.length ?? 0) : 0))
+  // Seçiciler düz metin döndürür: her değişiklikte yeni dizi üretip gereksiz yere yeniden çizdirmesin.
+  const fileElsewhere = useApp((s) => Object.keys(s.approvals).filter((id) => id !== activeId && s.approvals[id].length > 0).join('|'))
+  const sqlElsewhere = useSql((s) => Object.keys(s.approvals).filter((id) => id !== activeId && s.approvals[id].length > 0).join('|'))
+  const elsewhere = [...new Set([fileElsewhere, sqlElsewhere].join('|').split('|').filter(Boolean))]
+  const firstTitle = useApp((s) => {
+    const c = s.conversations.find((x) => x.id === elsewhere[0])
+    return c ? (c.title === UNTITLED_CONVERSATION ? t.common.newChat : c.title) : ''
+  })
+  const select = useApp((s) => s.select)
+  const here = fileHere + sqlHere
+
+  let text = ''
+  let action: { label: string; run(): void } | null = null
+  if (here > 0 && !cardVisible) {
+    text = a.here(here)
+    action = { label: a.goToCard, run: onJump }
+  } else if (elsewhere.length > 0) {
+    text = elsewhere.length === 1 ? a.elsewhere(firstTitle) : a.elsewhereMany(elsewhere.length)
+    action = { label: a.open, run: () => void select(elsewhere[0]) }
+  }
+  if (!action) return null
+  return (
+    <div className="mx-auto w-full max-w-[780px] px-6 pb-2">
+      <div role="status" className="flex items-center gap-3 rounded-xl border border-warn/50 bg-warn-soft px-3.5 py-2 text-[13px] text-ink">
+        <ShieldAlert size={15} className="shrink-0 text-warn" aria-hidden />
+        <span className="min-w-0 flex-1 truncate">{text}</span>
+        <Button size="sm" variant="secondary" onClick={action.run}>
+          {action.label}
+        </Button>
+      </div>
+    </div>
+  )
+}
 
 function Composer({
   busy,
@@ -606,6 +649,8 @@ export default function ChatView() {
   const scrollRef = useRef<HTMLDivElement>(null)
   const pinnedToBottom = useRef(true)
   const [showJump, setShowJump] = useState(false)
+  /** Bu sohbetteki ilk onay kartı ekranda mı (değilse mesaj kutusunun üstünde çubuk çıkar) */
+  const [cardVisible, setCardVisible] = useState(true)
   const [finding, setFinding] = useState(false)
   const sqlPaneOpen = useSql((s) => s.paneOpen)
   // Sohbete proje klasörü bağlıysa dosya ağacı ve dosya görüntüleyici kullanılabilir.
@@ -658,7 +703,29 @@ export default function ChatView() {
 
   // Ekran okuyucu için tek duyuru: akan metin her parçada okunmaz, yalnızca durum değişince söylenir.
   const sqlWaiting = useSql((s) => (activeId ? (s.approvals[activeId]?.length ?? 0) > 0 : false))
+  const sqlApprovalIds = useSql((s) => (activeId ? (s.approvals[activeId] ?? []).map((x) => x.id).join('|') : ''))
   const waitingApproval = approvals.length > 0 || sqlWaiting
+
+  // İlk onay kartı görünüyor mu: kullanıcı yukarı kaydırıp kartı gözden kaçırmasın.
+  const approvalKey = `${approvals.map((x) => x.id).join('|')}#${sqlApprovalIds}`
+  useEffect(() => {
+    const root = scrollRef.current
+    const card = root?.querySelector('[data-approval]')
+    if (!root || !card) {
+      setCardVisible(true)
+      return
+    }
+    const observer = new IntersectionObserver(([entry]) => setCardVisible(entry.isIntersecting), { root, threshold: 0.25 })
+    observer.observe(card)
+    return () => observer.disconnect()
+  }, [approvalKey, activeId])
+
+  const jumpToCard = (): void => {
+    const card = scrollRef.current?.querySelector<HTMLElement>('[data-approval]')
+    if (!card) return
+    card.scrollIntoView({ block: 'center', behavior: 'smooth' })
+    card.focus({ preventScroll: true })
+  }
   const [announce, setAnnounce] = useState('')
   const announced = useRef<{ id: string | null; busy: boolean }>({ id: activeId, busy })
   useEffect(() => {
@@ -984,6 +1051,7 @@ export default function ChatView() {
           <Notice tone="warn">{t.chat.composer.toolsMissing(model)}</Notice>
         </div>
       )}
+      <ApprovalBar activeId={activeId} cardVisible={cardVisible} onJump={jumpToCard} />
       {activeId && <TrustStrip conversationId={activeId} />}
       <Composer busy={busy} model={model} attachments={attachments} onSend={handleSend} onStop={() => void stop()} />
     </main>
