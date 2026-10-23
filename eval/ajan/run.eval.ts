@@ -17,7 +17,7 @@ vi.mock('../../src/main/services/catalog', async (importOriginal) => {
   return { ...actual, isAtlasModel: (name: string | null | undefined): name is string => !!name }
 })
 
-import { optionsFromEnv, runSuite } from './harness'
+import { categoryScore, optionsFromEnv, runSuite } from './harness'
 
 it('ajan test seti', async () => {
   const options = optionsFromEnv()
@@ -25,5 +25,12 @@ it('ajan test seti', async () => {
   // Sürüm kapısı: AJAN_GATE=0.7 verilirse başarı oranı bunun altındaki her model testi düşürür.
   if (options.gate !== null) {
     for (const model of summary.models) expect(model.rate, `${model.model} başarı oranı`).toBeGreaterThanOrEqual(options.gate)
+  }
+  // Kod görevleri için ayrı kapı: AJAN_GATE_KOD=0.9 verilirse kod görevlerinde bunun altına düşen model testi düşürür.
+  if (options.gateCode !== null) {
+    for (const model of summary.models) {
+      const { ok, total } = categoryScore(summary, model.model, 'kod')
+      expect(total > 0 ? ok / total : 0, `${model.model} kod görevleri (${ok}/${total})`).toBeGreaterThanOrEqual(options.gateCode)
+    }
   }
 })

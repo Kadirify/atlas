@@ -47,6 +47,8 @@ export interface Task {
   policy?: Policy
   /** Görev için gereken program ("python"); bilgisayarda yoksa görev atlanır */
   needs?: string
+  /** Dosyalar yazıldıktan sonra, model başlamadan önce (ör. git deposu kurup bir dosyayı değiştirmek) */
+  setup?(env: { run(command: string): Promise<{ code: number | null; output: string }>; write(rel: string, content: string): Promise<void> }): Promise<void>
   timeoutMs?: number
   check(ctx: CheckContext): Promise<void> | void
 }
@@ -145,6 +147,8 @@ export interface Options {
   tasks: string[] | null
   /** Sürüm kapısı: en düşük başarı oranı */
   gate: number | null
+  /** Sürüm kapısı: kod görevlerinde en düşük başarı oranı */
+  gateCode: number | null
   /** Başarısız görevlerin klasörlerini incelemek için silme */
   keepFailed: boolean
   out: string
@@ -168,6 +172,7 @@ export function optionsFromEnv(): Options {
     repeat: Math.max(1, Math.floor(Number(process.env.AJAN_REPEAT) || 1)),
     tasks: tasks.length > 0 ? tasks : null,
     gate: process.env.AJAN_GATE ? Number(process.env.AJAN_GATE) : null,
+    gateCode: process.env.AJAN_GATE_KOD ? Number(process.env.AJAN_GATE_KOD) : null,
     keepFailed: process.env.AJAN_KEEP === '1',
     resume: process.env.AJAN_RESUME || null,
     out: process.env.AJAN_OUT ?? join('eval', 'ajan', 'results')
@@ -233,6 +238,15 @@ async function runTask(task: Task, model: string, attempt: number, options: Opti
       const sqlite = new DatabaseSync(join(dir, 'veri.sqlite'))
       sqlite.exec(task.sqlite)
       sqlite.close()
+    }
+    if (task.setup) {
+      await task.setup({
+        run: (command) => shell(dir, command),
+        write: async (rel, content) => {
+          await mkdir(dirname(join(dir, rel)), { recursive: true })
+          await writeFile(join(dir, rel), content)
+        }
+      })
     }
 
     setLanguage('tr')
@@ -600,6 +614,44 @@ export async function runSuite(options: Options): Promise<Summary> {
   await writeFile(join(options.out, `${stamp}.md`), markdown)
   // Bütün görevlerle ve varsayılan sonuç klasörüyle yapılan çalıştırma depodaki özet tabloyu günceller; AJAN_OUT
   // verilmişse (elle yapılan bir ara ölçüm) özete dokunulmaz.
-  if (!options.tasks && !process.env.AJAN_OUT) await writeFile(join('eval', 'ajan', 'RESULTS.md'), markdown)
+  if (!options.tasks && !process.env.AJAN_OUT) {
+    await writeFile(join('eval', 'ajan', 'RESULTS.md'), markdown)
+    await appendHistory(summary, meta, tasks)
+  }
   return summary
+}
+
+/** Bir modelin bir türdeki sonucu: "9/10" */
+export function categoryScore(summary: Summary, model: string, category: Task['category']): { ok: number; total: number } {
+  const runs = summary.results.filter((r) => r.model === model && r.category === category && !r.skipped)
+  return { ok: runs.filter((r) => r.ok).length, total: runs.length }
+}
+
+const CATEGORIES: Task['category'][] = ['kod', 'okuma', 'güvenlik', 'komut', 'sql']
+
+/** Varsayılan tam turda depodaki geçmiş tablosuna her model için bir satır ekler: zaman içindeki değişim görünsün. */
+async function appendHistory(summary: Summary, meta: Meta, tasks: Task[]): Promise<void> {
+  const file = join('eval', 'ajan', 'GECMIS.md')
+  const commit = await new Promise<string>((resolve) =>
+    execFile('git', ['rev-parse', '--short', 'HEAD'], { windowsHide: true }, (err, out) => resolve(err ? '?' : String(out).trim()))
+  )
+  let text = await readFile(file, 'utf8').catch(() => '')
+  if (!text.trim()) {
+    text = [
+      '# Ajan test seti geçmişi',
+      '',
+      'Varsayılan ayarlarla yapılan her tam tur buraya bir satır ekler. Nasıl çalıştırıldığı: [README.md](README.md)',
+      '',
+      `| Tarih | Commit | Model | Görev | Tekrar | Başarı | %95 aralık | ${CATEGORIES.join(' | ')} |`,
+      `| --- | --- | --- | ---: | ---: | ---: | ---: | ${CATEGORIES.map(() => '---:').join(' | ')} |`
+    ].join('\n')
+  }
+  const rows = summary.models.map((m) => {
+    const cells = CATEGORIES.map((c) => {
+      const s = categoryScore(summary, m.model, c)
+      return `${s.ok}/${s.total}`
+    })
+    return `| ${meta.date} | ${commit} | ${m.model} | ${tasks.length} | ${meta.repeat} | ${m.ok}/${m.total} (${percent(m.rate)}) | ${percent(m.low)}-${percent(m.high).slice(1)} | ${cells.join(' | ')} |`
+  })
+  await writeFile(file, `${text.trimEnd()}\n${rows.join('\n')}\n`)
 }

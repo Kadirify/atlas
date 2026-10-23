@@ -51,7 +51,15 @@ npm test
 
 - Yeni ölçüm soruları `eval/items.mjs`, kuralları `eval/checks.mjs` dosyasına eklenir. Eğitim verisiyle çakışmamalı.
 - Eğitim betikleri `training/` altında. Bir model değişikliği, Atlas-TR'de ve yazım testlerinde tabanından kötü değilse kabul edilir; sonuçlar `training/README.md` dosyasına yazılır.
-- Kod alanını, araçları ya da ajan döngüsünü (`src/main/services/chat.ts`, `files.ts`, `sql.ts`) değiştiren katkılar ajan test setiyle (`npm run eval:ajan`, [eval/ajan](eval/ajan/README.md)) ölçülür: değişiklikten önceki ve sonraki sonuçları karşılaştır.
+- Kod alanını, araçları ya da ajan döngüsünü (`src/main/services/chat.ts`, `files.ts`, `sql.ts`) değiştiren katkılar ajan test setiyle (`npm run eval:ajan`, [eval/ajan](eval/ajan/README.md)) ölçülür: değişiklikten önceki ve sonraki sonuçları en az üç tekrarla (`AJAN_REPEAT=3`) karşılaştır. Tek deneme gürültülüdür.
+
+## Sürüm
+
+Her sürümden önce:
+
+1. `npm run typecheck` ve `npm test` temiz geçer.
+2. Ajan test seti Atlas Strong ile üç tekrarla çalıştırılır ve sonuç [eval/ajan/GECMIS.md](eval/ajan/GECMIS.md) dosyasındaki bir önceki satırla karşılaştırılır. Kod görevlerinde başarı %90'ın altındaysa sürüm çıkmaz (`AJAN_GATE_KOD=0.9` bunu kendisi denetler). Ayrıntı: [eval/ajan/README.md](eval/ajan/README.md#sürümden-önce)
+3. `CHANGELOG.md` güncellenir.
 
 ## Lisans
 
