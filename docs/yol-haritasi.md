@@ -4,7 +4,6 @@ Atlas'ta sırada ne var. Öncelik sırasıyla; tarih vermiyoruz, çünkü proje 
 
 ## Şimdi: sağlamlık ve güvenlik
 
-- **Uygulamanın donmaması.** Belge okuma ayrı iş parçacığında, süre ve boyut sınırıyla (SQLite sorguları artık ayrı süreçte).
 - **İmzalı güncellemeler.** Kurulum dosyalarını ve model tariflerini imzalamak, uygulamada doğrulamak.
 - **Veritabanı bağlantılarında şifreleme varsayılan.**
 

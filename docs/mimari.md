@@ -34,6 +34,7 @@ src/
     log.ts              Kayıt dosyası: hatalar, çökmeler, donmalar
     db/index.ts         SQLite (node:sqlite): göçler ve sorgular
     workers/sqlite.ts   Bağlanan SQLite dosyalarındaki sorgular (ayrı süreçte çalışır)
+    workers/document.ts PDF, Word ve Excel okuma (ayrı süreçte çalışır)
     services/
       chat.ts           Sohbet döngüsü: istem, geçmiş, akış, araç çağrıları, hafıza
       ollama.ts         Ollama istemcisi: akış, model indirme, oluşturma, bellek
@@ -46,6 +47,7 @@ src/
       diagnostics.ts    Hata bildirimi için tanılama bilgisi
       memory.ts         Kalıcı hafıza: öğrenme, gömme (embedding), anlamca arama
       attachments.ts    Ek dosyalardan metin çıkarma (PDF, Word, Excel)
+      documentRunner.ts Belgeyi ayrı süreçte okutma; açılmış boyut, süre ve bellek sınırı
       export.ts         Sohbeti Word, PDF ve Markdown'a çevirme
       apps.ts studio.ts Mini uygulamalar ve Prompt Stüdyosu
       personas.ts       Kişilikler

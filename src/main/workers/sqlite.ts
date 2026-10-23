@@ -118,6 +118,7 @@ export function runJob(job: SqliteJob): SqliteReply {
 const parentPort = (process as unknown as { parentPort?: { on(e: 'message', cb: (m: { data: unknown }) => void): void; postMessage(m: unknown): void } }).parentPort
 if (parentPort) {
   parentPort.on('message', (m) => parentPort.postMessage(runJob(m.data as SqliteJob)))
-} else if (process.send) {
+} else if (process.send && process.env.ATLAS_WORKER === 'sqlite') {
+  // Yalnızca işçi olarak başlatıldıysa: dosyayı içe aktaran başka bir süreç (test) kendi kanalını dinletmesin.
   process.on('message', (m) => process.send?.(runJob(m as SqliteJob)))
 }

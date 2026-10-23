@@ -28,6 +28,9 @@ export const main = {
       `"${name}" türü desteklenmiyor. Metin, PDF, Word (.docx), Excel (.xlsx) ve resim dosyaları eklenebilir.`,
     empty: (name: string) => `"${name}" boş.`,
     tooLarge: (name: string) => `"${name}" çok büyük. En fazla 25 MB dosya eklenebilir.`,
+    unpackedTooLarge: (name: string, mb: number, limit: number) =>
+      `"${name}" sıkıştırılmış bir dosya ve açıldığında ${mb} MB tutuyor. Atlas açıldığında en çok ${limit} MB tutan belgeleri okuyabilir; belgeyi bölüp tekrar dene.`,
+    tooSlow: (name: string) => `"${name}" bir dakikada okunamadı. Dosya çok büyük ya da bozuk olabilir.`,
     noText: (name: string) =>
       `"${name}" içinde okunabilir metin bulunamadı. Taranmış (resim halinde) bir belge olabilir.`,
     /** Excel dosyasından çıkarılan metinde sayfa başlığı */

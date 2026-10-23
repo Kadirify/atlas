@@ -40,6 +40,7 @@ Bu kurallar modele verilen talimatlarda değil, uygulamanın kodunda durur. Mode
 - `package.json`, `.git`, `.vscode`, `.bat`, `.ps1` gibi başka programların kendiliğinden çalıştırdığı dosyalar, "hep izin ver" desen bile her seferinde kırmızı uyarıyla sorulur.
 - `.env`, anahtar ve parola dosyalarını okumaz, aramaya ve indekse almaz.
 - UTF-8 olmayan dosyaları bozmamak için değiştirmez.
+- PDF, Word ve Excel dosyalarını ayrı, bellek sınırlı bir süreçte okur; açıldığında 200 MB'ı aşan dosyayı açmaz. Bozuk ya da kötü niyetli bir belge uygulamayı düşüremez.
 - Bir cevapta yaptığı değişiklikleri tek düğmeyle geri alırsın. Atlas'tan sonra dosyayı sen değiştirdiysen geri alma senin değişikliğine dokunmaz.
 
 ### Komutlar

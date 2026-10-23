@@ -2,6 +2,8 @@ import { extname } from 'node:path'
 import { documentViewKind, type Attachment } from '@shared/types'
 import type { Db } from '../db'
 import { L } from '../i18n'
+import { DocumentJobError, runDocument } from './documentRunner'
+import type { DocumentJob, DocumentKind } from '../workers/document'
 
 const MAX_FILE_BYTES = 25 * 1024 * 1024
 /** Veritabanında saklanan en fazla metin; modele bunun yalnızca baş kısmı verilir. */
@@ -38,45 +40,35 @@ function looksBinary(bytes: Buffer): boolean {
   return zeros > sample.length * 0.01
 }
 
-async function readPdf(bytes: Buffer): Promise<string> {
-  const { extractText, getDocumentProxy } = await import('unpdf')
-  const pdf = await getDocumentProxy(new Uint8Array(bytes))
-  const { text } = await extractText(pdf, { mergePages: true })
-  return text
-}
+/** Word ve Excel birer ZIP'tir; açıldığında bundan büyük olan belge okunmaz (sıkıştırma bombası). */
+export const MAX_UNPACKED_BYTES = 200 * 1024 * 1024
 
-async function readDocx(bytes: Buffer): Promise<string> {
-  const mammoth = await import('mammoth')
-  const { value } = await mammoth.extractRawText({ buffer: bytes })
-  return value
-}
-
-async function readXlsx(bytes: Buffer): Promise<string> {
-  const { default: ExcelJS } = await import('exceljs')
-  const workbook = new ExcelJS.Workbook()
-  await workbook.xlsx.load(bytes as unknown as ArrayBuffer)
-  const parts: string[] = []
-  workbook.eachSheet((sheet) => {
-    const rows: string[] = []
-    sheet.eachRow((row) => {
-      const cells: string[] = []
-      row.eachCell({ includeEmpty: true }, (cell) => cells.push(cell.text.replace(/\s+/g, ' ').trim()))
-      rows.push(cells.join(' | '))
-    })
-    if (rows.length > 0) parts.push(`${L().main.attachments.sheet(sheet.name)}\n${rows.join('\n')}`)
-  })
-  return parts.join('\n\n')
+/** PDF, Word ve Excel ayrı süreçte okunur: ağır ya da kötü niyetli bir belge uygulamayı dondurmasın. */
+async function readDocument<T>(name: string, job: DocumentJob): Promise<T> {
+  try {
+    return await runDocument<T>(job)
+  } catch (e) {
+    const t = L().main.attachments
+    if (e instanceof DocumentJobError && e.kind === 'unpacked') {
+      const mb = (bytes: number): number => Math.round(bytes / (1024 * 1024))
+      throw new AttachmentError(t.unpackedTooLarge(name, mb(e.size ?? 0), mb(MAX_UNPACKED_BYTES)))
+    }
+    if (e instanceof DocumentJobError && e.kind === 'timeout') throw new AttachmentError(t.tooSlow(name))
+    throw new AttachmentError(t.unreadable(name))
+  }
 }
 
 /** Dosyanın metnini çıkarır. Okunamayan türlerde anlaşılır bir hata verir. */
 export async function extractText(name: string, bytes: Buffer): Promise<string> {
   const ext = extname(name).toLowerCase()
-  try {
-    if (ext === '.pdf') return await readPdf(bytes)
-    if (ext === '.docx') return await readDocx(bytes)
-    if (ext === '.xlsx') return await readXlsx(bytes)
-  } catch {
-    throw new AttachmentError(L().main.attachments.unreadable(name))
+  if (ext === '.pdf' || ext === '.docx' || ext === '.xlsx') {
+    return readDocument<string>(name, {
+      op: 'extract',
+      kind: ext as DocumentKind,
+      bytes,
+      sheetHeading: L().main.attachments.sheet('{name}'),
+      maxUnpacked: MAX_UNPACKED_BYTES
+    })
   }
   if (ext === '.doc' || ext === '.xls' || ext === '.ppt') {
     throw new AttachmentError(L().main.attachments.oldOffice(ext))
@@ -131,34 +123,9 @@ export interface SheetPreview {
 const MAX_PREVIEW_ROWS = 2000
 const MAX_PREVIEW_COLS = 60
 
-/** Excel dosyasını belge panelinde tablo olarak göstermek için sayfa sayfa okur. */
-export async function sheetPreview(bytes: Buffer): Promise<SheetPreview[]> {
-  const { default: ExcelJS } = await import('exceljs')
-  const workbook = new ExcelJS.Workbook()
-  await workbook.xlsx.load(bytes as unknown as ArrayBuffer)
-  const sheets: SheetPreview[] = []
-  workbook.eachSheet((sheet) => {
-    const cols = Math.min(sheet.columnCount, MAX_PREVIEW_COLS)
-    const rows: SheetPreview['rows'] = []
-    const last = Math.min(sheet.rowCount, MAX_PREVIEW_ROWS)
-    for (let r = 1; r <= last; r++) {
-      const row = sheet.getRow(r)
-      const cells: SheetPreview['rows'][number] = []
-      for (let c = 1; c <= cols; c++) {
-        const cell = row.getCell(c)
-        const horizontal = cell.alignment?.horizontal
-        cells.push({
-          text: cell.text ?? '',
-          bold: !!cell.font?.bold,
-          align: horizontal === 'center' || horizontal === 'right' ? horizontal : typeof cell.value === 'number' ? 'right' : 'left'
-        })
-      }
-      rows.push(cells)
-    }
-    const widths = Array.from({ length: cols }, (_, i) => sheet.getColumn(i + 1).width ?? 0)
-    sheets.push({ name: sheet.name, widths, rows })
-  })
-  return sheets
+/** Excel dosyasını belge panelinde tablo olarak göstermek için sayfa sayfa okur (ayrı süreçte). */
+export function sheetPreview(bytes: Buffer, name = 'Excel'): Promise<SheetPreview[]> {
+  return readDocument<SheetPreview[]>(name, { op: 'sheets', bytes, maxUnpacked: MAX_UNPACKED_BYTES, maxRows: MAX_PREVIEW_ROWS, maxCols: MAX_PREVIEW_COLS })
 }
 
 /**

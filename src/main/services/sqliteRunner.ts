@@ -37,7 +37,7 @@ export function defaultSqliteSpawn(): SqliteChild {
       }
     }
   }
-  const child = fork(resolve('src/main/workers/sqlite.ts'), [], { stdio: 'ignore' })
+  const child = fork(resolve('src/main/workers/sqlite.ts'), [], { stdio: 'ignore', env: { ...process.env, ATLAS_WORKER: 'sqlite' } })
   return {
     send: (job) => child.send(job),
     onMessage: (cb) => child.on('message', (m) => cb(m as SqliteReply)),

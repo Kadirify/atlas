@@ -334,7 +334,7 @@ export function registerIpc(
     const original = db.getOriginal(id)
     const kind = original && documentViewKind(original.name)
     if (!original || !kind) return null
-    if (kind === 'xlsx') return { kind, sheets: await sheetPreview(original.bytes) }
+    if (kind === 'xlsx') return { kind, sheets: await sheetPreview(original.bytes, original.name) }
     return { kind, bytes: new Uint8Array(original.bytes) }
   })
   handle('documents:save', (id: string, text: string) => db.saveDocument(id, String(text).slice(0, 400_000)))

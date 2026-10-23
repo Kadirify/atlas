@@ -14,6 +14,7 @@
 - Yanlış PIN sayacı yeniden başlatınca sıfırlanmıyor.
 
 ### Düzeltmeler
+- PDF, Word ve Excel dosyaları ayrı bir süreçte okunuyor: ağır ya da bozuk bir belge artık uygulamayı dondurmuyor. Açıldığında 200 MB'ı aşan dosya (küçük görünen ama açılınca çok büyüyen "sıkıştırma bombası") hiç açılmadan reddediliyor; bir dakikada okunamayan belge için açık bir ileti çıkıyor.
 - Model bir tabloyu ya da tetikleyiciyi anlatırken ("sipariş oluşturulduğunda") ya da commit mesajı önerirken "değişiklik yaptığını söyledin ama yapmadın" diye yanlış dürtülmüyor; doğru cevabı "Haklısın, bir şey değiştirmedim" gibi bir cevapla değişmiyor.
 - Çıktıyı `>` ile dosyaya yazmak isteyen komut reddedilince modele "silme yapamam de" yerine doğru yol söyleniyor: komutu yönlendirmesiz çalıştırıp çıktıyı dosyaya yazmak.
 - Bağlanan SQLite dosyalarındaki sorgular ayrı bir süreçte çalışıyor: uzun ya da hiç bitmeyen bir sorgu (ör. sonsuz `WITH RECURSIVE`) artık uygulamayı dondurmuyor. Durdur sorguyu hemen kesiyor; 30 saniyede bitmeyen sorgu kendiliğinden duruyor.

@@ -29,6 +29,9 @@ export const main: Dict['main'] = {
       `"${name}" isn't a supported file type. You can add text, PDF, Word (.docx), Excel (.xlsx) and image files.`,
     empty: (name: string) => `"${name}" is empty.`,
     tooLarge: (name: string) => `"${name}" is too large. Files can be up to 25 MB.`,
+    unpackedTooLarge: (name: string, mb: number, limit: number) =>
+      `"${name}" is a compressed file that takes ${mb} MB once unpacked. Atlas can read documents up to ${limit} MB unpacked; split it and try again.`,
+    tooSlow: (name: string) => `"${name}" could not be read within a minute. The file may be too large or damaged.`,
     noText: (name: string) => `No readable text was found in "${name}". It may be a scanned (image-only) document.`,
     sheet: (name: string) => `Sheet: ${name}`,
     fileStart: (name: string) => `[Attached file: ${name}]`,
