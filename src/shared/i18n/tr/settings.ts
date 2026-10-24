@@ -22,6 +22,9 @@ export const settings = {
   general: {
     appearance: 'Görünüm',
     themeLabel: 'Tema',
+    zoomLabel: 'Yazı boyutu',
+    zoomPercent: (percent: number) => `%${percent}`,
+    zoomHint: 'Ctrl ve + ya da - ile de değiştirebilirsin; Ctrl 0 eski haline getirir.',
     theme: { system: 'Sistemle aynı', light: 'Açık', dark: 'Koyu' },
 
     language: 'Dil',

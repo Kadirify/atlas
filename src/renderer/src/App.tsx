@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { ZOOM_STEPS } from '@shared/types'
 import ChatView from '@/components/ChatView'
 import LockScreen from '@/components/LockScreen'
 import SettingsDialog from '@/components/SettingsDialog'
@@ -61,6 +62,23 @@ export default function App() {
     void window.api.lock.state().then((state) => useApp.setState({ lock: state }))
     return window.api.lock.onChanged((state) => useApp.setState({ lock: state }))
   }, [])
+
+  // Ctrl ile + ve - yazı boyutunu değiştirir, Ctrl 0 eski haline getirir (paketli sürümde Electron'un menü kısayolları yok).
+  const zoom = useApp((s) => s.settings?.zoom ?? 1)
+  const saveSettings = useApp((s) => s.saveSettings)
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent): void => {
+      if (locked !== false || !(e.ctrlKey || e.metaKey) || e.altKey) return
+      const step = e.key === '+' || e.key === '=' ? 1 : e.key === '-' ? -1 : e.key === '0' ? 0 : null
+      if (step === null) return
+      e.preventDefault()
+      const at = ZOOM_STEPS.indexOf(zoom)
+      const next = step === 0 ? 1 : ZOOM_STEPS[Math.min(ZOOM_STEPS.length - 1, Math.max(0, (at < 0 ? ZOOM_STEPS.indexOf(1) : at) + step))]
+      if (next !== zoom) void saveSettings({ zoom: next })
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [locked, zoom, saveSettings])
 
   useEffect(() => {
     if (locked === false) void init()

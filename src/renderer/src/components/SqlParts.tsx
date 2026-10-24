@@ -4,6 +4,8 @@ import { createPortal } from 'react-dom'
 import { SQL_ENGINES, type SqlApproval, type SqlConnection, type SqlConnectionInput, type SqlEngine, type SqlObjectType, type SqlResult, type SqlTable } from '@shared/types'
 import { Button, Field, IconButton, Input, Notice } from '@/components/ui'
 import { fold } from '@/lib/fold'
+import { toDelimited } from '@shared/delimited'
+import { useCopy } from '@/components/Markdown'
 import { cn, errorText } from '@/lib/format'
 import { useT } from '@/lib/useT'
 import { useApp } from '@/stores/app'
@@ -424,6 +426,22 @@ export function SqlPane() {
   const [expanded, setExpanded] = useState<string | null>(null)
   const [sql, setSql] = useState('')
   const [result, setResult] = useState<{ sql: string; result: SqlResult } | null>(null)
+  const language = useApp((s) => s.settings?.language)
+  const [copiedResult, copyResult] = useCopy()
+  const [savedCsv, setSavedCsv] = useState(false)
+
+  /** Görünen sonucu CSV dosyasına kaydeder (Türkçede Excel'in beklediği gibi noktalı virgülle). */
+  async function saveCsv(): Promise<void> {
+    if (!result) return
+    try {
+      if (await window.api.sql.exportCsv(result.result.columns, result.result.rows)) {
+        setSavedCsv(true)
+        setTimeout(() => setSavedCsv(false), 2000)
+      }
+    } catch (e) {
+      setError(errorText(e))
+    }
+  }
   /** Seçilen nesnenin kaynak kodu (görünüm, yordam, işlev, tetikleyici, iş) */
   const [code, setCode] = useState<{ title: string; text: string } | null>(null)
   const [error, setError] = useState('')
@@ -616,10 +634,25 @@ export function SqlPane() {
         {!busy && !error && !result && !code && <p className="p-3 text-[13px] leading-relaxed text-ink-3">{q.empty}</p>}
         {!busy && !error && result && (
           <>
-            <p className="sticky top-0 left-0 z-10 border-b border-line bg-bg px-3 py-1.5 text-xs text-ink-3 tabular-nums">
-              {q.resultInfo(result.result.rowCount, result.result.truncated, result.result.ms)}
-              <span className="ml-2 font-mono text-ink-2">{result.sql.replace(/\s+/g, ' ').slice(0, 120)}</span>
-            </p>
+            <div className="sticky top-0 left-0 z-10 flex items-center gap-2 border-b border-line bg-bg px-3 py-1.5 text-xs text-ink-3 tabular-nums">
+              <span className="shrink-0">{q.resultInfo(result.result.rowCount, result.result.truncated, result.result.ms)}</span>
+              <span className="min-w-0 flex-1 truncate font-mono text-ink-2">{result.sql.replace(/\s+/g, ' ').slice(0, 120)}</span>
+              {result.result.rows.length > 0 && (
+                <>
+                  {/* Sekmeyle ayrılmış metin Excel'e yapıştırılınca sütunlara oturur. */}
+                  <button
+                    type="button"
+                    className="shrink-0 rounded px-1.5 py-0.5 text-ink-2 hover:bg-surface-2 hover:text-ink"
+                    onClick={() => copyResult(toDelimited(result.result.columns, result.result.rows, '\t', language === 'tr'))}
+                  >
+                    {copiedResult ? q.copiedResult : q.copyResult}
+                  </button>
+                  <button type="button" className="shrink-0 rounded px-1.5 py-0.5 text-ink-2 hover:bg-surface-2 hover:text-ink" onClick={() => void saveCsv()}>
+                    {savedCsv ? q.savedCsv : q.saveCsv}
+                  </button>
+                </>
+              )}
+            </div>
             {result.result.rows.length === 0 ? (
               <p className="p-3 text-[13px] text-ink-3">{q.noRows}</p>
             ) : (

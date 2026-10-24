@@ -1,6 +1,6 @@
 import { ArrowDown, ArrowUp, Brain, Check, ChevronDown, Copy, Download, EyeOff, Lightbulb, Pencil, Plus, RefreshCw, ShieldAlert, ShieldCheck, Square, Undo2, X } from 'lucide-react'
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
-import { DEFAULT_PERSONA_ID, EXPORT_FORMATS, UNTITLED_CONVERSATION, type ExportFormat, type Message, type Persona } from '@shared/types'
+import { DEFAULT_PERSONA_ID, EXPORT_FORMATS, ROUND_LIMIT_TOOL, UNTITLED_CONVERSATION, type ExportFormat, type Message, type Persona } from '@shared/types'
 import { CodeViewer, FilesToggle, FileTree } from '@/components/CodeParts'
 import DocPane from '@/components/DocPane'
 import FindBar from '@/components/FindBar'
@@ -125,6 +125,7 @@ function AssistantMessage({
 }) {
   const t = useT()
   const regenerate = useApp((s) => s.regenerate)
+  const send = useApp((s) => s.send)
   const [copied, copy] = useCopy()
   /** Yeniden yazdırma bu cevabı siler; dosya değişikliklerinin geri alınamayacağı soruluyor mu */
   const [confirmRegen, setConfirmRegen] = useState(false)
@@ -171,6 +172,12 @@ function AssistantMessage({
               <RefreshCw size={14} aria-hidden />
             </IconButton>
           ))}
+        {/* Araç turu sınırı yüzünden duran iş tek tıkla sürdürülür. */}
+        {isLast && !busy && message.steps.at(-1)?.tool === ROUND_LIMIT_TOOL && (
+          <Button size="sm" variant="secondary" onClick={() => void send(t.chat.message.continueText)}>
+            {t.chat.message.continue}
+          </Button>
+        )}
         {message.undoCount > 0 && <UndoButton messageId={message.id} count={message.undoCount} disabled={busy} />}
         <span className="ml-2 text-xs text-ink-3 opacity-0 transition-opacity group-hover:opacity-100">
           {[message.partial && t.chat.message.partial, message.model, speed && `~${wordsPerSec(speed)} ${t.common.units.wordsPerSecond}`]
@@ -570,6 +577,15 @@ function ExportMenu({ conversationId }: { conversationId: string }) {
     return () => clearTimeout(timer)
   }, [status])
 
+  async function print(): Promise<void> {
+    setOpen(false)
+    try {
+      if (await window.api.conversations.print(conversationId)) setStatus({ tone: 'ok', text: t.chat.export.printed })
+    } catch (e) {
+      setStatus({ tone: 'error', text: errorText(e) })
+    }
+  }
+
   async function save(format: ExportFormat): Promise<void> {
     setOpen(false)
     try {
@@ -603,6 +619,14 @@ function ExportMenu({ conversationId }: { conversationId: string }) {
               {t.chat.export.formats[format]}
             </button>
           ))}
+          <button
+            type="button"
+            role="menuitem"
+            onClick={() => void print()}
+            className="mt-1 flex h-9 w-full items-center rounded-lg border-t border-line px-2.5 text-left text-[13px] text-ink-2 hover:bg-surface-2 hover:text-ink"
+          >
+            {t.chat.export.print}
+          </button>
         </div>
       )}
     </div>

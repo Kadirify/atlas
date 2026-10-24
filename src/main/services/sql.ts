@@ -736,7 +736,7 @@ export class SqlService {
     } catch {
       // Şema okunamadıysa model sql_schema aracıyla dener; hata o zaman sohbette görünür.
     }
-    return [p.intro(connection.name, ENGINE_NAME[connection.engine]), schema, p.schemaFirst, p.objectsHint, p.readFree, p.writeApproval, p.forbidden, p.limit]
+    return [p.intro(connection.name, ENGINE_NAME[connection.engine]), schema, p.schemaFirst, p.objectsHint, p.readFree, p.writeApproval, p.forbidden, p.limit, p.dataNotInstructions]
       .filter(Boolean)
       .join('\n')
   }

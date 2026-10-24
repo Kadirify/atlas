@@ -42,6 +42,8 @@ export const chat: Dict['chat'] = {
     editHint: 'Sending this deletes the responses that follow and writes them again.',
     copyAnswer: 'Copy response',
     regenerate: 'Regenerate response',
+    continue: 'Continue',
+    continueText: 'Continue.',
     partial: 'Stopped early'
   },
 
@@ -107,6 +109,8 @@ export const chat: Dict['chat'] = {
   },
 
   export: {
+    print: 'Print…',
+    printed: 'Sent to the printer',
     button: 'Export the chat',
     formats: { docx: 'Word document (.docx)', pdf: 'PDF (.pdf)', md: 'Markdown (.md)' },
     saved: 'Saved'
@@ -177,6 +181,10 @@ export const chat: Dict['chat'] = {
   },
 
   sql: {
+    copyResult: 'Copy',
+    copiedResult: 'Copied',
+    saveCsv: 'Save as CSV',
+    savedCsv: 'Saved',
     connect: 'Connect a database',
     connected: (name: string) => `Connected database: ${name}`,
     none: 'No database connection has been saved yet.',

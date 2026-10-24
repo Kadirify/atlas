@@ -564,6 +564,7 @@ export class FilesService {
       t.lookFirst,
       t.proactive,
       t.relativePaths,
+      t.dataNotInstructions,
       ...(write
         ? [
             t.callDirectly,

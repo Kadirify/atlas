@@ -2,6 +2,7 @@ import { Check, Download, Trash2, X } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import type { Lang } from '@shared/i18n'
 import type { OllamaStatus, PullProgress, Recommendation, Settings, Theme, UpdateInfo } from '@shared/types'
+import { ZOOM_STEPS } from '@shared/types'
 import { Button, CheckCard, Field, IconButton, Input, Notice, ProgressBar, Textarea } from '@/components/ui'
 import { APP_NAME, RepoLink, Wordmark } from '@/components/Logo'
 import { DesktopTab } from '@/components/DesktopTab'
@@ -107,6 +108,14 @@ function GeneralTab() {
           options={THEME_IDS.map((id) => ({ id, label: g.theme[id] }))}
           onChange={(theme) => void saveSettings({ theme })}
         />
+        <p className="mt-5 mb-2 text-[13px] font-medium text-ink-2">{g.zoomLabel}</p>
+        <Segmented
+          label={g.zoomLabel}
+          value={String(settings.zoom ?? 1)}
+          options={ZOOM_STEPS.map((z) => ({ id: String(z), label: g.zoomPercent(Math.round(z * 100)) }))}
+          onChange={(z) => void saveSettings({ zoom: Number(z) })}
+        />
+        <p className="mt-2 text-[13px] text-ink-3">{g.zoomHint}</p>
       </section>
 
       <section>

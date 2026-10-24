@@ -65,6 +65,7 @@ const api: Api = {
     messages: (id) => call('conversations:messages', id),
     search: (query) => call('conversations:search', query),
     export: (id, format) => call('conversations:export', id, format),
+    print: (id) => call('conversations:print', id),
     onUpdated: (cb) => on('conversations:updated', cb)
   },
   chat: {
@@ -113,6 +114,7 @@ const api: Api = {
     schema: (id) => call('sql:schema', id),
     definition: (id, object) => call('sql:definition', id, object),
     run: (id, sql) => call('sql:run', id, sql),
+    exportCsv: (columns, rows) => call('sql:exportCsv', columns, rows),
     respond: (approvalId, approved) => call('sql:respond', approvalId, approved),
     onApproval: (cb) => on('sql:approval', cb),
     onResult: (cb) => on('sql:result', cb)

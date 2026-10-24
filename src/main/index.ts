@@ -1,10 +1,12 @@
 import { copyFileSync, existsSync, mkdirSync } from 'node:fs'
 import { ensureRunning, listLoaded, unloadModel } from './services/ollama'
 import { join } from 'node:path'
-import { app, BrowserWindow, dialog, Menu, nativeTheme, powerMonitor, session, shell } from 'electron'
+import { app, BrowserWindow, dialog, Menu, nativeTheme, powerMonitor, screen, session, shell } from 'electron'
 import icon from '../../resources/icon.png?asset'
 import { langFromLocale } from '@shared/i18n'
-import { Db } from './db'
+import { attachmentBudgetFor, Db, setAttachmentBudget } from './db'
+import { restoreBounds, type WindowState } from './windowState'
+import { toolContextSize } from './services/hardware'
 import { getLanguage, setLanguage } from './i18n'
 import { BUNDLED_RECIPES_VERSION } from './services/catalog'
 import { loadSavedRecipes } from './services/updates'
@@ -58,6 +60,24 @@ function migrateOldData(dbPath: string): void {
 let mainWindow: BrowserWindow | null = null
 /** Çöken sayfanın en son yeniden yüklendiği an */
 let lastReload = 0
+/** Kaydedilmiş pencere yeri ve yazı boyutu; veritabanı açılınca bağlanır. */
+let loadWindowState: () => WindowState | null = () => null
+let saveWindowState: (state: WindowState) => void = () => {}
+let zoomFactor: () => number = () => 1
+/** Pencere gizli başladıysa (tepside) ekranı kaplama ilk gösterimde yapılır. */
+let maximizeOnShow = false
+/** Taşıma ve boyutlandırma bitince yeri saklamak için bekleyen zamanlayıcı */
+let persistTimer: NodeJS.Timeout | undefined
+
+/** Pencerenin yerini ve boyutunu saklar; bir sonraki açılışta aynı yerde açılır. */
+function persistWindow(): void {
+  if (!mainWindow || mainWindow.isDestroyed()) return
+  try {
+    saveWindowState({ ...mainWindow.getNormalBounds(), maximized: mainWindow.isMaximized() })
+  } catch {
+    // Kapanışta veritabanı çoktan kapanmış olabilir; yer o zaman daha önce saklanmıştır.
+  }
+}
 /** Kullanıcı gerçekten çıkmak istedi (tepsi menüsü, sistem kapanışı); pencere tepsiye gizlenmez. */
 let quitting = false
 /** Pencere kapatılmak istendiğinde tepsiye gizlenecekse gizler ve true döner. */
@@ -71,6 +91,10 @@ function showWindow(): void {
     return
   }
   if (mainWindow.isMinimized()) mainWindow.restore()
+  if (maximizeOnShow) {
+    maximizeOnShow = false
+    mainWindow.maximize()
+  }
   mainWindow.show()
   mainWindow.focus()
 }
@@ -89,9 +113,11 @@ function setTitleBarTheme(dark: boolean): void {
 
 function createWindow(show: boolean): void {
   const dark = nativeTheme.shouldUseDarkColors
+  const state = loadWindowState()
   mainWindow = new BrowserWindow({
-    width: 1240,
-    height: 820,
+    width: state?.width ?? 1240,
+    height: state?.height ?? 820,
+    ...(state ? { x: state.x, y: state.y } : {}),
     minWidth: 760,
     minHeight: 560,
     show: false,
@@ -108,8 +134,15 @@ function createWindow(show: boolean): void {
   })
 
   mainWindow.once('ready-to-show', () => {
-    if (show) mainWindow?.show()
+    if (!show) {
+      maximizeOnShow = state?.maximized === true
+      return
+    }
+    if (state?.maximized) mainWindow?.maximize()
+    mainWindow?.show()
   })
+  // Yazı boyutu (yakınlaştırma) her yüklemede yeniden uygulanır.
+  mainWindow.webContents.on('did-finish-load', () => mainWindow?.webContents.setZoomFactor(zoomFactor()))
   mainWindow.on('unresponsive', () => log('warn', 'Main window is not responding'))
   mainWindow.on('responsive', () => log('info', 'Main window is responding again'))
   // Sayfa çökerse boş pencere kalmasın: yeniden yüklenir (art arda çöküyorsa dakikada bir kez).
@@ -123,9 +156,18 @@ function createWindow(show: boolean): void {
     }, 500)
   })
   mainWindow.on('close', (event) => {
+    persistWindow()
     if (!quitting && hideToTray()) event.preventDefault()
   })
+  // Yer yalnızca kapanışta değil, pencere taşındıkça ve boyutu değiştikçe de saklanır: uygulama çökerse ya da görev
+  // yöneticisinden kapatılırsa son yer kaybolmasın. Art arda gelen olaylar tek kayıtta toplanır.
+  const schedulePersist = (): void => {
+    clearTimeout(persistTimer)
+    persistTimer = setTimeout(persistWindow, 500)
+  }
+  for (const event of ['move', 'resize', 'maximize', 'unmaximize'] as const) mainWindow.on(event as 'move', schedulePersist)
   mainWindow.on('closed', () => {
+    clearTimeout(persistTimer)
     mainWindow = null
     // Panel penceresi açık kalsa da ana pencere kapandıysa (tepsiye gizlenmediyse) uygulama kapanır.
     if (process.platform !== 'darwin') app.quit()
@@ -175,7 +217,26 @@ if (!app.requestSingleInstanceLock()) {
     mkdirSync(userData, { recursive: true })
     const dbPath = join(userData, DB_FILE)
     migrateOldData(dbPath)
-    const db = new Db(dbPath)
+    // Şema güncellenecekse önce veritabanının kopyası "backups" klasörüne alınır.
+    const db = new Db(dbPath, { backupDir: join(userData, 'backups') })
+    loadWindowState = () => {
+      try {
+        return restoreBounds(
+          JSON.parse(db.getInternal('windowState') ?? 'null'),
+          screen.getAllDisplays().map((d) => d.workArea),
+          { width: 760, height: 560 }
+        )
+      } catch {
+        return null
+      }
+    }
+    saveWindowState = (state) => db.setInternal('windowState', JSON.stringify(state))
+    zoomFactor = () => db.getSettings().zoom
+    // Belge payı ekran kartına göre belirlenir: ek etiketindeki "baş kısmı okunur" uyarısı gerçek sınırı göstersin.
+    void toolContextSize().then(
+      (ctx) => setAttachmentBudget(attachmentBudgetFor(ctx)),
+      () => undefined
+    )
     // İlk açılışta dil, işletim sisteminin diline göre seçilir; sonrasında kullanıcının seçimi geçerlidir.
     if (!db.hasSetting('language')) db.setSettings({ language: langFromLocale(app.getLocale()) })
     setLanguage(db.getSettings().language)
@@ -355,6 +416,7 @@ if (!app.requestSingleInstanceLock()) {
         panel,
         settingsChanged: (patch) => {
           if (patch.launchAtLogin !== undefined) applyLaunchAtLogin(patch.launchAtLogin)
+          if (patch.zoom !== undefined && mainWindow && !mainWindow.isDestroyed()) mainWindow.webContents.setZoomFactor(patch.zoom)
           if ('quickShortcut' in patch || 'selectionShortcut' in patch || 'setupDone' in patch) panel.registerShortcuts()
           tray.refresh()
         },
@@ -382,6 +444,8 @@ if (!app.requestSingleInstanceLock()) {
       if (closing) return
       closing = true
       event.preventDefault()
+      // Veritabanı kapanmadan önce pencerenin yeri saklanır.
+      persistWindow()
       clearInterval(idleTimer)
       stopWatching()
       panel.destroy()

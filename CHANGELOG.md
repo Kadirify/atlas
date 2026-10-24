@@ -3,6 +3,7 @@
 ## Yayımlanmamış
 
 ### Güvenlik
+- Dosya, belge, komut çıktısı ve sorgu sonucu içindeki metnin veri olduğu, talimat olmadığı modele açıkça söyleniyor.
 - Komutlar için güvenli kip: her komuttan önce proje klasörünün anlık görüntüsü alınıyor. Onaylanan bir komut (ya da çalıştırdığı test kodu) dosya silerse, değiştirirse ya da oluşturursa terminal çıktısının altında listeleniyor, model de bunu kullanıcıya söylüyor; cevabın "Geri al"ı komutun yaptıklarını da geri alıyor.
 - "Hep izin ver" denmiş bir komut, Atlas o zamandan beri sorulmadan dosya değiştirdiyse uyarıyla yeniden soruluyor: komut o dosyaları çalıştırabilir.
 - SQL sorguları bağlı veritabanının kendi yazım kurallarıyla inceleniyor; okuma gibi görünen hileli bir sorgu artık yazma ya da silme çalıştıramıyor. PostgreSQL okumaları tek ifadeye zorlanıyor.
@@ -14,6 +15,12 @@
 - Yanlış PIN sayacı yeniden başlatınca sıfırlanmıyor.
 
 ### Düzeltmeler
+- Pencere kapandığı yerde ve boyutta açılıyor.
+- Araç turu sınırına gelince iş sessizce yarıda kalmıyor: adımlarda görünüyor ve cevabın altındaki "Devam et" ile sürüyor.
+- Uzun belgelerde ekran kartı yetiyorsa modele daha fazla metin veriliyor (12 GB'lık kartta 12 bin yerine 24 bin karakter). Klasör ya da veritabanı bağlı sohbetlerde pay değişmiyor; ek etiketi gerçek sınıra göre uyarıyor.
+- Şema güncellemesinden önce veritabanının kopyası alınıyor; en yeni üç kopya `backups` klasöründe duruyor.
+- Model, bilgisayardaki Ollama'dan daha yeni bir sürüm istiyorsa anlaşılır bir ileti çıkıyor.
+- Ollama açılışta aynı anda iki kez başlatılmıyor.
 - PDF, Word ve Excel dosyaları ayrı bir süreçte okunuyor: ağır ya da bozuk bir belge artık uygulamayı dondurmuyor. Açıldığında 200 MB'ı aşan dosya (küçük görünen ama açılınca çok büyüyen "sıkıştırma bombası") hiç açılmadan reddediliyor; bir dakikada okunamayan belge için açık bir ileti çıkıyor.
 - Model bir tabloyu ya da tetikleyiciyi anlatırken ("sipariş oluşturulduğunda") ya da commit mesajı önerirken "değişiklik yaptığını söyledin ama yapmadın" diye yanlış dürtülmüyor; doğru cevabı "Haklısın, bir şey değiştirmedim" gibi bir cevapla değişmiyor.
 - Çıktıyı `>` ile dosyaya yazmak isteyen komut reddedilince modele "silme yapamam de" yerine doğru yol söyleniyor: komutu yönlendirmesiz çalıştırıp çıktıyı dosyaya yazmak.
@@ -34,6 +41,10 @@
 - Veritabanı açılamazsa uygulama asılı kalmıyor, ne olduğunu söylüyor.
 
 ### Diğer
+- Yazı boyutu ayarı: Ayarlar → Genel ya da Ctrl + / Ctrl - / Ctrl 0.
+- Sohbeti yazdırma: dışa aktarma menüsünde "Yazdır…".
+- Veritabanı sonucunu kopyalama ve CSV olarak kaydetme; Türkçede Excel'in beklediği biçimde (noktalı virgül, ondalık virgül).
+- Ajan test setine dört görev: içerikteki talimata uymama (dosya, veri dosyası, tablo hücresi) ve CSV toplamını dosyaya yazma.
 - Ajan test seti 50 göreve çıktı (çok dosyalı değişiklik, test yazma, Python paketi, ön yüz, git, uzun kayıt dosyası, sade Türkçe açıklama, yeni SQL görevleri); sürümden önce üç tekrarla çalıştırma kuralı, kod görevleri için %90 kapısı ve sonuçların geçmiş tablosu.
 - Onay bekleyen işler: onay kartı ekranda değilse mesaj kutusunun üstünde "Atlas onayını bekliyor" çubuğu ve karta atlama; başka bir sohbette bekleyen onay varsa o sohbete geçiş.
 - Hata kaydı: yakalanmamış hatalar, pencere ve alt süreç çökmeleri, uygulamanın donması ve Ollama'nın başlatılması `%APPDATA%\Atlas Asistan\logs` altına yazılıyor (sohbet içeriği yazılmaz). Ayarlar → Hakkında'da "Tanılama bilgisini kopyala" ve "Kayıt klasörünü aç".

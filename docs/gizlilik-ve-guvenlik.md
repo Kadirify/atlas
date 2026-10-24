@@ -9,6 +9,7 @@ Atlas'ın var olma nedeni verinin senin bilgisayarında kalması. Bu sayfa veril
 | Sohbetler, eklenen belgelerin metni ve aslı, ayarlar, bellek notları, veritabanı bağlantıları | `%APPDATA%\Atlas Asistan\atlas.db` (tek bir SQLite dosyası) |
 | Modeller | Ollama'nın klasörü (varsayılan `%USERPROFILE%\.ollama\models`) |
 | Komutlar için güvenli kip: komuttan önceki dosyaların kopyaları (geri alma için) | `%LOCALAPPDATA%\Atlas Asistan\snapshots` (hiçbir geri alma kaydının kullanmadığı kopyalar açılışta silinir) |
+| Şema güncellemesinden önce alınan veritabanı kopyaları (en yeni üçü) | `%APPDATA%\Atlas Asistan\backups` |
 | Hata kaydı: hatalar, çökmeler, donmalar (sohbet, dosya içeriği, komut ve sorgu metni yazılmaz) | `%APPDATA%\Atlas Asistan\logs` (en çok 4 MB; eskiler kendiliğinden silinir) |
 | Proje klasörlerin | Oldukları yerde; Atlas yalnızca senin bağladığın klasörün içinde çalışır |
 
@@ -41,6 +42,7 @@ Bu kurallar modele verilen talimatlarda değil, uygulamanın kodunda durur. Mode
 - `.env`, anahtar ve parola dosyalarını okumaz, aramaya ve indekse almaz.
 - UTF-8 olmayan dosyaları bozmamak için değiştirmez.
 - PDF, Word ve Excel dosyalarını ayrı, bellek sınırlı bir süreçte okur; açıldığında 200 MB'ı aşan dosyayı açmaz. Bozuk ya da kötü niyetli bir belge uygulamayı düşüremez.
+- Dosyaların, belgelerin, komut çıktılarının ve sorgu sonuçlarının içindeki metin modele "veri" olarak tanıtılır: içinde talimat gibi sözler geçse de uygulamaması söylenir. Bu bir talimattır, kesin bir engel değildir; asıl koruma onay kartlarıdır.
 - Bir cevapta yaptığı değişiklikleri tek düğmeyle geri alırsın. Atlas'tan sonra dosyayı sen değiştirdiysen geri alma senin değişikliğine dokunmaz.
 
 ### Komutlar

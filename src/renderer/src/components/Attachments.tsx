@@ -1,6 +1,6 @@
 import { FileSpreadsheet, FileText, LoaderCircle, Paperclip, X } from 'lucide-react'
 import { useRef, useState } from 'react'
-import type { Attachment } from '@shared/types'
+import { ATTACHMENT_BASE_CHARS, type Attachment } from '@shared/types'
 import ImageViewer, { type ViewerImage } from '@/components/ImageViewer'
 import { cn, formatBytes } from '@/lib/format'
 import { useT } from '@/lib/useT'
@@ -67,7 +67,19 @@ function conversationImages(current: Attachment): ViewerImage[] {
   return images
 }
 
-function FileChip({ attachment, onRemove }: { attachment: Attachment; onRemove?(): void }) {
+/**
+ * Klasör ya da veritabanı bağlı sohbetlerde ve mini uygulamalarda belge payı büyümez (bağlamın çoğu araç sonuçlarına
+ * kalır); "baş kısmı okunur" uyarısı o durumda temel sınıra göre verilir.
+ */
+function useBaseBudget(): boolean {
+  return useApp((s) => {
+    if (s.view.name !== 'chat') return true
+    const conversation = s.conversations.find((c) => c.id === s.activeId)
+    return Boolean(conversation ? conversation.folderId || conversation.sqlId : s.draft.folderId || s.draft.sqlId)
+  })
+}
+
+function FileChip({ attachment, onRemove, baseBudget }: { attachment: Attachment; onRemove?(): void; baseBudget: boolean }) {
   const t = useT()
   const open = useApp((s) => s.docId === attachment.id)
   const [zoomed, setZoomed] = useState(false)
@@ -117,7 +129,7 @@ function FileChip({ attachment, onRemove }: { attachment: Attachment; onRemove?(
         <div className="min-w-0">
           <p className="truncate text-[13px] font-medium text-ink">{attachment.name}</p>
           <p className="text-xs text-ink-3">
-            {attachment.truncated ? t.chat.attachments.truncated : formatBytes(attachment.size)}
+            {(baseBudget ? attachment.chars > ATTACHMENT_BASE_CHARS : attachment.truncated) ? t.chat.attachments.truncated : formatBytes(attachment.size)}
           </p>
         </div>
       </button>
@@ -138,11 +150,12 @@ export function AttachmentList({
   className?: string
 }) {
   const t = useT()
+  const baseBudget = useBaseBudget()
   if (items.length === 0 && pending === 0) return null
   return (
     <div className={cn('flex flex-wrap items-center gap-2', className)}>
       {items.map((a) => (
-        <FileChip key={a.id} attachment={a} onRemove={onRemove ? () => onRemove(a.id) : undefined} />
+        <FileChip key={a.id} attachment={a} baseBudget={baseBudget} onRemove={onRemove ? () => onRemove(a.id) : undefined} />
       ))}
       {pending > 0 && (
         <span className="flex h-9 items-center gap-2 rounded-lg border border-dashed border-line px-3 text-[13px] text-ink-3" role="status">

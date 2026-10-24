@@ -32,6 +32,7 @@ src/
     panel.ts            Kısayolla açılan küçük soru penceresi
     tray.ts             Sistem tepsisi simgesi ve menüsü
     log.ts              Kayıt dosyası: hatalar, çökmeler, donmalar
+    windowState.ts      Pencerenin kaydedilen yerini ve boyutunu geri yükleme
     db/index.ts         SQLite (node:sqlite): göçler ve sorgular
     workers/sqlite.ts   Bağlanan SQLite dosyalarındaki sorgular (ayrı süreçte çalışır)
     workers/document.ts PDF, Word ve Excel okuma (ayrı süreçte çalışır)

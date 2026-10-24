@@ -44,6 +44,9 @@ export const chat = {
     editHint: 'Gönderince sonraki cevaplar silinir ve yeniden yazılır.',
     copyAnswer: 'Cevabı kopyala',
     regenerate: 'Cevabı yeniden yazdır',
+    continue: 'Devam et',
+    /** "Devam et" düğmesine basılınca kullanıcının adına gönderilen mesaj */
+    continueText: 'Devam et.',
     partial: 'Yarıda kesildi'
   },
 
@@ -109,6 +112,8 @@ export const chat = {
   },
 
   export: {
+    print: 'Yazdır…',
+    printed: 'Yazıcıya gönderildi',
     button: 'Sohbeti dışa aktar',
     formats: { docx: 'Word belgesi (.docx)', pdf: 'PDF (.pdf)', md: 'Markdown (.md)' },
     saved: 'Kaydedildi'
@@ -176,6 +181,10 @@ export const chat = {
   },
 
   sql: {
+    copyResult: 'Kopyala',
+    copiedResult: 'Kopyalandı',
+    saveCsv: 'CSV olarak kaydet',
+    savedCsv: 'Kaydedildi',
     connect: 'Veritabanı bağla',
     connected: (name: string) => `Bağlı veritabanı: ${name}`,
     none: 'Henüz kayıtlı bir veritabanı bağlantısı yok.',

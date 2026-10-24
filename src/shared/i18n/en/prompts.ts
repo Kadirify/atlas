@@ -27,7 +27,9 @@ export const prompts: Dict['prompts'] = {
     titleRequest: (user: string, reply: string) => `User: ${user}\n\nAssistant: ${reply}`,
 
     lookAtFile: 'Take a look at this file.',
-    toolLimit: 'You have reached the tool use limit. Answer with what you have learned so far.',
+    toolLimit:
+      'You have reached the tool limit. Briefly write what you have done and learned so far; if the work is not finished, say what is left. If the user asks you to continue, pick up where you stopped.',
+    roundLimitStep: (rounds: number) => `Tool round limit reached (${rounds} rounds)`,
     /** Short action log added to an earlier assistant reply so the model knows what it did */
     toolResultTrimmed: '(older tool result, shortened to save space; call the tool again if you need it)',
     actionLog: (items: string) => `[Done in this reply: ${items}]`,

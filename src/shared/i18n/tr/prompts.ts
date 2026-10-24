@@ -31,7 +31,9 @@ export const prompts = {
 
     /** Yalnızca dosya gönderilip metin yazılmadığında modele giden mesaj */
     lookAtFile: 'Bu dosyaya bak.',
-    toolLimit: 'Araç kullanma sınırına ulaşıldı. Şimdiye kadar öğrendiklerinle cevap ver.',
+    toolLimit:
+      'Araç kullanma sınırına ulaşıldı. Şimdiye kadar yaptıklarını ve öğrendiklerini kısaca yaz; iş bitmediyse neyin kaldığını söyle. Kullanıcı devam etmeni isterse kaldığın yerden sürdürürsün.',
+    roundLimitStep: (rounds: number) => `Araç turu sınırına ulaşıldı (${rounds} tur)`,
     /** Geçmişteki asistan cevabına eklenen kısa iş kaydı: model bir sonraki turda neyi yaptığını bilsin */
     toolResultTrimmed: '(eski araç sonucu, yer açmak için kısaltıldı; gerekirse aracı yeniden çağır)',
     actionLog: (items: string) => `[Bu cevapta yapılanlar: ${items}]`,

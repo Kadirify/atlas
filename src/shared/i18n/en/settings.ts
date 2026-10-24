@@ -22,6 +22,9 @@ export const settings: Dict['settings'] = {
   general: {
     appearance: 'Appearance',
     themeLabel: 'Theme',
+    zoomLabel: 'Text size',
+    zoomPercent: (percent: number) => `${percent}%`,
+    zoomHint: 'You can also change it with Ctrl and + or -; Ctrl 0 resets it.',
     theme: { system: 'Match system', light: 'Light', dark: 'Dark' },
 
     language: 'Language',

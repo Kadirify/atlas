@@ -259,3 +259,17 @@ describe('değişiklik yapmadan "düzelttim" demek', () => {
     expect(claimsChange('Bu fonksiyon değeri günceller.')).toBe(false)
   })
 })
+
+import { historyBudgetFor } from '../src/main/services/chat'
+import { attachmentBudgetFor } from '../src/main/db'
+
+describe('uzun belgede bağlam payı', () => {
+  it('bağlam büyüdükçe belge ve geçmiş payı aynı oranda büyür; küçük bağlamda değişmez', () => {
+    expect(attachmentBudgetFor(8192)).toBe(12_000)
+    expect(attachmentBudgetFor(16_384)).toBe(24_000)
+    expect(attachmentBudgetFor(32_768)).toBe(48_000)
+    expect(attachmentBudgetFor(4096)).toBe(12_000)
+    expect(historyBudgetFor(8192)).toBe(18_000)
+    expect(historyBudgetFor(16_384)).toBe(36_000)
+  })
+})

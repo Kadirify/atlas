@@ -1,3 +1,6 @@
+import { mkdirSync, readdirSync, rmSync, statSync } from 'node:fs'
+import { join } from 'node:path'
+import { log } from '../log'
 import { DatabaseSync } from 'node:sqlite'
 import { randomUUID } from 'node:crypto'
 import type {
@@ -24,7 +27,7 @@ import type {
   ToolStep,
   WaStats, UndoEntry } from '@shared/types'
 import { documentViewKind } from '@shared/types'
-import { DEFAULT_PERSONA_ID, DEFAULT_SETTINGS, UNTITLED_CONVERSATION } from '@shared/types'
+import { ATTACHMENT_BASE_CHARS, DEFAULT_PERSONA_ID, DEFAULT_SETTINGS, UNTITLED_CONVERSATION } from '@shared/types'
 import { L } from '../i18n'
 
 /** Her dizi elemanı bir şema sürümüdür. Var olanı değiştirme; sona yenisini ekle. */
@@ -215,7 +218,40 @@ const MIGRATIONS: string[] = [
 ]
 
 /** Bir mesajdaki ek dosyalardan modele verilecek en fazla metin (karakter). */
-export const ATTACHMENT_CHAR_BUDGET = 12_000
+export const ATTACHMENT_CHAR_BUDGET = ATTACHMENT_BASE_CHARS
+
+/** Bağlam büyüdükçe (ekran kartı yetiyorsa) modele verilen belge metni de aynı oranda büyür: 8 bin belirteçte 12 bin karakter. */
+export function attachmentBudgetFor(numCtx: number): number {
+  return Math.round((Math.max(8192, numCtx) / 8192) * ATTACHMENT_CHAR_BUDGET)
+}
+
+/** Bu bilgisayarda bir belgeden modele verilebilen en çok metin; açılışta donanıma göre ayarlanır. */
+let attachmentBudget = ATTACHMENT_CHAR_BUDGET
+
+export function setAttachmentBudget(chars: number): void {
+  attachmentBudget = Math.max(ATTACHMENT_CHAR_BUDGET, Math.round(chars))
+}
+
+/** Şema güncellemesinden önce alınan yedeklerden en çok bu kadarı saklanır */
+const KEEP_BACKUPS = 3
+
+/**
+ * Açık veritabanının tutarlı bir kopyasını klasöre yazar (VACUUM INTO: henüz ana dosyaya işlenmemiş değişiklikler de
+ * girer) ve en yeni üçü dışındaki eski yedekleri siler. Kopyanın yolunu döner.
+ */
+export function backupDatabase(db: DatabaseSync, dir: string, version: number, now = new Date()): string {
+  mkdirSync(dir, { recursive: true })
+  const stamp = now.toISOString().slice(0, 19).replace(/[:T]/g, '-')
+  const file = join(dir, `atlas-v${version}-${stamp}.db`)
+  db.exec(`VACUUM INTO '${file.replace(/'/g, "''")}'`)
+  const old = readdirSync(dir)
+    .filter((name) => /^atlas-v\d+-.*\.db$/.test(name))
+    .map((name) => ({ name, time: statSync(join(dir, name)).mtimeMs }))
+    .sort((a, b) => b.time - a.time || b.name.localeCompare(a.name))
+    .slice(KEEP_BACKUPS)
+  for (const entry of old) rmSync(join(dir, entry.name), { force: true })
+  return file
+}
 
 /** Adı konmamış sohbetin başlığı; ayrıntı için UNTITLED_CONVERSATION. */
 export const NEW_CONVERSATION_TITLE = UNTITLED_CONVERSATION
@@ -329,7 +365,7 @@ function toAttachment(r: Row): Attachment {
     kind,
     size: r.size as number,
     chars,
-    truncated: chars > ATTACHMENT_CHAR_BUDGET,
+    truncated: chars > attachmentBudget,
     dataUrl: kind === 'image' && r.data ? `data:${r.mime as string};base64,${r.data as string}` : null
   }
 }
@@ -371,9 +407,20 @@ export class Db {
   /** Aynı milisaniyede eklenen mesajların sırası bozulmasın diye. */
   private lastTs = 0
 
-  constructor(path: string) {
+  /** backupDir verilirse şema güncellemesinden önce veritabanının kopyası o klasöre alınır. */
+  constructor(path: string, options: { backupDir?: string } = {}) {
     this.db = new DatabaseSync(path)
     this.db.exec('PRAGMA journal_mode = WAL; PRAGMA foreign_keys = ON;')
+    const current = (this.db.prepare('PRAGMA user_version').get() as { user_version: number }).user_version
+    // Yeni (boş) veritabanında ve şeması güncel olanda yedeğe gerek yok.
+    if (options.backupDir && current > 0 && current < MIGRATIONS.length) {
+      try {
+        log('info', `Database backed up before schema update: ${backupDatabase(this.db, options.backupDir, current)}`)
+      } catch (err) {
+        // Yedek alınamadıysa (disk dolu, izin yok) güncelleme yine de denenir; her göç kendi işleminde geri alınır.
+        log('warn', 'Database backup before schema update failed', err)
+      }
+    }
     this.migrate()
   }
 

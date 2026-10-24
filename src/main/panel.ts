@@ -73,12 +73,15 @@ export class AtlasPanel {
   private show(request: Omit<PanelRequest, 'id'>): void {
     const win = this.window && !this.window.isDestroyed() ? this.window : this.create()
     const area = screen.getDisplayNearestPoint(screen.getCursorScreenPoint()).workArea
+    // Yazı boyutu büyütüldüyse panel de aynı oranda büyür (yakınlaştırma bütün pencerelerde ortaktır).
+    const zoom = this.getSettings().zoom || 1
+    const width = Math.min(Math.round(WIDTH * zoom), area.width - MARGIN * 2)
     win.setBounds({
-      x: area.x + area.width - WIDTH - MARGIN,
+      x: area.x + area.width - width - MARGIN,
       y: area.y + MARGIN,
-      width: WIDTH,
+      width,
       // Çok uzun ekranlarda panel bütün yüksekliği kaplamaz; okunabilir bir boyda kalır.
-      height: Math.min(MAX_HEIGHT, Math.max(360, area.height - MARGIN * 2))
+      height: Math.min(Math.round(MAX_HEIGHT * zoom), Math.max(360, area.height - MARGIN * 2))
     })
     this.current = { ...request, id: this.current.id + 1 }
     if (this.loaded) win.webContents.send('panel:open', this.current)

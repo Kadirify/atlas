@@ -67,8 +67,12 @@ export function describeError(err: unknown): string {
   return msg
 }
 
-function translateApiError(text: string, model?: string): string {
+export function translateApiError(text: string, model?: string): string {
   if (/not found/i.test(text) && model) return L().main.ollama.modelNotInstalled(model)
+  // Model, kurulu Ollama'dan daha yeni bir sürüm istiyorsa Ollama bunu teknik bir iletiyle söyler.
+  if (/newer version of ollama|unknown model architecture|unsupported model (?:format|architecture)|invalid file magic/i.test(text)) {
+    return L().main.ollama.tooOld
+  }
   if (/requires more system memory|out of memory/i.test(text)) {
     return L().main.ollama.outOfMemory
   }
@@ -179,7 +183,7 @@ function desktopApp(): string | null {
   return existsSync(app) ? app : null
 }
 
-export async function start(): Promise<OllamaStatus> {
+async function launch(): Promise<OllamaStatus> {
   if (await runningVersion()) return status()
   const exe = await findExecutable()
   if (!exe) return { installed: false, running: false, version: null }
@@ -202,22 +206,20 @@ export async function start(): Promise<OllamaStatus> {
   return status()
 }
 
-let starting: Promise<boolean> | null = null
+let starting: Promise<OllamaStatus> | null = null
 
-/**
- * Ollama çalışmıyorsa başlatır. Aynı anda birden çok istek gelirse tek başlatma yapılır. Çalışıyorsa ya da
- * başlatılabildiyse true.
- */
-export function ensureRunning(): Promise<boolean> {
-  starting ??= (async () => {
-    try {
-      if (await runningVersion()) return true
-      return (await start()).running
-    } finally {
-      starting = null
-    }
-  })()
+/** Ollama'yı başlatır. Aynı anda birden çok istek gelirse (açılış, arayüz, bağlanamayan bir soru) tek başlatma yapılır. */
+export function start(): Promise<OllamaStatus> {
+  starting ??= launch().finally(() => {
+    starting = null
+  })
   return starting
+}
+
+/** Ollama çalışmıyorsa başlatır. Çalışıyorsa ya da başlatılabildiyse true. */
+export async function ensureRunning(): Promise<boolean> {
+  if (await runningVersion()) return true
+  return (await start()).running
 }
 
 /** Hata, Ollama'ya hiç bağlanılamadığını mı gösteriyor (kapalı ya da başlamamış) */

@@ -9,7 +9,8 @@ import type {
   Settings,
   ToolStep
 } from '@shared/types'
-import { ATTACHMENT_CHAR_BUDGET, NEW_CONVERSATION_TITLE, type Db } from '../db'
+import { ATTACHMENT_CHAR_BUDGET, attachmentBudgetFor, NEW_CONVERSATION_TITLE, type Db } from '../db'
+import { ROUND_LIMIT_TOOL } from '@shared/types'
 import { getLanguage, L, locale } from '../i18n'
 import { log } from '../log'
 import { attachmentsBlock } from './attachments'
@@ -25,6 +26,11 @@ import { toolContextSize } from './hardware'
 
 /** Modele gönderilen geçmişin yaklaşık karakter sınırı (8192 token bağlama sığacak şekilde). */
 const HISTORY_CHAR_BUDGET = 18_000
+
+/** Bağlam büyüdüğünde geçmişe ayrılan pay da aynı oranda büyür. */
+export function historyBudgetFor(numCtx: number): number {
+  return Math.round((Math.max(8192, numCtx) / 8192) * HISTORY_CHAR_BUDGET)
+}
 
 /** Bir cevapta modelin art arda en fazla kaç kez araç kullanabileceği */
 const MAX_TOOL_ROUNDS = 12
@@ -440,7 +446,7 @@ export class ChatService {
   }
 
   /** Geçmişi modelin anlayacağı hale getirir: dosya metinleri mesaja eklenir, resimler ayrı verilir. */
-  private async toModelMessages(history: Message[], model: string): Promise<OllamaMessage[]> {
+  private async toModelMessages(history: Message[], model: string, attachmentBudget: number): Promise<OllamaMessage[]> {
     const vision = await supportsVision(model)
     const lastUser = history.findLast((m) => m.role === 'user')
     if (!vision && lastUser?.attachments.some((a) => a.kind === 'image')) {
@@ -455,11 +461,12 @@ export class ChatService {
       }
       if (m.attachments.length === 0) return { role: m.role, content: m.content } as OllamaMessage
       const files = this.db.attachmentContents(m.attachments.map((a) => a.id))
-      const block = attachmentsBlock(files, ATTACHMENT_CHAR_BUDGET)
+      const block = attachmentsBlock(files, attachmentBudget)
       const images = vision ? files.filter((f) => f.kind === 'image' && f.data).map((f) => f.data!) : []
       return {
         role: m.role,
-        content: [block, m.content].filter(Boolean).join('\n\n') || L().prompts.chat.lookAtFile,
+        // Ek dosyanın içeriği veridir: içinde talimat gibi sözler geçse de model uygulamamalı.
+        content: [block ? `${L().main.attachments.dataNote}\n${block}` : '', m.content].filter(Boolean).join('\n\n') || L().prompts.chat.lookAtFile,
         ...(images.length > 0 ? { images } : {})
       } as OllamaMessage
     })
@@ -515,12 +522,19 @@ export class ChatService {
       model = this.modelFor(conversation)
       const settings = this.db.getSettings()
       const history = this.db.listMessages(conversationId).filter((m) => m.role !== 'system')
-      const all = await this.toModelMessages(history, model)
       // Araçlı sohbetlerde (klasör, veritabanı) bağlam büyük tutulur; geçmiş de buna göre daha uzun kalır.
       const toolSession = Boolean(conversation.folderId || conversation.sqlId)
-      const numCtx = toolSession ? await toolContextSize() : undefined
+      // Uzun belge eklenmiş düz sohbette de (ekran kartı yetiyorsa) bağlam büyütülür: belgenin daha fazlası modele
+      // verilir. Kısa belgelerde bağlam değişmez; model yeniden yüklenmez.
+      const docChars = history.reduce((sum, m) => sum + m.attachments.reduce((n, a) => n + (a.kind === 'text' ? a.chars : 0), 0), 0)
+      const longDocs = !toolSession && docChars > ATTACHMENT_CHAR_BUDGET
+      const numCtx = toolSession || longDocs ? await toolContextSize() : undefined
+      const all = await this.toModelMessages(history, model, longDocs && numCtx ? attachmentBudgetFor(numCtx) : ATTACHMENT_CHAR_BUDGET)
       // Araçlı sohbette bağlamın çoğu araç sonuçlarına (dosya, sorgu) kalmalı; eski mesajlara daha az yer ayrılır.
-      const kept = trimHistory(all, numCtx ? Math.max(6000, Math.round(numCtx * 0.75)) : HISTORY_CHAR_BUDGET)
+      const kept = trimHistory(
+        all,
+        toolSession && numCtx ? Math.max(6000, Math.round(numCtx * 0.75)) : longDocs && numCtx ? historyBudgetFor(numCtx) : HISTORY_CHAR_BUDGET
+      )
       // Bağlama sığmayan baştaki mesajlar; içerikleri özetle temsil edilir.
       const dropped = history.slice(0, all.length - kept.length)
 
@@ -744,7 +758,13 @@ export class ChatService {
         if (trimmed > 0) this.events.debug?.({ conversationId, kind: 'compact', detail: String(trimmed) })
         // Sınıra gelindiyse son turda araç verilmez; model elindekiyle cevap yazar.
         const last = round >= MAX_TOOL_ROUNDS
-        if (last) messages.push({ role: 'user', content: L().prompts.chat.toolLimit })
+        if (last) {
+          // Kullanıcı işin sınır yüzünden durduğunu görsün ve cevabın altındaki "Devam et" ile sürdürebilsin.
+          const step: ToolStep = { id: `round-limit-${round}`, tool: ROUND_LIMIT_TOOL, label: L().prompts.chat.roundLimitStep(MAX_TOOL_ROUNDS), status: 'denied' }
+          steps.push(step)
+          this.events.step({ conversationId, step })
+          messages.push({ role: 'user', content: L().prompts.chat.toolLimit })
+        }
         result = await stream(!last)
         if (last) break
         await nudge()

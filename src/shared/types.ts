@@ -641,6 +641,8 @@ export interface Settings {
   slashPrompts: SlashPrompt[]
   /** Model cevap vermeden önce düşünsün mü (daha yavaş, daha dikkatli); mesaj kutusundaki düğmeyle değişir */
   think: boolean
+  /** Arayüzün yakınlaştırması: 1 = %100 (Ctrl + ve Ctrl - ile de değişir) */
+  zoom: number
 }
 
 export interface SlashPrompt {
@@ -650,6 +652,18 @@ export interface SlashPrompt {
 
 /** Kendiliğinden kilitlenme için seçilebilen süreler (dakika); 0 kapalı demektir. */
 export const LOCK_MINUTES = [0, 1, 5, 15, 30, 60]
+
+/** Yazı boyutu için seçilebilen yakınlaştırma oranları */
+export const ZOOM_STEPS = [0.8, 0.9, 1, 1.1, 1.25, 1.5]
+
+/** Araç turu sınırına gelindiğinde adımlara eklenen işaretin araç adı; arayüz bununla "Devam et" düğmesini gösterir */
+export const ROUND_LIMIT_TOOL = 'round_limit'
+
+/**
+ * Bir belgeden modele verilen metnin temel sınırı (karakter). Ekran kartı yetiyorsa düz sohbetlerde bağlamla birlikte
+ * büyür; klasör ya da veritabanı bağlı sohbetlerde ve mini uygulamalarda bu değerde kalır.
+ */
+export const ATTACHMENT_BASE_CHARS = 12_000
 
 /** Uygulama kilidinin durumu. Kilitliyken arayüz yalnızca bunu görebilir. */
 export interface LockState {
@@ -687,7 +701,8 @@ export const DEFAULT_SETTINGS: Settings = {
   quickShortcut: 'Alt+Space',
   selectionShortcut: 'Ctrl+Shift+Space',
   slashPrompts: [],
-  think: false
+  think: false,
+  zoom: 1
 }
 
 // --- Mini uygulamalar ---
@@ -842,6 +857,8 @@ export interface Api {
     search(query: string): Promise<SearchHit[]>
     /** Sohbeti dosyaya kaydeder; kullanıcı vazgeçerse null döner. */
     export(id: string, format: ExportFormat): Promise<string | null>
+    /** Sohbeti sistemin yazdırma penceresiyle yazdırır; kullanıcı vazgeçerse false */
+    print(id: string): Promise<boolean>
     onUpdated(cb: (c: Conversation) => void): () => void
   }
   chat: {
@@ -973,6 +990,8 @@ export interface Api {
     definition(id: string, object: { schema: string; name: string; type: SqlObjectType }): Promise<string>
     /** Panelden elle çalıştırılan sorgu: yalnızca okuma kabul edilir */
     run(id: string, sql: string): Promise<SqlResult>
+    /** Sorgu sonucunu CSV dosyasına kaydeder; kullanıcı vazgeçerse null */
+    exportCsv(columns: string[], rows: SqlValue[][]): Promise<string | null>
     respond(approvalId: string, approved: boolean): Promise<void>
     onApproval(cb: (a: SqlApproval) => void): () => void
     onResult(cb: (e: SqlResultEvent) => void): () => void

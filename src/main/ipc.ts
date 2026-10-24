@@ -23,7 +23,7 @@ import { buildRunMessages, EXPORT_EXTENSION, EXPORT_FORMAT, formatValues, saniti
 import { addAttachment, sheetPreview } from './services/attachments'
 import { builtinApps, CORPORATE_APP_IDS } from './services/builtinApps'
 import type { LockService } from './services/lock'
-import { DOCUMENT_FORMATS, EXPORT_FORMATS, LOCK_MINUTES, documentViewKind, type DocumentFormat, type DocumentOriginal, type LoadedModel, type SqlConnectionInput, type SqlObjectType, SHORTCUT_CHOICES, UNTITLED_CONVERSATION, type ExportFormat, type PanelAction, type WhatsNew } from '@shared/types'
+import { DOCUMENT_FORMATS, EXPORT_FORMATS, LOCK_MINUTES, ZOOM_STEPS, documentViewKind, type DocumentFormat, type DocumentOriginal, type LoadedModel, type SqlConnectionInput, type SqlObjectType, type SqlValue, SHORTCUT_CHOICES, UNTITLED_CONVERSATION, type ExportFormat, type PanelAction, type WhatsNew } from '@shared/types'
 import { CATALOG, catalog, recommend, atlasRecipe, isAtlasModel, recipesVersion } from './services/catalog'
 import type { FilesService } from './services/files'
 import type { ChatService } from './services/chat'
@@ -37,6 +37,7 @@ import { isRunnable, listDir, readForView } from './services/code'
 import { resolveInside } from './services/files'
 import { buildApp, buildImproveMessages } from './services/studio'
 import { formatDiagnostics } from './services/diagnostics'
+import { toDelimited } from '@shared/delimited'
 import { log, logFolder, logSummary } from './log'
 import type { WhatsAppService } from './services/whatsapp'
 
@@ -108,6 +109,26 @@ async function renderPdf(html: string): Promise<Buffer> {
   try {
     await win.loadFile(file)
     return await win.webContents.printToPDF({ pageSize: 'A4', printBackground: true })
+  } finally {
+    win.destroy()
+    await rm(file, { force: true })
+  }
+}
+
+/** Hazırlanan HTML'i sistemin yazdırma penceresiyle yazdırır. Kullanıcı vazgeçerse false döner. */
+async function printHtml(html: string, title: string): Promise<boolean> {
+  // Otomatik denemelerde yazdırma penceresi açılmaz; çıktı verilen klasöre PDF olarak yazılır.
+  const testDir = process.env.ATLAS_USER_DATA ? process.env.ATLAS_EXPORT_DIR : undefined
+  if (testDir) {
+    await writeFile(join(testDir, `${safeFileName(title)}.yazdir.pdf`), await renderPdf(html))
+    return true
+  }
+  const file = join(app.getPath('temp'), `atlas-print-${Date.now()}.html`)
+  await writeFile(file, html, 'utf8')
+  const win = new BrowserWindow({ show: false, webPreferences: { sandbox: true, javascript: false } })
+  try {
+    await win.loadFile(file)
+    return await new Promise<boolean>((resolve) => win.webContents.print({ printBackground: true }, (success) => resolve(success)))
   } finally {
     win.destroy()
     await rm(file, { force: true })
@@ -273,6 +294,29 @@ export function registerIpc(
   handle('sql:schema', (id: string) => sqlService().schema(id))
   handle('sql:definition', (id: string, object: { schema: string; name: string; type: SqlObjectType }) => sqlService().definition(id, object))
   handle('sql:run', (id: string, sql: string) => sqlService().runRead(id, String(sql)))
+  // Sorgu sonucunu CSV olarak kaydeder. Türkçe Excel noktalı virgül ve ondalık virgül bekler; dosya BOM ile yazılır.
+  handle('sql:exportCsv', async (columns: string[], rows: SqlValue[][]) => {
+    if (!Array.isArray(columns) || !Array.isArray(rows) || columns.length === 0) return null
+    const turkish = getLanguage() === 'tr'
+    const text = toDelimited(
+      columns.slice(0, 500).map(String),
+      rows.slice(0, 5000).map((row) => (Array.isArray(row) ? row.slice(0, 500) : [])),
+      turkish ? ';' : ',',
+      turkish
+    )
+    const t = L().main.export
+    const testDir = process.env.ATLAS_USER_DATA ? process.env.ATLAS_EXPORT_DIR : undefined
+    const result = testDir
+      ? { canceled: false, filePath: join(testDir, `${t.csvFileName}.csv`) }
+      : await dialog.showSaveDialog({
+          title: t.saveCsvTitle,
+          defaultPath: join(app.getPath('documents'), `${t.csvFileName}.csv`),
+          filters: [{ name: 'CSV', extensions: ['csv'] }]
+        })
+    if (result.canceled || !result.filePath) return null
+    await writeFile(result.filePath, `\uFEFF${text}\r\n`, 'utf8')
+    return result.filePath
+  })
   handle('sql:respond', (approvalId: string, approved: boolean) => sqlService().respond(approvalId, approved))
   handle('sql:pickFile', async () => {
     const picked = await dialog.showOpenDialog({
@@ -293,9 +337,10 @@ export function registerIpc(
   })
   handle('conversations:messages', (id: string) => db.listMessages(id))
   handle('conversations:search', (query: string) => db.search(query))
-  handle('conversations:export', async (id: string, format: ExportFormat) => {
+  /** Sohbetin dışa aktarılacak ya da yazdırılacak hali; sohbet yoksa null, içinde mesaj yoksa hata. */
+  const conversationDocument = (id: string): ExportDocument | null => {
     const conversation = db.getConversation(id)
-    if (!conversation || !EXPORT_FORMATS.includes(format)) return null
+    if (!conversation) return null
     const t = L().main.export
     const persona = findPersona(db, conversation.personaId)
     const messages = db
@@ -310,7 +355,19 @@ export function registerIpc(
     const title = conversation.title === UNTITLED_CONVERSATION ? L().common.newChat : conversation.title
     const date = new Date(conversation.updatedAt).toLocaleDateString(locale(), { day: 'numeric', month: 'long', year: 'numeric' })
     const model = conversation.model ? (catalog(getLanguage()).find((m) => m.id === conversation.model)?.name ?? conversation.model) : null
-    const doc: ExportDocument = { title, subtitle: t.subtitle(date, model), messages }
+    return { title, subtitle: t.subtitle(date, model), messages }
+  }
+
+  handle('conversations:print', async (id: string) => {
+    const doc = conversationDocument(String(id))
+    return doc ? printHtml(toHtml(doc), doc.title) : false
+  })
+  handle('conversations:export', async (id: string, format: ExportFormat) => {
+    if (!EXPORT_FORMATS.includes(format)) return null
+    const doc = conversationDocument(id)
+    if (!doc) return null
+    const t = L().main.export
+    const title = doc.title
 
     // Otomatik denemelerde kaydetme penceresi açılmaz; dosya verilen klasöre yazılır.
     const testDir = process.env.ATLAS_USER_DATA ? process.env.ATLAS_EXPORT_DIR : undefined
@@ -545,6 +602,7 @@ export function registerIpc(
   handle('settings:get', () => db.getSettings())
   handle('settings:set', (patch: Partial<Settings>) => {
     if (patch.lockAfterMinutes !== undefined && !LOCK_MINUTES.includes(patch.lockAfterMinutes)) delete patch.lockAfterMinutes
+    if (patch.zoom !== undefined && !ZOOM_STEPS.includes(patch.zoom)) delete patch.zoom
     if (patch.quickShortcut !== undefined && !SHORTCUT_CHOICES.includes(patch.quickShortcut)) delete patch.quickShortcut
     if (patch.selectionShortcut !== undefined && !SHORTCUT_CHOICES.includes(patch.selectionShortcut)) delete patch.selectionShortcut
     if (patch.slashPrompts !== undefined) {
