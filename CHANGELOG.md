@@ -3,6 +3,7 @@
 ## Yayımlanmamış
 
 ### Güvenlik
+- Kod alanındaki git, deponun kendi ayarında yazan programları çalıştırmıyor: durum ve fark bu özellikler kapalı okunuyor; yerel ayarında içerik süzgeci, imza programı ya da dış fark aracı tanımlı depoda git hiç çalıştırılmıyor. `.env` gibi dosyalar commit için kendiliğinden seçilmiyor, içerikleri gösterilmiyor ve modele verilmiyor.
 - Dosya, belge, komut çıktısı ve sorgu sonucu içindeki metnin veri olduğu, talimat olmadığı modele açıkça söyleniyor.
 - Komutlar için güvenli kip: her komuttan önce proje klasörünün anlık görüntüsü alınıyor. Onaylanan bir komut (ya da çalıştırdığı test kodu) dosya silerse, değiştirirse ya da oluşturursa terminal çıktısının altında listeleniyor, model de bunu kullanıcıya söylüyor; cevabın "Geri al"ı komutun yaptıklarını da geri alıyor.
 - "Hep izin ver" denmiş bir komut, Atlas o zamandan beri sorulmadan dosya değiştirdiyse uyarıyla yeniden soruluyor: komut o dosyaları çalıştırabilir.
@@ -42,6 +43,7 @@
 - Veritabanı açılamazsa uygulama asılı kalmıyor, ne olduğunu söylüyor.
 
 ### Diğer
+- Kod alanında git: proje bir git deposuysa **Değişiklikler** sekmesi son commit'e göre değişen dosyaları ve satır satır farkı gösteriyor. Seçili dosyalarla commit, commit mesajı önerisi, yeni dal açma ve dosyayı son commit'teki haline döndürme (şimdiki hali çöp kutusuna gider). Commit yalnızca senin tıklamanla atılır; push yoktur.
 - Yazı boyutu ayarı: Ayarlar → Genel ya da Ctrl + / Ctrl - / Ctrl 0.
 - Sohbeti yazdırma: dışa aktarma menüsünde "Yazdır…".
 - Veritabanı sonucunu kopyalama ve CSV olarak kaydetme; Türkçede Excel'in beklediği biçimde (noktalı virgül, ondalık virgül).

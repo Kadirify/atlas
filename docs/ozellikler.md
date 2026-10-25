@@ -53,6 +53,7 @@ Sol menüdeki **Kod** bölümünden bir proje klasörü açarsın. Atlas o proje
 - Atlas bir cevapta en çok 12 araç turu atar. Sınıra gelirse bunu adımlarda görürsün; cevabın altındaki **Devam et** ile kaldığı yerden sürdürür.
 - **Güvenli kip:** her komuttan önce proje klasörünün anlık görüntüsü alınır. Komut (ya da çalıştırdığı test kodu) bir dosyayı silerse ya da değiştirirse terminalin altında görürsün.
 - Bir cevapta yaptığı bütün dosya değişikliklerini, komutların yaptıkları dahil, tek düğmeyle **geri alırsın**.
+- **Git:** proje bir git deposuysa dosya ağacının üstündeki **Değişiklikler** sekmesinde son commit'e göre değişen dosyaları görürsün; dosyaya tıklayınca farkı satır satır açılır. Dosyaları seçip mesajını yazarak commit atar, yeni dal açarsın. İstersen Atlas seçili değişikliklere bakıp deponun üslubunda bir commit mesajı önerir. Bir dosyadaki değişikliği geri çevirirsen şimdiki hali çöp kutusuna gider. Atlas kendiliğinden commit atmaz ve hiçbir zaman push yapmaz.
 - Proje köküne `ATLAS.md` koyarsan ("Bu projede TypeScript kullan" gibi) Atlas bu kuralları her seferinde okur.
 - **Silme aracı yok**: Atlas dosya silmez, bilinen silme komutlarını çalıştırmaz; bunu senin yapman gerektiğini söyler. Komutların sınırları için: [Gizlilik ve güvenlik](gizlilik-ve-guvenlik.md).
 - `package.json`, `.git`, `.bat` gibi başka programların kendiliğinden çalıştırdığı dosyalar "hep izin ver" desen de her seferinde sorulur.

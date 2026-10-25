@@ -3,6 +3,7 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react
 import { DEFAULT_PERSONA_ID, EXPORT_FORMATS, ROUND_LIMIT_TOOL, UNTITLED_CONVERSATION, type ExportFormat, type Message, type Persona } from '@shared/types'
 import { CodeViewer, FilesToggle, FileTree } from '@/components/CodeParts'
 import DocPane from '@/components/DocPane'
+import { GitDiffViewer } from '@/components/GitParts'
 import FindBar from '@/components/FindBar'
 import MemoryMenu from '@/components/MemoryMenu'
 import SlashMenu, { type SlashMenuHandle } from '@/components/SlashMenu'
@@ -1123,7 +1124,17 @@ export default function ChatView() {
       {activeId && <TrustStrip key={activeId} conversationId={activeId} />}
       <Composer busy={busy} model={model} attachments={attachments} onSend={handleSend} onStop={() => void stop()} />
     </main>
-    {docId ? <DocPane attachmentId={docId} /> : viewing ? <CodeViewer folderId={viewing.folderId} path={viewing.path} /> : sqlShown && <SqlPane />}
+    {docId ? (
+      <DocPane attachmentId={docId} />
+    ) : viewing ? (
+      viewing.diff ? (
+        <GitDiffViewer folderId={viewing.folderId} path={viewing.path} />
+      ) : (
+        <CodeViewer folderId={viewing.folderId} path={viewing.path} />
+      )
+    ) : (
+      sqlShown && <SqlPane />
+    )}
     </>
   )
 }

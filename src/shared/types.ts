@@ -359,6 +359,47 @@ export interface FileApproval {
   recheck?: boolean
 }
 
+/** Kod alanında git: bir dosyanın son commit'e göre durumu */
+export type GitChangeKind = 'added' | 'modified' | 'deleted' | 'conflict'
+
+export interface GitChange {
+  /** Depo köküne göre yol (/ ile ayrılmış) */
+  path: string
+  kind: GitChangeKind
+  /** Gizli bilgi içerebilen dosya (.env, anahtar): içeriği gösterilmez, commit için kendiliğinden seçilmez */
+  secret: boolean
+}
+
+/** Bağlı proje klasörünün git durumu */
+export interface GitStatus {
+  /** Bulunulan dal; bir dalda değilse null */
+  branch: string | null
+  /** Depoda henüz hiç commit yok */
+  initial: boolean
+  /** Uzak dala gönderilmemiş commit sayısı; izlenen bir uzak dal yoksa null */
+  ahead: number | null
+  changes: GitChange[]
+  /** Listeye sığmadığı için gösterilmeyen değişiklik sayısı */
+  more: number
+  /** Commit ya da dal açma sırasında çalışacak depo betikleri (hook) */
+  hooks: string[]
+  /** Yarım kalmış bir birleştirme, rebase ya da benzeri bir işlem var: buradan commit yapılamaz */
+  busy: boolean
+  /** Deponun ayarları git çalışırken program başlatıyorsa o ayarların adları: Atlas bu depoda git çalıştırmaz */
+  blocked: string[]
+}
+
+/** Değişen bir dosyanın son commit'teki ve şimdiki hali */
+export interface GitFileDiff {
+  path: string
+  /** Son commit'teki içerik; dosya yeniyse null */
+  before: string | null
+  /** Şimdiki içerik; dosya silindiyse null */
+  after: string | null
+  /** İçerik gösterilemiyorsa nedeni (gizli, metin olmayan ya da çok büyük dosya) */
+  note: string
+}
+
 /** Bir sohbette verilmiş "hep izin ver" izinleri (uygulama kapanınca unutulur) */
 export interface TrustState {
   /** Dosya oluşturma, değiştirme ve taşıma sorulmadan yapılıyor */
@@ -988,6 +1029,20 @@ export interface Api {
     open(folderId: string, rel: string): Promise<'opened' | 'revealed'>
     /** Dosyayı Gezgin'de gösterir */
     reveal(folderId: string, rel: string): Promise<void>
+  }
+  /** Kod alanında git. Commit, dal açma ve geri çevirme yalnızca kullanıcının tıklamasıyla yapılır; push yoktur. */
+  git: {
+    /** Proje klasörü bir git deposunun köküyse durumu; değilse ya da git kurulu değilse null */
+    status(folderId: string): Promise<GitStatus | null>
+    diff(folderId: string, path: string): Promise<GitFileDiff>
+    /** Seçilen dosyalar için commit mesajı önerir (model çalışır). conversationId verilirse o sohbetin modeli kullanılır. */
+    suggest(folderId: string, paths: string[], conversationId: string | null): Promise<string>
+    /** Seçilen dosyaların şimdiki halini commit eder; yeni durumu döndürür */
+    commit(folderId: string, paths: string[], message: string): Promise<GitStatus | null>
+    /** Bulunulan yerden yeni bir dal açar ve ona geçer */
+    createBranch(folderId: string, name: string): Promise<GitStatus | null>
+    /** Dosyadaki değişikliği geri çevirir: şimdiki hali çöp kutusuna gider, son commit'teki hali geri gelir */
+    discard(folderId: string, path: string): Promise<GitStatus | null>
   }
   sql: {
     list(): Promise<SqlConnection[]>

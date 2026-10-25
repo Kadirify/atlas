@@ -250,6 +250,28 @@ ${region}`,
     binaryFile: 'Bu dosya metin değil; içeriği gösterilemiyor.'
   },
 
+  /** Kod alanında git (services/git.ts) */
+  git: {
+    notARepo: 'Bu klasör bir git deposunun kökü değil.',
+    blocked: (keys: string) => `Bu deponun ayarları git çalışırken başka programlar başlatıyor (${keys}). Atlas bu depoda git çalıştırmaz.`,
+    timeout: 'Git zamanında cevap vermedi.',
+    failed: (detail: string) => `Git hata verdi: ${detail}`,
+    tooLarge: 'Dosya burada karşılaştırılamayacak kadar büyük.',
+    noPaths: 'En az bir dosya seç.',
+    unknownPath: (path: string) => `${path} değişen dosyalar arasında değil; listeyi yenile.`,
+    noMessage: 'Commit mesajı boş olamaz.',
+    messageTooLong: 'Commit mesajı çok uzun.',
+    busy: 'Yarım kalmış bir birleştirme, rebase ya da çözülmemiş çakışma var. Önce onu terminalden bitir.',
+    detached: 'Şu an bir dalda değilsin. Commit yapmadan önce yeni bir dal aç.',
+    nothingToCommit: 'Seçilen dosyalarda commit edilecek değişiklik yok.',
+    noIdentity:
+      'Git\'te adın ve e-postan ayarlı değil. Terminalde bir kez şunları çalıştır:\ngit config --global user.name "Adın"\ngit config --global user.email "e-posta adresin"',
+    commitFailed: (detail: string) => `Commit yapılamadı:\n${detail}`,
+    badBranchName: 'Bu ad dal adı olamaz. Harf, rakam, tire, nokta ve / kullan; boşluk kullanma.',
+    branchExists: (name: string) => `"${name}" adında bir dal zaten var.`,
+    discardFailed: (path: string, detail: string) => `${path} son commit'teki haline getirilemedi; şimdiki hali çöp kutusunda. ${detail}`
+  },
+
   /** Veritabanı araçları (services/sql.ts) */
   sql: {
     defs: {

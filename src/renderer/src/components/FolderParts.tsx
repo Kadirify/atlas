@@ -165,7 +165,8 @@ function CommandEffects({ effects }: { effects: NonNullable<NonNullable<ToolStep
   )
 }
 
-function Diff({ before, after }: { before: string | null; after: string }) {
+/** Satır satır fark. fill: kart içinde değil, yan panelde bütün yüksekliği kaplayarak gösterilir. */
+export function Diff({ before, after, fill = false }: { before: string | null; after: string; fill?: boolean }) {
   const t = useT()
   const rows = useMemo(() => {
     if (before === null) return after.split('\n').map((text) => ({ type: 'add' as const, text }))
@@ -175,9 +176,9 @@ function Diff({ before, after }: { before: string | null; after: string }) {
 
   if (!rows) {
     return (
-      <div>
+      <div className={cn(fill && 'p-3')}>
         <p className="mb-1.5 text-xs text-ink-3">{t.chat.diff.tooLarge}</p>
-        <pre className="max-h-64 overflow-auto rounded-lg border border-line bg-bg p-3 font-mono text-xs whitespace-pre-wrap text-ink">
+        <pre className={cn('bg-bg p-3 font-mono text-xs whitespace-pre-wrap text-ink', !fill && 'max-h-64 overflow-auto rounded-lg border border-line')}>
           {after.slice(0, 20_000)}
         </pre>
       </div>
@@ -185,7 +186,7 @@ function Diff({ before, after }: { before: string | null; after: string }) {
   }
 
   return (
-    <div className="max-h-72 overflow-auto rounded-lg border border-line bg-bg font-mono text-xs leading-relaxed" role="group" aria-label={t.chat.diff.label}>
+    <div className={cn('bg-bg font-mono text-xs leading-relaxed', fill ? 'min-h-full py-2' : 'max-h-72 overflow-auto rounded-lg border border-line')} role="group" aria-label={t.chat.diff.label}>
       {rows.map((row, i) =>
         row.type === 'skip' ? (
           <div key={i} className="px-3 py-1 text-ink-3 select-none">

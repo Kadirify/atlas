@@ -245,6 +245,28 @@ ${region}`,
     binaryFile: 'This file is not text; its contents cannot be shown.'
   },
 
+  /** Git in the code area (services/git.ts) */
+  git: {
+    notARepo: 'This folder is not the root of a git repository.',
+    blocked: (keys: string) => `This repository's settings make git start other programs (${keys}). Atlas does not run git in this repository.`,
+    timeout: 'Git did not respond in time.',
+    failed: (detail: string) => `Git reported an error: ${detail}`,
+    tooLarge: 'The file is too large to compare here.',
+    noPaths: 'Select at least one file.',
+    unknownPath: (path: string) => `${path} is not among the changed files; refresh the list.`,
+    noMessage: 'The commit message cannot be empty.',
+    messageTooLong: 'The commit message is too long.',
+    busy: 'There is an unfinished merge, rebase or unresolved conflict. Finish it in your terminal first.',
+    detached: 'You are not on a branch. Create a new branch before committing.',
+    nothingToCommit: 'There is nothing to commit in the selected files.',
+    noIdentity:
+      'Your name and email are not set in git. Run these once in a terminal:\ngit config --global user.name "Your name"\ngit config --global user.email "your email address"',
+    commitFailed: (detail: string) => `The commit failed:\n${detail}`,
+    badBranchName: 'This cannot be a branch name. Use letters, digits, hyphens, dots and /; no spaces.',
+    branchExists: (name: string) => `A branch named "${name}" already exists.`,
+    discardFailed: (path: string, detail: string) => `${path} could not be restored from the last commit; its current version is in the recycle bin. ${detail}`
+  },
+
   /** Database tools (services/sql.ts) */
   sql: {
     defs: {

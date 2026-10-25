@@ -82,11 +82,14 @@ interface AppState {
   loadFolders(): Promise<void>
   /** Açık sohbete (ya da henüz başlamamış yeni sohbete) klasör bağlar; null bağlantıyı kaldırır. */
   attachFolder(folderId: string | null): Promise<void>
-  /** Kod alanında sağda görüntülenen dosya */
-  codeFile: { folderId: string; path: string } | null
+  /** Kod alanında sağda görüntülenen dosya; diff: içeriği yerine son commit'e göre değişikliği gösterilir */
+  codeFile: { folderId: string; path: string; diff?: boolean } | null
+  /** Git durumunu okuyan yerlerin yenilenmesi için sayaç (commit ya da geri çevirmeden sonra artar) */
+  gitTick: number
+  bumpGit(): void
   /** Proje dosya ağacı açık mı */
   filesOpen: boolean
-  openCodeFile(file: { folderId: string; path: string } | null): void
+  openCodeFile(file: { folderId: string; path: string; diff?: boolean } | null): void
   setFilesOpen(open: boolean): void
   /** Seçilen proje klasöründe Atlas Code ile yeni bir geliştirme sohbeti başlatır */
   startCode(folderId: string): Promise<void>
@@ -283,6 +286,11 @@ export const useApp = create<AppState>((set, get) => ({
 
   codeFile: null,
   filesOpen: false,
+  gitTick: 0,
+
+  bumpGit() {
+    set((s) => ({ gitTick: s.gitTick + 1 }))
+  },
 
   openCodeFile(file) {
     // Dosya görüntüleyici ile belge paneli aynı yeri kullanır; dosya açılınca belge paneli kapanır.

@@ -180,6 +180,42 @@ export const chat = {
     quoteIntro: (path: string) => `${path} dosyasındaki şu kısım hakkında:`
   },
 
+  /** Kod alanında git: değişiklikler sekmesi, fark görünümü, commit */
+  git: {
+    tabFiles: 'Dosyalar',
+    tabChanges: 'Değişiklikler',
+    changesCount: (n: number) => `${n} değişiklik`,
+    noBranch: 'Bir dalda değilsin',
+    initial: 'Bu depoda henüz commit yok.',
+    ahead: (n: number) => `${n} commit gönderilmedi. Atlas push yapmaz; göndermeyi sen yaparsın.`,
+    newBranch: 'Yeni dal aç',
+    newBranchPlaceholder: 'dal-adi',
+    createBranch: 'Aç',
+    clean: 'Değişiklik yok: dosyalar son commit ile aynı.',
+    more: (n: number) => `ve ${n} değişiklik daha (listelenmedi)`,
+    selectAll: 'Hepsini seç (gizli dosyalar hariç)',
+    select: (path: string) => `${path} dosyasını commit'e ekle`,
+    kinds: { added: 'Yeni dosya', modified: 'Değişti', deleted: 'Silindi', conflict: 'Çakışma' },
+    secret: 'Gizli bilgi içerebilir; kendiliğinden seçilmez',
+    messagePlaceholder: 'Commit mesajı',
+    suggest: 'Mesaj öner',
+    suggestHint: 'Atlas seçili değişikliklere bakıp bir commit mesajı önerir',
+    commit: (n: number) => `Commit (${n})`,
+    committed: 'Commit yapıldı.',
+    hooks: (names: string) => `Commit sırasında depodaki betikler de çalışır: ${names}`,
+    blocked: (keys: string) =>
+      `Bu deponun ayarları git çalışırken başka programlar başlatıyor (${keys}). Güvenlik için Atlas bu depoda git çalıştırmaz; git işlemlerini kendi terminalinden yap.`,
+    busy: 'Yarım kalmış bir birleştirme ya da rebase var. Onu terminalden bitirene kadar buradan commit yapılamaz.',
+    detachedHint: 'Commit yapmak için önce yeni bir dal aç.',
+    diffLabel: 'Değişiklik görünümü',
+    noDiff: 'Bu dosyada son commit’e göre değişiklik yok.',
+    discard: 'Geri çevir',
+    discardHint: 'Dosyayı son commit’teki haline döndürür',
+    discardConfirm: 'Şimdiki hali çöp kutusuna gider, son commit’teki hali geri gelir.',
+    discardConfirmNew: 'Bu yeni dosya çöp kutusuna gider.',
+    closeDiff: 'Değişiklik görünümünü kapat'
+  },
+
   sql: {
     copyResult: 'Kopyala',
     copiedResult: 'Kopyalandı',

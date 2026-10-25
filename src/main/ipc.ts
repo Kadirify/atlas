@@ -27,7 +27,7 @@ import { DOCUMENT_FORMATS, EXPORT_FORMATS, LOCK_MINUTES, ZOOM_STEPS, documentVie
 import { CATALOG, catalog, recommend, atlasRecipe, isAtlasModel, recipesVersion } from './services/catalog'
 import type { FilesService } from './services/files'
 import type { ChatService } from './services/chat'
-import { scanHardware } from './services/hardware'
+import { scanHardware, toolContextSize } from './services/hardware'
 import type { JobService } from './services/jobs'
 import { EMBEDDING_MODEL, EMBEDDING_SIZE_GB, type MemoryService } from './services/memory'
 import { BUILTIN_PERSONAS, builtinPersonas, findPersona, listPersonas, personaInstructions, sanitizePersona } from './services/personas'
@@ -37,6 +37,7 @@ import { isRunnable, listDir, readForView } from './services/code'
 import { resolveInside } from './services/files'
 import { buildApp, buildImproveMessages } from './services/studio'
 import { formatDiagnostics } from './services/diagnostics'
+import { cleanCommitMessage, commitMessagePrompt, GitError, GitService } from './services/git'
 import { toDelimited } from '@shared/delimited'
 import { log, logFolder, logSummary } from './log'
 import type { WhatsAppService } from './services/whatsapp'
@@ -95,7 +96,8 @@ function handle<A extends unknown[], R>(channel: string, fn: (...args: A) => R |
       return { ok: true, data: await fn(...(args as A)) }
     } catch (err) {
       // Kilitliyken reddedilen istekler olağandır; diğer hatalar kayda geçer (yalnızca hata iletisi, istek içeriği değil).
-      if (!locked) log('warn', `${channel} failed`, err instanceof Error ? `${err.name}: ${err.message}` : err)
+      // Git hatalarının iletisinde dosya adları ve depo betiklerinin çıktısı olabilir; kayda yalnızca türü yazılır.
+      if (!locked) log('warn', `${channel} failed`, err instanceof GitError ? 'GitError' : err instanceof Error ? `${err.name}: ${err.message}` : err)
       return { ok: false, error: ollama.describeError(err) }
     }
   })
@@ -284,6 +286,56 @@ export function registerIpc(
     const folder = db.getFolder(folderId)
     if (!folder) throw new Error(L().tools.code.noFolder)
     return readForView(folder.path, String(rel ?? ''))
+  })
+
+  // --- Kod alanı: git. Commit, dal açma ve geri çevirme yalnızca kullanıcının tıklamasıyla yapılır; model bu uçları
+  // kullanmaz, push hiç yoktur. Geri çevrilen dosyanın şimdiki hali çöp kutusuna gider. ---
+  const git = new GitService((full) => shell.trashItem(full))
+  const projectPath = (folderId: string): string => {
+    const folder = db.getFolder(String(folderId))
+    if (!folder) throw new Error(L().tools.code.noFolder)
+    return folder.path
+  }
+  handle('git:status', (folderId: string) => git.status(projectPath(folderId)))
+  handle('git:diff', (folderId: string, path: string) => git.diff(projectPath(folderId), String(path ?? '')))
+  handle('git:commit', async (folderId: string, paths: string[], message: string) => {
+    const root = projectPath(folderId)
+    await git.commit(root, paths, String(message ?? ''))
+    return git.status(root)
+  })
+  handle('git:createBranch', async (folderId: string, name: string) => {
+    const root = projectPath(folderId)
+    await git.createBranch(root, String(name ?? ''))
+    return git.status(root)
+  })
+  handle('git:discard', async (folderId: string, path: string) => {
+    const root = projectPath(folderId)
+    await git.discard(root, String(path ?? ''))
+    return git.status(root)
+  })
+  handle('git:suggest', async (folderId: string, paths: string[], conversationId: string | null) => {
+    const { system, user } = commitMessagePrompt(await git.commitContext(projectPath(folderId), paths))
+    // Sohbetin modeli ve araçlı sohbetin bağlam boyu kullanılır: bellekteki model yeniden yüklenmesin.
+    const model = atlasOrDefault(conversationId ? db.getConversation(String(conversationId))?.model : null)
+    const ask = async (): Promise<string> =>
+      cleanCommitMessage(
+        await ollama.chatOnce({
+          model,
+          numPredict: 80,
+          numCtx: await toolContextSize(),
+          messages: [
+            { role: 'system', content: system },
+            { role: 'user', content: user }
+          ]
+        })
+      )
+    try {
+      return await ask()
+    } catch (err) {
+      // Ollama kapalıysa başlatılıp bir kez daha denenir.
+      if (!ollama.isUnreachable(err) || !(await ollama.ensureRunning())) throw err
+      return ask()
+    }
   })
 
   // --- Veritabanı bağlantıları (Kod alanı) ---

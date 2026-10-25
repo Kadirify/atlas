@@ -2,6 +2,7 @@ import { ChevronDown, ChevronRight, Code2, Database, ExternalLink, File, FileLoc
 import { hasCodeModel } from '../lib/codeModel'
 import { useCallback, useEffect, useState } from 'react'
 import type { CodeEntry, CodeFile } from '@shared/types'
+import { GitChanges, useGitStatus } from '@/components/GitParts'
 import { Button, IconButton, Notice } from '@/components/ui'
 import { cn, errorText } from '@/lib/format'
 import { useT } from '@/lib/useT'
@@ -133,14 +134,22 @@ export function FilesToggle() {
   )
 }
 
-/** Proje dosya ağacı: klasörler tıklanınca açılır, dosyaya tıklanınca sağda görüntülenir. */
+/**
+ * Proje dosya ağacı: klasörler tıklanınca açılır, dosyaya tıklanınca sağda görüntülenir. Klasör bir git deposuysa
+ * ikinci bir sekmede son commit'e göre değişen dosyalar ve commit kutusu vardır.
+ */
 export function FileTree({ folderId, name }: { folderId: string; name: string }) {
   const t = useT()
   const c = t.chat.codeArea
   const [children, setChildren] = useState<Record<string, CodeEntry[]>>({})
   const [open, setOpen] = useState<Record<string, boolean>>({})
   const [error, setError] = useState('')
-  const active = useApp((s) => (s.codeFile?.folderId === folderId ? s.codeFile.path : null))
+  const git = useGitStatus(folderId)
+  const [tab, setTab] = useState<'files' | 'changes'>('files')
+  // Depo değilse (ya da git kurulu değilse) sekmeler hiç görünmez; git hata verdiyse hata "Değişiklikler"de okunur.
+  const hasGit = !!git.status || (git.status === undefined && !!git.error)
+  const changeCount = git.status ? git.status.changes.length + git.status.more : 0
+  const active = useApp((s) => (s.codeFile?.folderId === folderId && !s.codeFile.diff ? s.codeFile.path : null))
   const openCodeFile = useApp((s) => s.openCodeFile)
   const setFilesOpen = useApp((s) => s.setFilesOpen)
   const [menu, setMenu] = useState<{ entry: CodeEntry; x: number; y: number } | null>(null)
@@ -161,12 +170,17 @@ export function FileTree({ folderId, name }: { folderId: string; name: string })
   useEffect(() => {
     setChildren({})
     setOpen({})
+    setTab('files')
     void load('')
   }, [load])
 
   const refresh = (): void => {
     void load('')
     for (const [rel, isOpen] of Object.entries(open)) if (isOpen) void load(rel)
+  }
+  const refreshAll = (): void => {
+    refresh()
+    git.refresh()
   }
 
   // Atlas bir dosya oluşturunca ya da cevap bitince ağaç kendiliğinden yenilenir.
@@ -222,18 +236,46 @@ export function FileTree({ folderId, name }: { folderId: string; name: string })
         <span className="min-w-0 flex-1 truncate text-[13px] font-semibold text-ink" title={name}>
           {name}
         </span>
-        <IconButton label={c.refresh} onClick={refresh}>
+        <IconButton label={c.refresh} onClick={refreshAll}>
           <RefreshCw size={13} aria-hidden />
         </IconButton>
         <IconButton label={c.hideFiles} onClick={() => setFilesOpen(false)}>
           <X size={14} aria-hidden />
         </IconButton>
       </header>
-      <div className="min-h-0 flex-1 overflow-y-auto px-1.5 pb-3">
-        {error && <p className="px-2 py-2 text-[13px] text-danger">{error}</p>}
-        {!error && children[''] && children[''].length === 0 && <p className="px-2 py-2 text-[13px] text-ink-3">{c.emptyFolder}</p>}
-        <ul role="tree">{render('', 0)}</ul>
-      </div>
+      {hasGit && (
+        <div role="tablist" className="mx-2 mb-2 flex shrink-0 gap-0.5 rounded-lg bg-surface-2 p-0.5">
+          {(['files', 'changes'] as const).map((id) => (
+            <button
+              key={id}
+              type="button"
+              role="tab"
+              aria-selected={tab === id}
+              onClick={() => setTab(id)}
+              className={cn(
+                'flex h-6 min-w-0 flex-1 items-center justify-center gap-1 rounded-md px-1.5 text-xs font-medium transition-colors',
+                tab === id ? 'bg-surface text-ink' : 'text-ink-3 hover:text-ink'
+              )}
+            >
+              <span className="truncate">{id === 'files' ? t.chat.git.tabFiles : t.chat.git.tabChanges}</span>
+              {id === 'changes' && changeCount > 0 && (
+                <span className="shrink-0 rounded-full bg-accent-soft px-1.5 text-[11px] leading-4 text-accent tabular-nums" title={t.chat.git.changesCount(changeCount)}>
+                  {changeCount}
+                </span>
+              )}
+            </button>
+          ))}
+        </div>
+      )}
+      {hasGit && tab === 'changes' ? (
+        <GitChanges folderId={folderId} git={git} />
+      ) : (
+        <div className="min-h-0 flex-1 overflow-y-auto px-1.5 pb-3">
+          {error && <p className="px-2 py-2 text-[13px] text-danger">{error}</p>}
+          {!error && children[''] && children[''].length === 0 && <p className="px-2 py-2 text-[13px] text-ink-3">{c.emptyFolder}</p>}
+          <ul role="tree">{render('', 0)}</ul>
+        </div>
+      )}
       {menu && <EntryMenu folderId={folderId} entry={menu.entry} x={menu.x} y={menu.y} onClose={() => setMenu(null)} />}
     </nav>
   )

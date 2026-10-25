@@ -42,6 +42,7 @@ src/
       generate.ts       Akışı tekrar döngüsüne karşı koruyan sarmalayıcı
       files.ts          Klasör araçları: listele, oku, ara, düzenle, yaz, taşı, komut
       code.ts           Kod alanı: dosya ağacı, dosya görüntüleme, komut çalıştırma
+      git.ts            Kod alanında git: durum, fark, commit, dal açma, geri çevirme (push yok)
       sql.ts            Veritabanı bağlantıları ve sürücüler (mssql, pg, mysql2, node:sqlite)
       sqliteRunner.ts   SQLite sorgusunu ayrı süreçte çalıştırma; Durdur'da ve 30 sn'de kapatma
       snapshot.ts       Komutlar için güvenli kip: komuttan önce klasörün anlık görüntüsü, sonra farkı

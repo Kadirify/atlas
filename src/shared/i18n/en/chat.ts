@@ -108,6 +108,42 @@ export const chat: Dict['chat'] = {
     emptySheet: 'This sheet is empty.'
   },
 
+  /** Git in the code area: changes tab, diff view, commit */
+  git: {
+    tabFiles: 'Files',
+    tabChanges: 'Changes',
+    changesCount: (n: number) => (n === 1 ? '1 change' : `${n} changes`),
+    noBranch: 'You are not on a branch',
+    initial: 'This repository has no commits yet.',
+    ahead: (n: number) => `${n === 1 ? '1 commit has' : `${n} commits have`} not been pushed. Atlas never pushes; that is up to you.`,
+    newBranch: 'Create a branch',
+    newBranchPlaceholder: 'branch-name',
+    createBranch: 'Create',
+    clean: 'No changes: the files match the last commit.',
+    more: (n: number) => `and ${n} more ${n === 1 ? 'change' : 'changes'} (not listed)`,
+    selectAll: 'Select all (except secret files)',
+    select: (path: string) => `Include ${path} in the commit`,
+    kinds: { added: 'New file', modified: 'Changed', deleted: 'Deleted', conflict: 'Conflict' },
+    secret: 'May hold secrets; never selected automatically',
+    messagePlaceholder: 'Commit message',
+    suggest: 'Suggest',
+    suggestHint: 'Atlas looks at the selected changes and suggests a commit message',
+    commit: (n: number) => `Commit (${n})`,
+    committed: 'Committed.',
+    hooks: (names: string) => `The repository’s own scripts also run when you commit: ${names}`,
+    blocked: (keys: string) =>
+      `This repository’s settings make git start other programs (${keys}). For safety, Atlas does not run git here; use your own terminal for git.`,
+    busy: 'There is an unfinished merge or rebase. You cannot commit from here until you finish it in your terminal.',
+    detachedHint: 'Create a new branch before committing.',
+    diffLabel: 'Change view',
+    noDiff: 'This file has no changes since the last commit.',
+    discard: 'Discard',
+    discardHint: 'Restores the file from the last commit',
+    discardConfirm: 'The current version goes to the recycle bin and the last committed version comes back.',
+    discardConfirmNew: 'This new file goes to the recycle bin.',
+    closeDiff: 'Close the change view'
+  },
+
   export: {
     print: 'Print…',
     printed: 'Sent to the printer',

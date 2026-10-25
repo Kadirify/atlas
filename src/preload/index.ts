@@ -99,6 +99,14 @@ const api: Api = {
     undo: (messageId) => call('folders:undo', messageId),
     onCommandOutput: (cb) => on('folders:commandOutput', cb)
   },
+  git: {
+    status: (folderId) => call('git:status', folderId),
+    diff: (folderId, path) => call('git:diff', folderId, path),
+    suggest: (folderId, paths, conversationId) => call('git:suggest', folderId, paths, conversationId),
+    commit: (folderId, paths, message) => call('git:commit', folderId, paths, message),
+    createBranch: (folderId, name) => call('git:createBranch', folderId, name),
+    discard: (folderId, path) => call('git:discard', folderId, path)
+  },
   code: {
     list: (folderId, rel) => call('code:list', folderId, rel),
     read: (folderId, rel) => call('code:read', folderId, rel),
