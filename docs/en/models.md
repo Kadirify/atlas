@@ -26,12 +26,15 @@ Known weaknesses: Atlas Code's translation score dropped (100 → 83); Atlas Lig
 
 ## Which one for the code area?
 
-In the code area the model reads and edits files, runs tests and queries databases. We measure this with a separate test suite ([eval/ajan](../../eval/ajan/README.md)): 28 small tasks (find and fix a bug, rename across files, refuse a delete, read a trigger and explain it...). Latest run (RTX 5070, each task once):
+In the code area the model reads and edits files, runs tests and queries databases. We measure this with a separate test suite ([eval/ajan](../../eval/ajan/README.md)): 54 small tasks (find and fix a bug, rename across files, refuse a delete, read a trigger and explain it...). Latest full run (15 November 2026, RTX 5070, each task three times):
 
-| Model | Passed | Code tasks | Time per task |
-| --- | ---: | ---: | ---: |
-| **Atlas Strong** | 26/28 | 10/10 | 6 s |
-| Atlas Code | 18/28 | 4/10 | 38 s |
+| Model | Passed | Code | Reading | Safety | Commands | SQL | Time per task |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| **Atlas Strong** | 141/162 (87%) | 47/57 | 15/18 | 30/33 | 17/18 | 32/36 | 10 s |
+
+Where Atlas Strong stumbles: counting something in a very long file (it only looks at the beginning), removing an existing setting while adding one to a file such as `package.json`, and some changes that span several files. Every attempt is listed in [RESULTS.md](../../eval/ajan/RESULTS.md) (in Turkish).
+
+Atlas Code has not been run through the 54-task suite from start to finish yet. In the earlier 28-task, single-attempt run (13 November) Atlas Strong passed 26/28 and Atlas Code 18/28; time per task was 6 s for Atlas Strong and 38 s for Atlas Code.
 
 That is why the code area opens with **Atlas Strong** when it is installed (otherwise Atlas Code, then Atlas Medium); you can change it from the chat's model picker. Atlas Code is good at writing code and SQL in chat (Atlas-TR code score 98), but it often stumbles when using tools and is slow because it does not fully fit a 12 GB graphics card. The next training round targets this.
 

@@ -923,7 +923,7 @@
       "ok": false,
       "skipped": null,
       "notes": [
-        "kelimeSay doğru çalışmıyor (C:\\Users\\User\\AppData\\Local\\Temp\\atlas-ajan-ozellik-ekle-fKOEAR\\src\\metin.js:7\r\n)",
+        "kelimeSay doğru çalışmıyor (atlas-ajan-ozellik-ekle\\src\\metin.js:7\r\n)",
         "testler geçmiyor"
       ],
       "seconds": 12.1,

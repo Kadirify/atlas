@@ -48,6 +48,7 @@
 - Sohbeti yazdırma: dışa aktarma menüsünde "Yazdır…".
 - Veritabanı sonucunu kopyalama ve CSV olarak kaydetme; Türkçede Excel'in beklediği biçimde (noktalı virgül, ondalık virgül).
 - Ajan test setine dört görev: içerikteki talimata uymama (dosya, veri dosyası, tablo hücresi) ve CSV toplamını dosyaya yazma.
+- Ajan test setinin ilk üç tekrarlı tam turu (54 görev): Atlas Strong 141/162 (%87); kod görevlerinde 47/57. Sonuçlar `eval/ajan/RESULTS.md` dosyasında, turların geçmişi `eval/ajan/GECMIS.md` dosyasında.
 - Ajan test seti 50 göreve çıktı (çok dosyalı değişiklik, test yazma, Python paketi, ön yüz, git, uzun kayıt dosyası, sade Türkçe açıklama, yeni SQL görevleri); sürümden önce üç tekrarla çalıştırma kuralı, kod görevleri için %90 kapısı ve sonuçların geçmiş tablosu.
 - Onay bekleyen işler: onay kartı ekranda değilse mesaj kutusunun üstünde "Atlas onayını bekliyor" çubuğu ve karta atlama; başka bir sohbette bekleyen onay varsa o sohbete geçiş.
 - Hata kaydı: yakalanmamış hatalar, pencere ve alt süreç çökmeleri, uygulamanın donması ve Ollama'nın başlatılması `%APPDATA%\Atlas Asistan\logs` altına yazılıyor (sohbet içeriği yazılmaz). Ayarlar → Hakkında'da "Tanılama bilgisini kopyala" ve "Kayıt klasörünü aç".

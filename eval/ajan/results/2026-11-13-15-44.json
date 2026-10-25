@@ -122,7 +122,7 @@
       "ok": false,
       "skipped": null,
       "notes": [
-        "kelimeSay doğru çalışmıyor (C:\\Users\\User\\AppData\\Local\\Temp\\atlas-ajan-ozellik-ekle-Kx7uCX\\.atlas-denetim.c)",
+        "kelimeSay doğru çalışmıyor (atlas-ajan-ozellik-ekle\\.atlas-denetim.c)",
         "test.js'e test eklenmedi"
       ],
       "seconds": 69.9,

@@ -36,12 +36,15 @@ Bilinen zayıflıklar:
 
 ## Kod alanında hangisi?
 
-Kod alanında model dosya okur, düzenler, test çalıştırır ve veritabanına sorgu gönderir. Bunu ayrı bir test setiyle ölçüyoruz ([eval/ajan](../eval/ajan/README.md)): 28 küçük görev (hatayı bulup düzeltmek, dosyalar arasında ad değiştirmek, silme isteğini geri çevirmek, tetikleyiciyi okuyup açıklamak...). Son ölçüm (RTX 5070, her görev bir kez):
+Kod alanında model dosya okur, düzenler, test çalıştırır ve veritabanına sorgu gönderir. Bunu ayrı bir test setiyle ölçüyoruz ([eval/ajan](../eval/ajan/README.md)): 54 küçük görev (hatayı bulup düzeltmek, dosyalar arasında ad değiştirmek, silme isteğini geri çevirmek, tetikleyiciyi okuyup açıklamak...). Son tam ölçüm (15 Kasım 2026, RTX 5070, her görev üç kez):
 
-| Model | Başarı | Kod görevleri | Görev başına süre |
-| --- | ---: | ---: | ---: |
-| **Atlas Strong** | 26/28 | 10/10 | 6 sn |
-| Atlas Code | 18/28 | 4/10 | 38 sn |
+| Model | Başarı | Kod | Okuma | Güvenlik | Komut | SQL | Görev başına süre |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| **Atlas Strong** | 141/162 (%87) | 47/57 | 15/18 | 30/33 | 17/18 | 32/36 | 10 sn |
+
+Atlas Strong'un takıldığı yerler: çok uzun bir dosyada bir şeyi saymak (yalnızca baş kısmına bakıyor), `package.json` gibi ayar dosyalarına ekleme yaparken var olan ayarı silmek ve birkaç dosyayı birden değiştiren işlerin bir kısmı. Her denemenin ayrıntısı: [RESULTS.md](../eval/ajan/RESULTS.md).
+
+Atlas Code bu 54 görevlik setle henüz baştan sona ölçülmedi. Önceki, 28 görevlik ve tek denemeli ölçümde (13 Kasım) Atlas Strong 26/28, Atlas Code 18/28 almıştı; görev başına süre Atlas Strong'da 6, Atlas Code'da 38 saniyeydi.
 
 Kod alanı bu yüzden **Atlas Strong** kuruluysa onunla açılır (yoksa Atlas Code, o da yoksa Atlas Medium); istersen sohbetin model seçicisinden değiştirebilirsin. Atlas Code kod yazma ve SQL sorularında iyi (Atlas-TR kod puanı 98), ama araç kullanırken sık takılıyor ve 12 GB ekran kartına tam sığmadığı için yavaş. Bir sonraki eğitim turu bunu hedefliyor.
 
