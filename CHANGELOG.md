@@ -15,6 +15,7 @@
 - Yanlış PIN sayacı yeniden başlatınca sıfırlanmıyor.
 
 ### Düzeltmeler
+- "Hep izin ver" denmiş komutlar mesaj kutusunun üstünde listeleniyor ve tek tek kaldırılıyor. Önceden komut izni ekranda görünmüyordu ve sohbet boyunca kaldırılamıyordu; düzenleme iznini kaldırmak komut izinlerini de sessizce siliyordu. Sayfa yeniden yüklenince ya da sohbetin klasörü değişince şerit gerçek izinleri gösteriyor.
 - Pencere kapandığı yerde ve boyutta açılıyor.
 - Araç turu sınırına gelince iş sessizce yarıda kalmıyor: adımlarda görünüyor ve cevabın altındaki "Devam et" ile sürüyor.
 - Uzun belgelerde ekran kartı yetiyorsa modele daha fazla metin veriliyor (12 GB'lık kartta 12 bin yerine 24 bin karakter). Klasör ya da veritabanı bağlı sohbetlerde pay değişmiyor; ek etiketi gerçek sınıra göre uyarıyor.

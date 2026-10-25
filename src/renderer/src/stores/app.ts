@@ -13,7 +13,9 @@ import {
   type MiniAppDraft,
   type Persona,
   type Settings,
-  type ToolStep
+  type ToolStep,
+  type TrustState,
+  type TrustTarget
 } from '@shared/types'
 import { errorText } from '@/lib/format'
 
@@ -62,9 +64,12 @@ interface AppState {
   thoughts: Record<string, string>
   /** Çalışan komutun canlı terminal çıktısı (komut bitince adımın içine geçer) */
   liveTerminal: Record<string, { command: string; output: string }>
-  /** "Bu sohbette hep izin ver" denmiş sohbetler */
-  trusted: Record<string, boolean>
-  revokeTrust(conversationId: string): Promise<void>
+  /** "Hep izin ver" denmiş sohbetler ve izinleri; izin kalmayan sohbetin kaydı silinir. Asıl kayıt ana süreçtedir. */
+  trust: Record<string, TrustState>
+  /** Sohbetin izinlerini ana süreçten okur */
+  refreshTrust(conversationId: string): Promise<void>
+  /** target verilmezse sohbetteki bütün izinler kalkar */
+  revokeTrust(conversationId: string, target?: TrustTarget): Promise<void>
   /** Bir cevaptaki dosya değişikliklerini geri alır */
   undo(messageId: string): Promise<number>
   errors: Record<string, string>
@@ -113,6 +118,10 @@ function without<T>(record: Record<string, T>, key: string): Record<string, T> {
   return rest
 }
 
+function withTrust(record: Record<string, TrustState>, id: string, state: TrustState): Record<string, TrustState> {
+  return state.edits || state.commands.length > 0 ? { ...record, [id]: state } : without(record, id)
+}
+
 let subscribed = false
 
 export const useApp = create<AppState>((set, get) => ({
@@ -132,11 +141,20 @@ export const useApp = create<AppState>((set, get) => ({
   streaming: {},
   thoughts: {},
   liveTerminal: {},
-  trusted: {},
+  trust: {},
 
-  async revokeTrust(conversationId) {
-    await window.api.folders.revokeTrust(conversationId)
-    set((s) => ({ trusted: without(s.trusted, conversationId) }))
+  async refreshTrust(conversationId) {
+    try {
+      const state = await window.api.folders.trust(conversationId)
+      set((s) => ({ trust: withTrust(s.trust, conversationId, state) }))
+    } catch {
+      // Okunamadıysa şerit olduğu gibi kalır.
+    }
+  },
+
+  async revokeTrust(conversationId, target) {
+    const state = await window.api.folders.revokeTrust(conversationId, target)
+    set((s) => ({ trust: withTrust(s.trust, conversationId, state) }))
   },
 
   async undo(messageId) {
@@ -258,6 +276,8 @@ export const useApp = create<AppState>((set, get) => ({
       return
     }
     await window.api.conversations.setFolder(id, folderId)
+    // İzinler klasöre özgüdür: klasör değişince ana süreç unutur, şerit de güncellenir.
+    await get().refreshTrust(id)
     await get().refreshConversations()
   },
 
@@ -301,7 +321,7 @@ export const useApp = create<AppState>((set, get) => ({
       }
     }))
     await window.api.folders.respond(approval.id, approved, remember)
-    if (approved && remember && approval.kind !== 'command') set((s) => ({ trusted: { ...s.trusted, [approval.conversationId]: true } }))
+    if (approved && remember) await get().refreshTrust(approval.conversationId)
   },
 
   setDraft(patch) {
@@ -354,6 +374,8 @@ export const useApp = create<AppState>((set, get) => ({
   async select(id) {
     // Belge paneli sohbete aittir; başka sohbete geçince kapanır.
     set({ activeId: id, view: { name: 'chat' }, docId: get().activeId === id ? get().docId : null, codeFile: get().activeId === id ? get().codeFile : null })
+    // Sayfa yeniden yüklendiyse izinler ana süreçte durur; şerit oradan okunur.
+    if (id) void get().refreshTrust(id)
     if (id && !get().messages[id]) {
       const list = await window.api.conversations.messages(id)
       set((s) => ({ messages: { ...s.messages, [id]: list } }))
@@ -456,6 +478,7 @@ export const useApp = create<AppState>((set, get) => ({
       liveSteps: without(s.liveSteps, id),
       liveTerminal: without(s.liveTerminal, id),
       approvals: without(s.approvals, id),
+      trust: without(s.trust, id),
       learned: without(s.learned, id),
       errors: without(s.errors, id)
     }))

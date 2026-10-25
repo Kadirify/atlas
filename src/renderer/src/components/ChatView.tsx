@@ -1,4 +1,4 @@
-import { ArrowDown, ArrowUp, Brain, Check, ChevronDown, Copy, Download, EyeOff, Lightbulb, Pencil, Plus, RefreshCw, ShieldAlert, ShieldCheck, Square, Undo2, X } from 'lucide-react'
+import { ArrowDown, ArrowUp, Brain, Check, ChevronDown, Copy, Download, EyeOff, Lightbulb, Pencil, Plus, RefreshCw, ShieldAlert, ShieldCheck, Square, SquareTerminal, Undo2, X } from 'lucide-react'
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { DEFAULT_PERSONA_ID, EXPORT_FORMATS, ROUND_LIMIT_TOOL, UNTITLED_CONVERSATION, type ExportFormat, type Message, type Persona } from '@shared/types'
 import { CodeViewer, FilesToggle, FileTree } from '@/components/CodeParts'
@@ -214,19 +214,63 @@ function UndoButton({ messageId, count, disabled }: { messageId: string; count: 
   )
 }
 
-/** "Bu sohbette dosya düzenlemelerine izin verildi" şeridi; izin buradan kaldırılır. */
+/** Şeritte açılmadan gösterilen komut sayısı */
+const TRUST_COMMANDS_SHOWN = 3
+
+/**
+ * Bu sohbette verilmiş "hep izin ver" izinleri: düzenleme izni ve sorulmadan çalışan komutlar. Her biri buradan
+ * tek tek kaldırılır.
+ */
 function TrustStrip({ conversationId }: { conversationId: string }) {
   const t = useT()
-  const trusted = useApp((s) => s.trusted[conversationId] === true)
+  const trust = useApp((s) => s.trust[conversationId])
   const revoke = useApp((s) => s.revokeTrust)
-  if (!trusted) return null
+  const [expanded, setExpanded] = useState(false)
+  if (!trust) return null
+  const shown = expanded ? trust.commands : trust.commands.slice(0, TRUST_COMMANDS_SHOWN)
+  const hidden = trust.commands.length - shown.length
   return (
-    <div className="mx-auto mb-1.5 flex w-full max-w-[780px] items-center gap-2 px-6 text-xs text-ink-3">
-      <ShieldCheck size={13} className="shrink-0 text-teal" aria-hidden />
-      {t.chat.approval.trustedNote}
-      <button type="button" onClick={() => void revoke(conversationId)} className="font-medium text-accent hover:underline">
-        {t.chat.approval.revoke}
-      </button>
+    <div className="mx-auto mb-1.5 w-full max-w-[780px] space-y-1 px-6 text-xs text-ink-3">
+      {trust.edits && (
+        <p className="flex items-center gap-2">
+          <ShieldCheck size={13} className="shrink-0 text-teal" aria-hidden />
+          {t.chat.approval.trustedNote}
+          <button type="button" onClick={() => void revoke(conversationId, 'edits')} className="font-medium text-accent hover:underline">
+            {t.chat.approval.revoke}
+          </button>
+        </p>
+      )}
+      {trust.commands.length > 0 && (
+        <div className="flex items-start gap-2">
+          <SquareTerminal size={13} className="mt-1 shrink-0 text-teal" aria-hidden />
+          <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
+            <span>{t.chat.approval.trustedCommands}</span>
+            <ul className="flex min-w-0 flex-wrap items-center gap-1.5" aria-label={t.chat.approval.trustedCommands}>
+              {shown.map((command) => (
+                <li key={command} className="flex max-w-[300px] min-w-0 items-center rounded-md border border-line bg-surface-2 text-ink-2">
+                  <span className="truncate py-0.5 pl-2 font-mono text-[11.5px]" title={command}>
+                    {command}
+                  </span>
+                  <button
+                    type="button"
+                    aria-label={t.chat.approval.revokeCommand(command)}
+                    title={t.chat.approval.revoke}
+                    onClick={() => void revoke(conversationId, { command })}
+                    className="mx-0.5 flex size-5 shrink-0 items-center justify-center rounded text-ink-3 transition-colors hover:bg-danger-soft hover:text-danger"
+                  >
+                    <X size={12} aria-hidden />
+                  </button>
+                </li>
+              ))}
+            </ul>
+            {trust.commands.length > TRUST_COMMANDS_SHOWN && (
+              <button type="button" aria-expanded={expanded} onClick={() => setExpanded((v) => !v)} className="font-medium text-accent hover:underline">
+                {expanded ? t.chat.approval.fewerCommands : t.chat.approval.moreCommands(hidden)}
+              </button>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   )
 }
@@ -1076,7 +1120,7 @@ export default function ChatView() {
         </div>
       )}
       <ApprovalBar activeId={activeId} cardVisible={cardVisible} onJump={jumpToCard} />
-      {activeId && <TrustStrip conversationId={activeId} />}
+      {activeId && <TrustStrip key={activeId} conversationId={activeId} />}
       <Composer busy={busy} model={model} attachments={attachments} onSend={handleSend} onStop={() => void stop()} />
     </main>
     {docId ? <DocPane attachmentId={docId} /> : viewing ? <CodeViewer folderId={viewing.folderId} path={viewing.path} /> : sqlShown && <SqlPane />}

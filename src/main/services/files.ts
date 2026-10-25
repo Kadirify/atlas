@@ -1,7 +1,7 @@
 import { createHash, randomUUID } from 'node:crypto'
 import { lstat, mkdir, readdir, readFile, realpath, rename, stat, writeFile } from 'node:fs/promises'
 import { basename, dirname, extname, join, relative, resolve, sep } from 'node:path'
-import type { CommandEffectsSummary, FileApproval, Folder, FolderCapability, IndexProgress, PlanItem, ToolStep, UndoEntry } from '@shared/types'
+import type { CommandEffectsSummary, FileApproval, Folder, FolderCapability, IndexProgress, PlanItem, ToolStep, TrustState, TrustTarget, UndoEntry } from '@shared/types'
 import type { Db, FileChunkRow } from '../db'
 import { L, locale } from '../i18n'
 import { decodeText, extractText, TEXT_EXTENSIONS } from './attachments'
@@ -608,13 +608,23 @@ export class FilesService {
   }
 
   /** Bu sohbette verilen kalıcı izinler (arayüzde gösterilir ve geri alınır) */
-  trustState(conversationId: string): { edits: boolean; commands: string[] } {
+  trustState(conversationId: string): TrustState {
     const trust = this.trust.get(conversationId)
     return { edits: trust?.edits ?? false, commands: [...(trust?.commands.keys() ?? [])] }
   }
 
-  revokeTrust(conversationId: string): void {
-    this.trust.delete(conversationId)
+  /**
+   * İzni kaldırır ve kalan izinleri döndürür. target verilmezse sohbetteki bütün izinler, 'edits' ise yalnızca
+   * düzenleme izni, komut verilirse yalnızca o komutun izni kalkar.
+   */
+  revokeTrust(conversationId: string, target?: TrustTarget): TrustState {
+    const trust = this.trust.get(conversationId)
+    if (trust) {
+      if (target === 'edits') trust.edits = false
+      else if (target) trust.commands.delete(target.command)
+      if (!target || (!trust.edits && trust.commands.size === 0)) this.trust.delete(conversationId)
+    }
+    return this.trustState(conversationId)
   }
 
   /** İzin verilmişse onay sormadan geçer; verilmemişse kullanıcıya sorar. */

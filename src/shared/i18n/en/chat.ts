@@ -363,7 +363,11 @@ export const chat: Dict['chat'] = {
     alwaysCommand: 'Always allow this command',
     alwaysCommandHint: 'The exact same command will not be asked again in this chat. Other commands are still asked.',
     trustedNote: 'File edits run without asking in this chat.',
+    trustedCommands: 'Commands that run without asking:',
     revoke: 'Revoke',
+    revokeCommand: (command: string) => `Revoke "${command}"`,
+    moreCommands: (count: number) => `${count} more`,
+    fewerCommands: 'Show fewer',
     create: 'Atlas wants to create a new file',
     change: 'Atlas wants to change a file',
     move: 'Atlas wants to move a file',
@@ -372,8 +376,7 @@ export const chat: Dict['chat'] = {
     commandNote: 'The command runs in the project folder and its output is given to Atlas. It can take up to 2 minutes.',
     moveTo: 'to:',
     trashNote: "The file isn't deleted permanently. You can restore it from the trash.",
-    protectedWarning: 'Other programs may run this file automatically. Review it carefully.'
-,
+    protectedWarning: 'Other programs may run this file automatically. Review it carefully.',
     recheckWarning:
       'You chose "always allow" for this command, but since then Atlas changed files without asking you. The command may run those files, so you are asked again.'
   },

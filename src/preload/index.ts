@@ -95,7 +95,7 @@ const api: Api = {
     onApproval: (cb) => on('folders:approval', cb),
     respond: (approvalId, approved, remember) => call('folders:respond', approvalId, approved, remember),
     trust: (conversationId) => call('folders:trust', conversationId),
-    revokeTrust: (conversationId) => call('folders:revokeTrust', conversationId),
+    revokeTrust: (conversationId, target) => call('folders:revokeTrust', conversationId, target),
     undo: (messageId) => call('folders:undo', messageId),
     onCommandOutput: (cb) => on('folders:commandOutput', cb)
   },

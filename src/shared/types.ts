@@ -359,6 +359,17 @@ export interface FileApproval {
   recheck?: boolean
 }
 
+/** Bir sohbette verilmiş "hep izin ver" izinleri (uygulama kapanınca unutulur) */
+export interface TrustState {
+  /** Dosya oluşturma, değiştirme ve taşıma sorulmadan yapılıyor */
+  edits: boolean
+  /** Sorulmadan çalışan komutlar, izin verildikleri sırayla */
+  commands: string[]
+}
+
+/** Kaldırılacak izin: düzenleme izni ya da tek bir komut */
+export type TrustTarget = 'edits' | { command: string }
+
 export interface FileAction {
   id: string
   folderId: string
@@ -889,8 +900,9 @@ export interface Api {
     /** remember: bu sohbette aynı türdeki işlemlere bir daha sorma (dosya düzenlemeleri ya da birebir aynı komut) */
     respond(approvalId: string, approved: boolean, remember?: boolean): Promise<void>
     /** Bu sohbette verilen kalıcı izinler */
-    trust(conversationId: string): Promise<{ edits: boolean; commands: string[] }>
-    revokeTrust(conversationId: string): Promise<void>
+    trust(conversationId: string): Promise<TrustState>
+    /** İzni kaldırır ve kalan izinleri döndürür. target verilmezse sohbetteki bütün izinler kalkar. */
+    revokeTrust(conversationId: string, target?: TrustTarget): Promise<TrustState>
     /** Bir cevaptaki dosya değişikliklerini geri alır; geri alınan dosya sayısını döndürür */
     undo(messageId: string): Promise<number>
     /** Çalışan komutun canlı çıktısı */

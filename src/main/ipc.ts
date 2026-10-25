@@ -333,6 +333,7 @@ export function registerIpc(
   })
   handle('conversations:remove', (id: string) => {
     chat.stop(id)
+    files.revokeTrust(String(id))
     db.deleteConversation(id)
   })
   handle('conversations:messages', (id: string) => db.listMessages(id))
@@ -492,7 +493,11 @@ export function registerIpc(
     db.setUndo(id, left)
     return restored
   })
-  handle('folders:revokeTrust', (conversationId: string) => files.revokeTrust(conversationId))
+  // Hedef verilmezse (ya da tanınmayan bir değerse) sohbetteki bütün izinler kalkar: izni azaltmak her zaman güvenlidir.
+  handle('folders:revokeTrust', (conversationId: string, target?: unknown) => {
+    const command = typeof target === 'object' && target !== null ? (target as { command?: unknown }).command : undefined
+    return files.revokeTrust(String(conversationId), target === 'edits' ? 'edits' : typeof command === 'string' ? { command } : undefined)
+  })
 
   handle('whatsapp:parse', (name: string, bytes: ArrayBuffer) => whatsapp.parse(name, bytes))
   handle('whatsapp:build', (request: WaBuildRequest) =>

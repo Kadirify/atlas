@@ -550,6 +550,41 @@ describe('komutlar için güvenli kip', () => {
     await exec('run_command', { command: 'echo merhaba' })
     expect(approvals).toHaveLength(3)
   })
+
+  it('"hep izin ver" denmiş komutlar listelenir ve tek tek kaldırılır', async () => {
+    const safe = safeService(true)
+    const exec = (name: string, args: Record<string, unknown>) =>
+      safe.execute('sohbet', folder, { name, arguments: args }, new AbortController().signal, true)
+    await exec('run_command', { command: 'echo bir' })
+    await exec('run_command', { command: 'echo iki' })
+    await exec('write_file', { path: 'bir.txt', content: '1' })
+    expect(approvals).toHaveLength(3)
+    expect(safe.trustState('sohbet')).toEqual({ edits: true, commands: ['echo bir', 'echo iki'] })
+
+    // Tek komutun izni kalkar; öteki komut ve düzenleme izni yerinde kalır.
+    expect(safe.revokeTrust('sohbet', { command: 'echo bir' })).toEqual({ edits: true, commands: ['echo iki'] })
+    await exec('run_command', { command: 'echo iki' })
+    expect(approvals).toHaveLength(3)
+    await exec('run_command', { command: 'echo bir' })
+    expect(approvals.map((a) => a.kind)).toEqual(['command', 'command', 'write', 'command'])
+    expect(approvals[3].recheck).toBeUndefined()
+
+    // Yalnızca düzenleme izni kalkar; komutlar sorulmadan çalışmayı sürdürür.
+    expect(safe.revokeTrust('sohbet', 'edits')).toEqual({ edits: false, commands: ['echo iki', 'echo bir'] })
+    await exec('run_command', { command: 'echo iki' })
+    expect(approvals).toHaveLength(4)
+    await exec('write_file', { path: 'iki.txt', content: '2' })
+    expect(approvals).toHaveLength(5)
+
+    // Olmayan komut ya da sohbet için sessizce bir şey yapmaz.
+    expect(safe.revokeTrust('sohbet', { command: 'echo yok' }).commands).toEqual(['echo iki', 'echo bir'])
+    expect(safe.revokeTrust('baska-sohbet', 'edits')).toEqual({ edits: false, commands: [] })
+
+    // Hedef verilmezse hepsi kalkar.
+    expect(safe.revokeTrust('sohbet')).toEqual({ edits: false, commands: [] })
+    await exec('run_command', { command: 'echo iki' })
+    expect(approvals).toHaveLength(6)
+  })
 })
 
 describe('gizli dosyalar komutla da okunmaz', () => {
