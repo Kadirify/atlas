@@ -16,6 +16,7 @@
 - Yanlış PIN sayacı yeniden başlatınca sıfırlanmıyor.
 
 ### Düzeltmeler
+- Uygulama içi güncelleme kurulum dosyasını indiremeyecekti: GitHub indirme adresini hesabın kayıtlı yazımıyla (büyük harfle başlayan sahip adı) döndürüyor, Atlas ise küçük harfli adresle birebir karşılaştırıp dosyayı güvenilmeyen sayıyordu. Adres artık ayrıştırılıp harf ayrımı yapılmadan karşılaştırılıyor; başka depoya ya da sunucuya çıkan adresler yine eleniyor.
 - "Hep izin ver" denmiş komutlar mesaj kutusunun üstünde listeleniyor ve tek tek kaldırılıyor. Önceden komut izni ekranda görünmüyordu ve sohbet boyunca kaldırılamıyordu; düzenleme iznini kaldırmak komut izinlerini de sessizce siliyordu. Sayfa yeniden yüklenince ya da sohbetin klasörü değişince şerit gerçek izinleri gösteriyor.
 - Pencere kapandığı yerde ve boyutta açılıyor.
 - Araç turu sınırına gelince iş sessizce yarıda kalmıyor: adımlarda görünüyor ve cevabın altındaki "Devam et" ile sürüyor.

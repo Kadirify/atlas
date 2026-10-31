@@ -14,8 +14,20 @@ const RECIPES_URL = `https://raw.githubusercontent.com/${REPO}/main/resources/at
 const RELEASES_PAGE = `https://github.com/${REPO}/releases`
 const RECIPES_FILE = 'atlas-models.json'
 const TIMEOUT_MS = 10_000
-/** Kurulum dosyası yalnızca bu adresin altından indirilir. */
-const DOWNLOAD_PREFIX = `https://github.com/${REPO}/releases/download/`
+/**
+ * Adres bu deponun (verilirse deponun o yolunun) altında mı. Kurulum dosyası yalnızca deponun sürümleri altından
+ * indirilir. GitHub sahip ve depo adında büyük-küçük harf ayırmaz ve adresleri hesabın kayıtlı yazımıyla ("Kadirify")
+ * döndürür; bu yüzden adres ayrıştırılıp küçük harfle karşılaştırılır. Ayrıştırma ".." ile başka depoya çıkan ya da
+ * başka sunucuyu gösteren adresleri de eler.
+ */
+export function inRepo(url: string, path = ''): boolean {
+  try {
+    const parsed = new URL(url)
+    return parsed.origin === 'https://github.com' && parsed.pathname.toLowerCase().startsWith(`/${REPO}/${path}`.toLowerCase())
+  } catch {
+    return false
+  }
+}
 
 /** Son denetimde bulunan kurulum dosyası. Adres arayüzden alınmaz, yalnızca burada tutulur. */
 export interface UpdateAsset {
@@ -39,7 +51,7 @@ export function pickAsset(release: unknown, platform: NodeJS.Platform = process.
     const name = typeof a?.name === 'string' ? a.name : ''
     const url = typeof a?.browser_download_url === 'string' ? a.browser_download_url : ''
     const size = typeof a?.size === 'number' ? a.size : 0
-    if (!/^[\w .()+-]+\.exe$/i.test(name) || !url.startsWith(DOWNLOAD_PREFIX) || size <= 0) continue
+    if (!/^[\w .()+-]+\.exe$/i.test(name) || !inRepo(url, 'releases/download/') || size <= 0) continue
     const digest = typeof a.digest === 'string' ? /^sha256:([0-9a-f]{64})$/i.exec(a.digest) : null
     return { name, url, size, sha256: digest ? digest[1].toLowerCase() : null }
   }
@@ -145,7 +157,7 @@ export async function checkUpdates(currentVersion: string, currentRecipes: numbe
     currentVersion,
     latestVersion,
     hasUpdate,
-    url: typeof page === 'string' && page.startsWith(`https://github.com/${REPO}/`) ? page : RELEASES_PAGE,
+    url: typeof page === 'string' && inRepo(page) ? page : RELEASES_PAGE,
     modelsUpdated,
     notes: hasUpdate ? notes : '',
     installable: pending !== null,

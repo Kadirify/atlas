@@ -7,7 +7,7 @@ vi.mock('electron', () => ({ app: { getPath: () => tmpdir() } }))
 
 import bundled from '../resources/atlas-models.json'
 import { atlasRecipe, catalog, recipesVersion, recommend, setAtlasModels } from '../src/main/services/catalog'
-import { checkUpdates, compareVersions, isValidRecipes, loadSavedRecipes } from '../src/main/services/updates'
+import { checkUpdates, compareVersions, inRepo, isValidRecipes, loadSavedRecipes, pickAsset } from '../src/main/services/updates'
 
 function respond(release: unknown, recipes: unknown): void {
   vi.stubGlobal(
@@ -59,6 +59,34 @@ describe('isValidRecipes', () => {
     expect(isValidRecipes({ version: 2, models: [] })).toBe(false)
     expect(isValidRecipes({ version: 2, models: [{ ...bundled.models[0], id: 'baska-model:latest' }] })).toBe(false)
     expect(isValidRecipes({ version: 2, models: [{ ...bundled.models[0], base: '' }] })).toBe(false)
+  })
+})
+
+describe('pickAsset', () => {
+  const asset = (url: string) => ({ assets: [{ name: 'Atlas-Setup-9.0.0.exe', browser_download_url: url, size: 120_000_000, digest: `sha256:${'a'.repeat(64)}` }] })
+
+  it("kurulum dosyasını GitHub'ın döndürdüğü yazımla da kabul eder", () => {
+    // GitHub adresi hesabın kayıtlı yazımıyla döndürür; sahip adı büyük harfle başlar.
+    const url = 'https://github.com/Kadirify/atlas/releases/download/v9.0.0/Atlas-Setup-9.0.0.exe'
+    expect(pickAsset(asset(url), 'win32')).toEqual({ name: 'Atlas-Setup-9.0.0.exe', url, size: 120_000_000, sha256: 'a'.repeat(64) })
+    expect(pickAsset(asset('https://github.com/kadirify/atlas/releases/download/v9.0.0/Atlas-Setup-9.0.0.exe'), 'win32')).not.toBeNull()
+  })
+
+  it('başka depoyu, başka sunucuyu ve depodan dışarı çıkan yolu kabul etmez', () => {
+    for (const url of [
+      'https://github.com/baskasi/atlas/releases/download/v9.0.0/Atlas-Setup-9.0.0.exe',
+      'https://github.com/kadirify/atlas-sahte/releases/download/v9.0.0/Atlas-Setup-9.0.0.exe',
+      'https://github.com/kadirify/atlas/releases/download/../../../baskasi/kotu/releases/download/v1/Atlas-Setup-9.0.0.exe',
+      'https://github.com.example.com/kadirify/atlas/releases/download/v9.0.0/Atlas-Setup-9.0.0.exe',
+      'https://github.com@example.com/kadirify/atlas/releases/download/v9.0.0/Atlas-Setup-9.0.0.exe',
+      'http://github.com/kadirify/atlas/releases/download/v9.0.0/Atlas-Setup-9.0.0.exe',
+      'https://github.com/kadirify/atlas/archive/main.exe',
+      'adres değil'
+    ]) {
+      expect(pickAsset(asset(url), 'win32'), url).toBeNull()
+    }
+    expect(inRepo('https://github.com/Kadirify/atlas/releases/tag/v9.0.0')).toBe(true)
+    expect(inRepo('https://example.com/kadirify/atlas/')).toBe(false)
   })
 })
 
