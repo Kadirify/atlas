@@ -3,6 +3,7 @@
 ## Yayımlanmamış
 
 ### Güvenlik
+- Kurulu `Atlas.exe` sıradan bir Node.js çalıştırıcısı gibi kullanılamıyor (`ELECTRON_RUN_AS_NODE`, `NODE_OPTIONS` ve `--inspect` kapalı) ve uygulama kodu yalnızca bütünlüğü denetlenen `app.asar` dosyasından yükleniyor (Electron sigortaları).
 - Kurulum sihirbazı indirdiği Ollama kurulum dosyasını çalıştırmadan önce Windows imzasını denetliyor: imza geçerli değilse ya da Ollama'ya ait değilse dosya çalıştırılmıyor. Yarım inen dosya da çalıştırılmıyor.
 - Kod alanındaki git, deponun kendi ayarında yazan programları çalıştırmıyor: durum ve fark bu özellikler kapalı okunuyor; yerel ayarında içerik süzgeci, imza programı ya da dış fark aracı tanımlı depoda git hiç çalıştırılmıyor. `.env` gibi dosyalar commit için kendiliğinden seçilmiyor, içerikleri gösterilmiyor ve modele verilmiyor.
 - Dosya, belge, komut çıktısı ve sorgu sonucu içindeki metnin veri olduğu, talimat olmadığı modele açıkça söyleniyor.

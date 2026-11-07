@@ -17,6 +17,15 @@ extraResources:
     to: LICENSE.txt
   - from: resources/third-party-notices.txt
     to: third-party-notices.txt
+# Kurulu Atlas.exe sıradan bir Node.js çalıştırıcısı gibi kullanılamasın (ELECTRON_RUN_AS_NODE, NODE_OPTIONS, --inspect)
+# ve uygulama kodu yalnızca bütünlüğü denetlenen app.asar'dan yüklensin. Alt süreçler utilityProcess ile açıldığı için
+# runAsNode kapalıyken de çalışır.
+electronFuses:
+  runAsNode: false
+  enableNodeOptionsEnvironmentVariable: false
+  enableNodeCliInspectArguments: false
+  enableEmbeddedAsarIntegrityValidation: true
+  onlyLoadAppFromAsar: true
 electronLanguages:
   - tr
   - en-US
