@@ -61,6 +61,16 @@ Her sürümden önce:
 2. Ajan test seti Atlas Strong ile üç tekrarla çalıştırılır ve sonuç [eval/ajan/GECMIS.md](eval/ajan/GECMIS.md) dosyasındaki bir önceki satırla karşılaştırılır. Kod görevlerinde başarı %90'ın altındaysa sürüm çıkmaz (`AJAN_GATE_KOD=0.9` bunu kendisi denetler). Ayrıntı: [eval/ajan/README.md](eval/ajan/README.md#sürümden-önce)
 3. `CHANGELOG.md` güncellenir.
 
+Sürümü çıkarırken (uygulamadaki güncelleme denetimi bu adımlara bağlıdır):
+
+1. `package.json` sürümünü artır (`npm version X.Y.Z --no-git-tag-version`). `CHANGELOG.md` dosyasında "Yayımlanmamış" başlığını `X.Y.Z (tarih)` yap, üstüne boş bir "Yayımlanmamış" bölümü aç.
+2. `npm run dist` kurulum dosyasını üretir: `release/Atlas-Setup-X.Y.Z.exe`. Adını değiştirme; Atlas kurulum dosyasını `.exe` uzantısından ve deponun sürümleri altında olmasından tanır.
+3. Kurulum dosyasını temiz bir Windows kullanıcı hesabında dene: kurulum sihirbazı, model indirme, ilk sohbet, bir belge ekleme.
+4. Etiket `vX.Y.Z` biçiminde ve `package.json` sürümüyle aynı olmalı. GitHub'da sürümü bu etiketle yayımla; **taslak ya da ön sürüm (pre-release) olarak işaretleme**: Atlas yalnızca "latest" sürüme bakar, öbürlerini görmez.
+5. Sürüme yalnızca kurulum dosyasını yükle (tek `.exe`). Sürüm notuna `CHANGELOG.md` dosyasının o sürüme ait bölümünü yapıştır; Atlas bunu "Bu sürümde neler değişti" başlığıyla gösterir.
+6. Yayımladıktan sonra bir önceki sürümle dene: **Ayarlar → Hakkında → Güncellemeleri denetle** yeni sürümü göstermeli, "İndir" düğmesi çıkmalı, indirilen dosya boyut ve özet denetiminden geçip kurulmalı.
+7. `resources/atlas-models.json` ana dala girdiği anda bütün kullanıcılara ulaşır (Atlas model tariflerini ana daldan okur). Tarif değişikliğini, onu anlayan sürüm yayımlanmadan ana dala alma.
+
 ## Lisans
 
 Gönderdiğin katkılar projenin lisansıyla ([MIT](LICENSE)) yayımlanır.

@@ -22,5 +22,8 @@ Modelfile
 coverage/
 *.tsbuildinfo
 
+# Kurulum dosyası için üretilen lisans bildirimi (npm run notices)
+resources/third-party-notices.txt
+
 # Ajan test setinin ilerleme kayıtları (sonuçlar .json ve .md olarak saklanır)
 eval/ajan/results/*.log

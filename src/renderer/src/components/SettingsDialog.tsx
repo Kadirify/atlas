@@ -484,6 +484,7 @@ function AboutTab({ onClose }: { onClose(): void }) {
   /** null: indirme başlamadı; 100: indirildi ve kuruluma hazır */
   const [downloadPercent, setDownloadPercent] = useState<number | null>(null)
   const [diagnostics, setDiagnostics] = useState('')
+  const [noticesError, setNoticesError] = useState('')
   const [preparing, setPreparing] = useState(false)
   const [reportError, setReportError] = useState('')
   useEffect(() => {
@@ -535,9 +536,19 @@ function AboutTab({ onClose }: { onClose(): void }) {
         <p className="mt-2 text-[13px] text-ink-3">{a.version(version)}</p>
         <p className="mt-4 max-w-[52ch] text-sm leading-relaxed text-ink-2">{a.privacy}</p>
         <p className="mt-3 max-w-[52ch] text-sm leading-relaxed text-ink-2">{a.openSource(APP_NAME)}</p>
-        <p className="mt-3 text-sm">
+        <p className="mt-3 max-w-[52ch] text-sm leading-relaxed text-ink-2">{a.models}</p>
+        <p className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
           <RepoLink />
+          <button
+            type="button"
+            title={a.noticesHint}
+            onClick={() => void window.api.app.openNotices().then(() => setNoticesError(''), (e) => setNoticesError(errorText(e)))}
+            className="font-medium text-accent hover:underline"
+          >
+            {a.notices}
+          </button>
         </p>
+        {noticesError && <p className="mt-2 text-[13px] text-danger">{noticesError}</p>}
       </section>
       <section>
         <h3 className="mb-1 text-sm font-semibold text-ink">{a.updatesTitle}</h3>

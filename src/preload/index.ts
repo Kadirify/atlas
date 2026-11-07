@@ -180,6 +180,7 @@ const api: Api = {
     dataPath: () => call('app:dataPath'),
     diagnostics: () => call('app:diagnostics'),
     openLogs: () => call('app:openLogs'),
+    openNotices: () => call('app:openNotices'),
     setTitleBarTheme: (dark) => call('app:setTitleBarTheme', dark),
     checkUpdates: () => call('app:checkUpdates'),
     isPackaged: () => call('app:isPackaged'),

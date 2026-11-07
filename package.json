@@ -1,7 +1,7 @@
 {
   "name": "atlas-asistan",
   "productName": "Atlas",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Tamamen yerel çalışan masaüstü yapay zeka asistanı",
   "main": "./out/main/index.js",
   "author": "Kadir",
@@ -23,7 +23,8 @@
     "test": "vitest run",
     "eval:ajan": "vitest run --config eval/ajan/vitest.config.mts",
     "icons": "electron scripts/make-icons.cjs",
-    "dist": "electron-vite build && electron-builder --win"
+    "notices": "node scripts/make-notices.cjs",
+    "dist": "node scripts/make-notices.cjs && electron-vite build && electron-builder --win"
   },
   "devDependencies": {
     "@fontsource-variable/bricolage-grotesque": "^5.3.0",
@@ -63,5 +64,10 @@
     "pg": "^8.23.1",
     "systeminformation": "^5.33.19",
     "unpdf": "^2.1.0"
+  },
+  "overrides": {
+    "exceljs": {
+      "unzipper": "^0.12.5"
+    }
   }
 }

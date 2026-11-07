@@ -83,7 +83,7 @@ Architecture (Turkish): [docs/mimari.md](docs/mimari.md) · Contributing (Turkis
 
 ## Status
 
-Atlas is an early release (0.1). It is usable for everyday work, but local models are not as strong as cloud models and can make mistakes in long, multi-step tasks. Windows only for now.
+Atlas is an early release (0.2). It is usable for everyday work, but local models are not as strong as cloud models and can make mistakes in long, multi-step tasks. Windows only for now.
 
 ## Development note
 

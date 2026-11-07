@@ -733,6 +733,13 @@ export function registerIpc(
     const error = await shell.openPath(logFolder() ?? app.getPath('userData'))
     if (error) throw new Error(error)
   })
+  // Açık kaynak bildirimleri kurulum klasöründe düz metin dosyasıdır; varsayılan metin düzenleyicide açılır.
+  handle('app:openNotices', async () => {
+    const file = app.isPackaged ? join(process.resourcesPath, 'third-party-notices.txt') : join(app.getAppPath(), 'resources', 'third-party-notices.txt')
+    if (!(await stat(file).catch(() => null))) throw new Error(L().main.about.noticesMissing)
+    const error = await shell.openPath(file)
+    if (error) throw new Error(error)
+  })
   handle('app:checkUpdates', () => checkUpdates(app.getVersion(), recipesVersion(), app.getPath('userData')))
   handle('app:setTitleBarTheme', (dark: boolean) => titleBar(dark))
 }

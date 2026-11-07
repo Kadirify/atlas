@@ -66,4 +66,8 @@ Hugging Face'teki GGUF dosyaları llama.cpp, LM Studio ve benzeri araçlarla da 
 | Atlas Medium, Atlas Strong | Gemma 4: Apache 2.0 |
 | Atlas Code | Qwen2.5-Coder: Apache 2.0 |
 
-Atlas modelleri de aynı lisansla (Apache 2.0) yayımlanır. Taban modellerin geliştiricilerine teşekkür ederiz: Google DeepMind (Gemma) ve Alibaba Qwen ekibi.
+Atlas modelleri de aynı lisansla ([Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0)) yayımlanır. Taban modellerin geliştiricilerine teşekkür ederiz: Google DeepMind (Gemma) ve Alibaba Qwen ekibi.
+
+- **Değişiklik bildirimi:** Atlas modelleri taban modellerin kendisi değildir; taban modelin ağırlıkları Türkçe yazım düzeltme verisiyle ince ayarlanarak (LoRA) değiştirilmiş ve yeniden paketlenmiştir. Hangi tabandan türedikleri [Nasıl eğitildi?](egitim.md) sayfasındaki tabloda yazar.
+- **Kullanırken:** Apache 2.0, modeli ticari işler dahil serbestçe kullanmana, değiştirmene ve dağıtmana izin verir. Yeniden dağıtırsan lisans metnini ve bu değişiklik bildirimini yanında bulundurman gerekir. Model hiçbir garanti olmadan sunulur; çıktılarından sen sorumlusun.
+- **Eğitim verisi:** yazım örneklerindeki cümlelerin bir kısmı Türkçe Vikipedi'den alınmıştır ([CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/deed.tr), Vikipedi katkıcıları); cümlelere yazım yanlışları kurallarla yerleştirilmiştir.

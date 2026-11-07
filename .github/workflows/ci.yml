@@ -17,3 +17,5 @@ jobs:
       - run: npm ci
       - run: npm run typecheck
       - run: npm test
+      # Kurulum dosyasıyla dağıtılacak her paketin lisansı belli ve uygun olmalı.
+      - run: node scripts/make-notices.cjs --check

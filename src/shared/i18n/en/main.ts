@@ -10,6 +10,10 @@ export const main: Dict['main'] = {
     httpError: (status: number) => `Ollama error (${status})`,
     autoInstallWindowsOnly: 'Automatic setup is only available on Windows for now. Install Ollama from ollama.com.',
     installerDownloadFailed: (status: number) => `Couldn't download the Ollama installer (${status}).`,
+    installerUnreachable: "Couldn't download the Ollama installer. Check your internet connection and try again.",
+    installerIncomplete: 'The Ollama installer was only partly downloaded. Try again.',
+    installerUntrusted:
+      "The signature of the downloaded Ollama installer could not be verified, so it was not run. Try again, or install Ollama yourself from ollama.com.",
     installFailed: (code: number | null) => `Ollama setup didn't finish (code ${code}).`,
     embeddingUnexpected: 'The embedding model returned an unexpected response.',
     alreadyPulling: 'This model is already downloading.',
@@ -114,6 +118,10 @@ export const main: Dict['main'] = {
     undone: 'Undone by the user',
     pickTitle: 'Choose a folder Atlas can access',
     pickButton: 'Allow this folder'
+  },
+
+  about: {
+    noticesMissing: 'The license notices file could not be found.'
   },
 
   apps: {

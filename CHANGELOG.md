@@ -3,6 +3,7 @@
 ## Yayımlanmamış
 
 ### Güvenlik
+- Kurulum sihirbazı indirdiği Ollama kurulum dosyasını çalıştırmadan önce Windows imzasını denetliyor: imza geçerli değilse ya da Ollama'ya ait değilse dosya çalıştırılmıyor. Yarım inen dosya da çalıştırılmıyor.
 - Kod alanındaki git, deponun kendi ayarında yazan programları çalıştırmıyor: durum ve fark bu özellikler kapalı okunuyor; yerel ayarında içerik süzgeci, imza programı ya da dış fark aracı tanımlı depoda git hiç çalıştırılmıyor. `.env` gibi dosyalar commit için kendiliğinden seçilmiyor, içerikleri gösterilmiyor ve modele verilmiyor.
 - Dosya, belge, komut çıktısı ve sorgu sonucu içindeki metnin veri olduğu, talimat olmadığı modele açıkça söyleniyor.
 - Komutlar için güvenli kip: her komuttan önce proje klasörünün anlık görüntüsü alınıyor. Onaylanan bir komut (ya da çalıştırdığı test kodu) dosya silerse, değiştirirse ya da oluşturursa terminal çıktısının altında listeleniyor, model de bunu kullanıcıya söylüyor; cevabın "Geri al"ı komutun yaptıklarını da geri alıyor.
@@ -16,6 +17,7 @@
 - Yanlış PIN sayacı yeniden başlatınca sıfırlanmıyor.
 
 ### Düzeltmeler
+- Kurulum sihirbazında internet yokken "Ollama çalışmıyor" yerine indirmenin yapılamadığı söyleniyor; bağlantı takılırsa sihirbaz süresiz beklemiyor.
 - Uygulama içi güncelleme kurulum dosyasını indiremeyecekti: GitHub indirme adresini hesabın kayıtlı yazımıyla (büyük harfle başlayan sahip adı) döndürüyor, Atlas ise küçük harfli adresle birebir karşılaştırıp dosyayı güvenilmeyen sayıyordu. Adres artık ayrıştırılıp harf ayrımı yapılmadan karşılaştırılıyor; başka depoya ya da sunucuya çıkan adresler yine eleniyor.
 - "Hep izin ver" denmiş komutlar mesaj kutusunun üstünde listeleniyor ve tek tek kaldırılıyor. Önceden komut izni ekranda görünmüyordu ve sohbet boyunca kaldırılamıyordu; düzenleme iznini kaldırmak komut izinlerini de sessizce siliyordu. Sayfa yeniden yüklenince ya da sohbetin klasörü değişince şerit gerçek izinleri gösteriyor.
 - Pencere kapandığı yerde ve boyutta açılıyor.
@@ -44,6 +46,8 @@
 - Veritabanı açılamazsa uygulama asılı kalmıyor, ne olduğunu söylüyor.
 
 ### Diğer
+- Açık kaynak bildirimleri: kurulum dosyasına Atlas'ın lisansı ve içindeki açık kaynak yazılımların lisans metinleri eklendi; **Ayarlar → Hakkında → Açık kaynak bildirimleri** ile açılır. Her derlemede lisansı belli olmayan ya da uygun olmayan paket var mı diye denetleniyor.
+- Lisansı bildirilmemiş bir paketi getiren eski bir alt bağımlılık yenisiyle değiştirildi; kurulum dosyasına giren paket sayısı 308'den 205'e indi.
 - Kod alanında git: proje bir git deposuysa **Değişiklikler** sekmesi son commit'e göre değişen dosyaları ve satır satır farkı gösteriyor. Seçili dosyalarla commit, commit mesajı önerisi, yeni dal açma ve dosyayı son commit'teki haline döndürme (şimdiki hali çöp kutusuna gider). Commit yalnızca senin tıklamanla atılır; push yoktur.
 - Yazı boyutu ayarı: Ayarlar → Genel ya da Ctrl + / Ctrl - / Ctrl 0.
 - Sohbeti yazdırma: dışa aktarma menüsünde "Yazdır…".

@@ -1075,6 +1075,8 @@ export interface Api {
     diagnostics(): Promise<string>
     /** Kayıt dosyalarının klasörünü dosya gezgininde açar. */
     openLogs(): Promise<void>
+    /** Kurulumla gelen açık kaynak lisans bildirimlerini metin düzenleyicide açar */
+    openNotices(): Promise<void>
     setTitleBarTheme(dark: boolean): Promise<void>
     /** Depodan yeni sürüme ve yeni model tariflerine bakar. Yalnızca kullanıcı isteyince çağrılır. */
     checkUpdates(): Promise<UpdateInfo>

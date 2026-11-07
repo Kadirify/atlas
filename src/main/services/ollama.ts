@@ -14,6 +14,7 @@ import type {
 } from '@shared/types'
 import { L } from '../i18n'
 import { log } from '../log'
+import { isOllamaSignature, readSignature } from './signature'
 
 const BASE = 'http://127.0.0.1:11434'
 /**
@@ -24,6 +25,8 @@ const NUM_CTX = 8192
 /** Tek cevabın en fazla uzunluğu; model durmayı bilmezse sonsuza kadar yazmasın. */
 const MAX_REPLY_TOKENS = 3072
 const WINDOWS_INSTALLER_URL = 'https://ollama.com/download/OllamaSetup.exe'
+/** Kurulum dosyası indirilirken bu kadar süre hiç veri gelmezse indirme kesilir. */
+const INSTALLER_STALL_MS = 60_000
 
 export interface ToolCall {
   name: string
@@ -233,7 +236,62 @@ export function isUnreachable(err: unknown): boolean {
   return false
 }
 
-/** Resmi kurulum dosyasını indirir ve sessiz modda çalıştırır (şimdilik sadece Windows). */
+/**
+ * Kurulum dosyasını indirir. İnternet yoksa ya da indirme yarıda kalırsa ne olduğunu söyleyen bir hata verir
+ * (ham "fetch failed" hatası arayüzde "Ollama çalışmıyor" diye görünürdü). stallMs süre veri gelmezse indirme kesilir.
+ */
+export async function downloadInstaller(
+  url: string,
+  file: string,
+  onProgress: (p: DownloadProgress) => void,
+  stallMs = INSTALLER_STALL_MS
+): Promise<void> {
+  const t = L().main.ollama
+  const controller = new AbortController()
+  let stall: NodeJS.Timeout | undefined
+  const arm = (): void => {
+    clearTimeout(stall)
+    stall = setTimeout(() => controller.abort(), stallMs)
+  }
+  arm()
+  try {
+    let res: Response
+    try {
+      res = await fetch(url, { signal: controller.signal })
+    } catch {
+      throw new OllamaError(t.installerUnreachable)
+    }
+    if (!res.ok || !res.body) throw new OllamaError(t.installerDownloadFailed(res.status))
+    const total = Number(res.headers.get('content-length') ?? 0)
+    let done = 0
+    let lastEmit = 0
+    const body = Readable.fromWeb(res.body as never)
+    body.on('data', (chunk: Buffer) => {
+      done += chunk.length
+      arm()
+      const now = Date.now()
+      if (now - lastEmit > 200) {
+        lastEmit = now
+        onProgress({ completedBytes: done, totalBytes: total, percent: total ? (done / total) * 100 : 0 })
+      }
+    })
+    try {
+      await pipeline(body, createWriteStream(file))
+    } catch {
+      throw new OllamaError(t.installerUnreachable)
+    }
+    // Yarım inen dosya çalıştırılmaz. Sıkıştırılarak gönderilen cevapta bildirilen boyut inen boyutla karşılaştırılamaz.
+    if (total > 0 && !res.headers.get('content-encoding') && done !== total) throw new OllamaError(t.installerIncomplete)
+    onProgress({ completedBytes: done, totalBytes: total || done, percent: 100 })
+  } finally {
+    clearTimeout(stall)
+  }
+}
+
+/**
+ * Resmi kurulum dosyasını indirir, Windows imzasını denetler ve sessiz modda çalıştırır (şimdilik sadece Windows).
+ * İmzası geçerli olmayan ya da Ollama'ya ait olmayan dosya çalıştırılmaz. Dosya her durumda silinir.
+ */
 export async function install(onProgress: (p: DownloadProgress) => void): Promise<OllamaStatus> {
   if (process.platform !== 'win32') {
     throw new OllamaError(L().main.ollama.autoInstallWindowsOnly)
@@ -242,31 +300,23 @@ export async function install(onProgress: (p: DownloadProgress) => void): Promis
   await mkdir(dir, { recursive: true })
   const file = join(dir, 'OllamaSetup.exe')
 
-  const res = await fetch(WINDOWS_INSTALLER_URL)
-  if (!res.ok || !res.body) throw new OllamaError(L().main.ollama.installerDownloadFailed(res.status))
-  const total = Number(res.headers.get('content-length') ?? 0)
-  let done = 0
-  let lastEmit = 0
-  const body = Readable.fromWeb(res.body as never)
-  body.on('data', (chunk: Buffer) => {
-    done += chunk.length
-    const now = Date.now()
-    if (now - lastEmit > 200) {
-      lastEmit = now
-      onProgress({ completedBytes: done, totalBytes: total, percent: total ? (done / total) * 100 : 0 })
+  try {
+    await downloadInstaller(WINDOWS_INSTALLER_URL, file, onProgress)
+    const signature = await readSignature(file)
+    if (!isOllamaSignature(signature)) {
+      log('warn', 'Ollama installer signature rejected', signature ? `${signature.status}: ${signature.subject}` : 'signature could not be read')
+      throw new OllamaError(L().main.ollama.installerUntrusted)
     }
-  })
-  await pipeline(body, createWriteStream(file))
-  onProgress({ completedBytes: done, totalBytes: total || done, percent: 100 })
-
-  await new Promise<void>((resolve, reject) => {
-    const child = spawn(file, ['/SILENT', '/NORESTART'], { windowsHide: true })
-    child.on('error', reject)
-    child.on('exit', (code) =>
-      code === 0 ? resolve() : reject(new OllamaError(L().main.ollama.installFailed(code)))
-    )
-  })
-  await rm(file, { force: true })
+    await new Promise<void>((resolve, reject) => {
+      const child = spawn(file, ['/SILENT', '/NORESTART'], { windowsHide: true })
+      child.on('error', reject)
+      child.on('exit', (code) =>
+        code === 0 ? resolve() : reject(new OllamaError(L().main.ollama.installFailed(code)))
+      )
+    })
+  } finally {
+    await rm(file, { force: true }).catch(() => {})
+  }
 
   if (!(await waitUntilRunning(15_000))) await start()
   return status()

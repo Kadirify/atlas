@@ -141,6 +141,9 @@ export const settings = {
       'Sohbetlerin ve ayarların sadece bu bilgisayarda saklanır. Uygulama internete yalnızca model indirirken ve sen güncelleme denetlediğinde bağlanır.',
     openSource: (appName: string) =>
       `${appName} açık kaynaklı ve ücretsizdir. Kaynak kodu MIT lisansıyla yayımlanır: inceleyebilir, değiştirebilir ve kendi işinde kullanabilirsin.`,
+    models: 'Atlas modelleri Qwen ve Gemma taban modellerinden ince ayarla türetilmiştir; taban modeller gibi Apache 2.0 lisansıyla dağıtılır.',
+    notices: 'Açık kaynak bildirimleri',
+    noticesHint: 'Atlas’ın içindeki açık kaynak yazılımların lisans metinlerini açar',
     updatesTitle: 'Güncellemeler',
     updatesHint: 'Yeni sürüme ve yeni Atlas modellerine GitHub deposundan bakar. Depoya hiçbir bilgi gönderilmez.',
     checkUpdates: 'Güncellemeleri denetle',

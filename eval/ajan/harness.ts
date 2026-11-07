@@ -382,7 +382,11 @@ async function runTask(task: Task, model: string, attempt: number, options: Opti
     for (const s of steps) tools[s.tool] = (tools[s.tool] ?? 0) + 1
     const ok = notes.length === 0
     keep = !ok && options.keepFailed
-    if (keep) notes.push(`klasör: ${dir}`)
+    // Sonuç dosyaları depoya girer: bu bilgisayara özgü geçici klasör yolu yerine görevin adı yazılır.
+    const scrub = (text: string): string => text.split(dir).join(`atlas-ajan-${task.id}`).split(dir.replace(/\\/g, '/')).join(`atlas-ajan-${task.id}`)
+    const cleanNotes = notes.map(scrub)
+    // Başarısız görevin klasörü saklanacaksa (AJAN_KEEP=1) yolu yalnızca o zaman, bilerek yazılır.
+    if (keep) cleanNotes.push(`klasör: ${dir}`)
     return {
       task: task.id,
       category: task.category,
@@ -390,7 +394,7 @@ async function runTask(task: Task, model: string, attempt: number, options: Opti
       attempt,
       ok,
       skipped: null,
-      notes,
+      notes: cleanNotes,
       seconds: Math.round((Date.now() - started) / 100) / 10,
       steps: steps.length,
       tools,
@@ -400,10 +404,10 @@ async function runTask(task: Task, model: string, attempt: number, options: Opti
       ...counters,
       falseClaim: claimsWrite(reply) && !changed(),
       endsAsking: asksPermission(reply),
-      error: outcome.error,
+      error: outcome.error === null ? null : scrub(outcome.error),
       timedOut,
       tokens: outcome.message?.tokens ?? null,
-      reply: reply.slice(0, 1500)
+      reply: scrub(reply).slice(0, 1500)
     }
   } finally {
     await chat?.settle(5000)

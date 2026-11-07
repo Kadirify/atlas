@@ -63,7 +63,13 @@ Sorun bildirirken **Ayarlar → Hakkında → Tanılama bilgisini kopyala** dü�
 
 ## Kaldırma
 
-Windows **Ayarlar → Uygulamalar** üzerinden Atlas'ı kaldır. Verilerini de silmek istersen `%APPDATA%\Atlas Asistan` klasörünü sil. Modelleri silmek için `ollama rm <model adı>` ya da Ollama'nın klasörü.
+Windows **Ayarlar → Uygulamalar** üzerinden Atlas'ı kaldır. Kaldırma, verilerine dokunmaz. Hepsini silmek istersen şunları da sil:
+
+- `%APPDATA%\Atlas Asistan`: sohbetler, ayarlar, yedekler, hata kaydı
+- `%LOCALAPPDATA%\Atlas Asistan`: kod alanında komutlardan önce alınan dosya kopyaları (geri alma için)
+- Modeller: `ollama rm <model adı>` ya da Ollama'nın klasörü
+
+"Bilgisayar açılınca başlat" ayarını açtıysan kaldırmadan önce **Ayarlar → Arka plan ve kilit** bölümünden kapat; yoksa Görev Yöneticisi'nin Başlangıç listesinde boş bir kayıt kalır (oradan da kapatabilirsin).
 
 ## Kaynaktan derleme
 

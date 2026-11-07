@@ -9,6 +9,10 @@ export const main = {
     httpError: (status: number) => `Ollama hatası (${status})`,
     autoInstallWindowsOnly: "Otomatik kurulum şimdilik sadece Windows için. Ollama'yı ollama.com adresinden kurun.",
     installerDownloadFailed: (status: number) => `Ollama kurulum dosyası indirilemedi (${status}).`,
+    installerUnreachable: 'Ollama kurulum dosyası indirilemedi. İnternet bağlantınızı kontrol edip yeniden deneyin.',
+    installerIncomplete: 'Ollama kurulum dosyası yarım indi. Yeniden deneyin.',
+    installerUntrusted:
+      "İndirilen Ollama kurulum dosyasının imzası doğrulanamadı; dosya çalıştırılmadı. Yeniden deneyin ya da Ollama'yı ollama.com adresinden kendiniz kurun.",
     installFailed: (code: number | null) => `Ollama kurulumu tamamlanamadı (kod ${code}).`,
     embeddingUnexpected: 'Gömme modeli beklenmeyen bir cevap verdi.',
     alreadyPulling: 'Bu model zaten indiriliyor.',
@@ -116,6 +120,10 @@ export const main = {
     undone: 'Kullanıcı geri aldı',
     pickTitle: 'Atlas’ın erişebileceği klasörü seç',
     pickButton: 'Bu klasöre izin ver'
+  },
+
+  about: {
+    noticesMissing: 'Lisans bildirimi dosyası bulunamadı.'
   },
 
   apps: {

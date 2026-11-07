@@ -141,6 +141,9 @@ export const settings: Dict['settings'] = {
       'Your chats and settings are stored only on this computer. The app connects to the internet only to download models and when you check for updates.',
     openSource: (appName: string) =>
       `${appName} is free and open source. The source code is published under the MIT license: you can read it, change it and use it in your own work.`,
+    models: 'Atlas models are fine-tuned derivatives of the Qwen and Gemma base models and, like them, are distributed under the Apache 2.0 license.',
+    notices: 'Open source notices',
+    noticesHint: 'Opens the license texts of the open source software inside Atlas',
     updatesTitle: 'Updates',
     updatesHint: 'Looks for a new version and new Atlas models in the GitHub repository. Nothing is sent to it.',
     checkUpdates: 'Check for updates',

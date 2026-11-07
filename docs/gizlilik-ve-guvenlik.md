@@ -11,6 +11,8 @@ Atlas'ın var olma nedeni verinin senin bilgisayarında kalması. Bu sayfa veril
 | Komutlar için güvenli kip: komuttan önceki dosyaların kopyaları (geri alma için) | `%LOCALAPPDATA%\Atlas Asistan\snapshots` (hiçbir geri alma kaydının kullanmadığı kopyalar açılışta silinir) |
 | Şema güncellemesinden önce alınan veritabanı kopyaları (en yeni üçü) | `%APPDATA%\Atlas Asistan\backups` |
 | Hata kaydı: hatalar, çökmeler, donmalar (sohbet, dosya içeriği, komut ve sorgu metni yazılmaz) | `%APPDATA%\Atlas Asistan\logs` (en çok 4 MB; eskiler kendiliğinden silinir) |
+| Güncelleme denetlediğinde indirilen Atlas model listesi | `%APPDATA%\Atlas Asistan\atlas-models.json` |
+| Geçici dosyalar: indirilen güncelleme ve Ollama kurulum dosyası, PDF'e aktarırken ve yazdırırken hazırlanan sayfa | `%TEMP%` altında `atlas-update` ve `atlas-setup` klasörleri, `atlas-export-*.html` ve `atlas-print-*.html`. Sayfalar ve Ollama kurulum dosyası iş bitince silinir |
 | Proje klasörlerin | Oldukları yerde; Atlas yalnızca senin bağladığın klasörün içinde çalışır |
 
 - **Veritabanı parolaları** Windows'un güvenli deposuyla (DPAPI) şifrelenerek saklanır; başka bir kullanıcı ya da başka bir bilgisayar çözemez.
@@ -21,7 +23,7 @@ Atlas'ın var olma nedeni verinin senin bilgisayarında kalması. Bu sayfa veril
 
 Yalnızca şu durumlarda, ve yalnızca sen başlatınca:
 
-1. **Kurulumda:** Ollama'yı `ollama.com`'dan indirirken ve seçtiğin modeli indirirken (model indirmeyi Ollama yapar).
+1. **Kurulumda:** Ollama'yı `ollama.com`'dan indirirken ve seçtiğin modeli indirirken (model indirmeyi Ollama yapar). İndirilen Ollama kurulum dosyası çalıştırılmadan önce Windows imzası denetlenir: imza geçerli ve Ollama'ya ait değilse dosya çalıştırılmaz.
 2. **"Güncellemeleri denetle" dediğinde:** GitHub'dan son sürümün bilgisini ve model tarifleri dosyasını okur; yeni sürümü kurmayı seçersen kurulum dosyasını indirir.
 
 Bunların hiçbirinde seninle ilgili bir bilgi gönderilmez. Kullanım istatistiği, hata raporu ya da reklam kimliği yoktur.

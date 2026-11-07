@@ -73,7 +73,7 @@ ollama run kadirify/atlas-strong
 1. [Sürümler](https://github.com/Kadirify/atlas/releases) sayfasından `Atlas-Setup` dosyasını indirip çalıştır.
 2. İlk açılışta sihirbaz bilgisayarını tarar, [Ollama](https://ollama.com)'yı kurar ve donanımına uygun Atlas modelini indirir.
 
-Gereksinimler: Windows 10/11, en az 8 GB bellek. Ekran kartı şart değil ama çok fark eder. Ayrıntı: [docs/kurulum.md](docs/kurulum.md)
+Gereksinimler: Windows 10/11, en az 8 GB bellek. Ekran kartı şart değil ama çok fark eder. Kurulum dosyası imzalı olmadığı için Windows "Bilinmeyen yayıncı" uyarısı gösterebilir. Ayrıntı: [docs/kurulum.md](docs/kurulum.md)
 
 ## Gizlilik
 
@@ -93,7 +93,7 @@ Mimari: [docs/mimari.md](docs/mimari.md) · Katkı: [CONTRIBUTING.md](CONTRIBUTI
 
 ## Durum
 
-Atlas erken bir sürümde (0.1). Günlük işlerde kullanılabilir durumda, ama yerel modeller bulut modelleri kadar güçlü değil ve uzun, çok adımlı işlerde hata yapabilir. Bilinen sınırlar ve yol haritası: [docs/yol-haritasi.md](docs/yol-haritasi.md)
+Atlas erken bir sürümde (0.2). Günlük işlerde kullanılabilir durumda, ama yerel modeller bulut modelleri kadar güçlü değil ve uzun, çok adımlı işlerde hata yapabilir. Bilinen sınırlar ve yol haritası: [docs/yol-haritasi.md](docs/yol-haritasi.md)
 
 ## Geliştirme notu
 
@@ -101,5 +101,5 @@ Atlas'ın geliştirilmesinde yapay zeka destekli geliştirme aracı olarak [Clau
 
 ## Lisans
 
-Uygulama [MIT](LICENSE) lisanslı. Atlas modelleri, taban modelleri gibi Apache 2.0 lisanslı.
+Uygulama [MIT](LICENSE) lisanslı. Atlas modelleri, taban modelleri gibi Apache 2.0 lisanslı ([ayrıntı](docs/modeller.md#lisanslar)). Kurulum dosyasındaki açık kaynak yazılımların lisansları uygulamada **Ayarlar → Hakkında → Açık kaynak bildirimleri** altında.
 Taban modeller için Google DeepMind'a (Gemma) ve Alibaba Qwen ekibine teşekkürler.
