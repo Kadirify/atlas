@@ -34,8 +34,9 @@ $env:AJAN_MODELS = 'atlas-code:latest,gemma4:12b'; $env:AJAN_REPEAT = '3'; npm r
 | `AJAN_MODELS` | Virgülle ayrılmış Ollama model adları |
 | `AJAN_REPEAT` | Her görevin kaç kez deneneceği. Tek deneme gürültülüdür; karşılaştırma için en az 3 |
 | `AJAN_TASKS` | Yalnızca bu görevler (ör. `test-duzelt,sql-csv`) |
-| `AJAN_GATE` | Sürüm kapısı: başarı oranı bunun altındaki model testi düşürür (ör. `0.7`) |
-| `AJAN_GATE_KOD` | Kod görevleri için ayrı kapı: kod görevlerindeki başarı oranı bunun altındaki model testi düşürür (ör. `0.9`) |
+| `AJAN_GATE_ONCEKI` | Sürüm kapısı: `1` ise sonuç bir önceki üç tekrarlı tam turla karşılaştırılır, belirgin düşüş varsa test düşer. Bir sonuç dosyasının yolu verilirse onunla karşılaştırılır |
+| `AJAN_GATE` | İsteğe bağlı mutlak sınır: başarı oranı bunun altındaki model testi düşürür (ör. `0.7`) |
+| `AJAN_GATE_KOD` | İsteğe bağlı mutlak sınır, yalnızca kod görevleri için (ör. `0.8`) |
 | `AJAN_KEEP` | `1` ise başarısız görevlerin klasörleri silinmez, incelenebilir |
 | `AJAN_OUT` | Sonuç klasörü (varsayılan `eval/ajan/results`). Verilirse `RESULTS.md` güncellenmez |
 
@@ -49,13 +50,18 @@ Sonuçlar:
 
 ## Sürümden önce
 
-Her sürümden önce Atlas Strong ile bütün set üç tekrarla çalıştırılır; kod görevlerinde başarı %90'ın altına düşerse sürüm çıkmaz:
+Her sürümden önce Atlas Strong ile bütün set üç tekrarla çalıştırılır ve bir önceki üç tekrarlı tam turla karşılaştırılır:
 
 ```powershell
-$env:AJAN_MODELS = 'atlas-guclu:latest'; $env:AJAN_REPEAT = '3'; $env:AJAN_GATE_KOD = '0.9'; npm run eval:ajan
+$env:AJAN_MODELS = 'atlas-guclu:latest'; $env:AJAN_REPEAT = '3'; $env:AJAN_GATE_ONCEKI = '1'; npm run eval:ajan
 ```
 
-Sonuç `GECMIS.md` dosyasına kendiliğinden eklenir; bir önceki satırla karşılaştır. Bir türde belirgin düşüş varsa (ör. sql 20/21'den 15/21'e) nedenini bulmadan sürüm çıkarma.
+Belirgin düşüş varsa test düşer ve sürüm çıkmaz. Ölçüm gürültülü olduğu için düşüş şöyle tanımlanır; yalnızca iki turda da olan görevlere bakılır ([compare.ts](compare.ts)):
+
+- Toplamda ya da herhangi bir türde başarı oranı, bir önceki turun %95 aralığının alt sınırının altına inmiş. Örnek: önceki tur toplamda 141/162 (%87, aralık %81-91) ise yeni tur %81'in altına inmemeli.
+- Bir önceki turda üç denemesinin üçünü de geçen bir görev bu turda üçünü de kaybetmiş.
+
+Mutlak bir sınır ("kod görevlerinde %90" gibi) kullanılmaz: set büyüdükçe ve zorlaştıkça sabit bir sınır anlamını yitirir; önemli olan bir değişikliğin Atlas'ı kötüleştirmemesi. Sonuç `GECMIS.md` dosyasına kendiliğinden eklenir. Karşılaştırılacak önceki tur yoksa kapı geçilir ve o tur bundan sonrakilerin çizgisi olur.
 
 ## Neler ölçülür
 

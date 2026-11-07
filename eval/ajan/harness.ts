@@ -14,6 +14,7 @@ import { appendFile, mkdir, mkdtemp, readFile, rm, stat, writeFile } from 'node:
 import { tmpdir } from 'node:os'
 import { basename, dirname, join } from 'node:path'
 import { DatabaseSync } from 'node:sqlite'
+import { wilson } from './compare'
 import type { Message, ToolStep } from '../../src/shared/types'
 import { Db } from '../../src/main/db'
 import { setLanguage } from '../../src/main/i18n'
@@ -154,6 +155,8 @@ export interface Options {
   out: string
   /** Yarıda kalan çalıştırmanın sonuç dosyası: oradaki sonuçlar korunur, eksikler çalıştırılır */
   resume: string | null
+  /** Sürüm kapısı: "1" ise bir önceki üç tekrarlı tam turla, bir dosya yolu verilirse o turla karşılaştırılır */
+  gatePrevious: string | null
 }
 
 const DEFAULT_TIMEOUT_MS = 6 * 60 * 1000
@@ -175,6 +178,7 @@ export function optionsFromEnv(): Options {
     gateCode: process.env.AJAN_GATE_KOD ? Number(process.env.AJAN_GATE_KOD) : null,
     keepFailed: process.env.AJAN_KEEP === '1',
     resume: process.env.AJAN_RESUME || null,
+    gatePrevious: process.env.AJAN_GATE_ONCEKI || null,
     out: process.env.AJAN_OUT ?? join('eval', 'ajan', 'results')
   }
 }
@@ -209,16 +213,7 @@ function shell(dir: string, command: string): Promise<{ code: number | null; out
   })
 }
 
-/** Wilson aralığı: az sayıda denemede başarı oranının ne kadar güvenilir olduğunu gösterir */
-export function wilson(k: number, n: number): [number, number] {
-  if (n === 0) return [0, 0]
-  const z = 1.96
-  const p = k / n
-  const d = 1 + (z * z) / n
-  const c = p + (z * z) / (2 * n)
-  const r = z * Math.sqrt((p * (1 - p)) / n + (z * z) / (4 * n * n))
-  return [Math.max(0, (c - r) / d), Math.min(1, (c + r) / d)]
-}
+export { wilson }
 
 async function runTask(task: Task, model: string, attempt: number, options: Options): Promise<RunResult> {
   const started = Date.now()
@@ -554,7 +549,7 @@ async function ollamaVersion(): Promise<string> {
   }
 }
 
-export async function runSuite(options: Options): Promise<Summary> {
+export async function runSuite(options: Options): Promise<Summary & { file: string }> {
   const tasks = TASKS.filter((t) => !options.tasks || options.tasks.includes(t.id))
   const hardware = await scanHardware()
   const numCtx = await toolContextSize()
@@ -622,7 +617,7 @@ export async function runSuite(options: Options): Promise<Summary> {
     await writeFile(join('eval', 'ajan', 'RESULTS.md'), markdown)
     await appendHistory(summary, meta, tasks)
   }
-  return summary
+  return { ...summary, file: jsonFile }
 }
 
 /** Bir modelin bir türdeki sonucu: "9/10" */

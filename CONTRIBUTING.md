@@ -58,7 +58,7 @@ npm test
 Her sürümden önce:
 
 1. `npm run typecheck` ve `npm test` temiz geçer.
-2. Ajan test seti Atlas Strong ile üç tekrarla çalıştırılır ve sonuç [eval/ajan/GECMIS.md](eval/ajan/GECMIS.md) dosyasındaki bir önceki satırla karşılaştırılır. Kod görevlerinde başarı %90'ın altındaysa sürüm çıkmaz (`AJAN_GATE_KOD=0.9` bunu kendisi denetler). Ayrıntı: [eval/ajan/README.md](eval/ajan/README.md#sürümden-önce)
+2. Ajan test seti Atlas Strong ile üç tekrarla çalıştırılır ve bir önceki üç tekrarlı tam turla karşılaştırılır (`AJAN_GATE_ONCEKI=1` bunu kendisi yapar). Belirgin düşüş varsa sürüm çıkmaz: iki turda da olan görevlerde toplamda ya da bir türde başarı oranı önceki turun %95 aralığının altına inmişse, ya da önceki turda bütün denemelerini geçen bir görev bu turda hepsini kaybetmişse. Sonuç [eval/ajan/GECMIS.md](eval/ajan/GECMIS.md) dosyasına satır olarak eklenir. Ayrıntı: [eval/ajan/README.md](eval/ajan/README.md#sürümden-önce)
 3. `CHANGELOG.md` güncellenir.
 
 Sürümü çıkarırken (uygulamadaki güncelleme denetimi bu adımlara bağlıdır):
