@@ -11,6 +11,7 @@ export const main = {
     installerDownloadFailed: (status: number) => `Ollama kurulum dosyası indirilemedi (${status}).`,
     installerUnreachable: 'Ollama kurulum dosyası indirilemedi. İnternet bağlantınızı kontrol edip yeniden deneyin.',
     installerIncomplete: 'Ollama kurulum dosyası yarım indi. Yeniden deneyin.',
+    installerWriteFailed: 'Ollama kurulum dosyası diske yazılamadı. Diskte yer olduğunu kontrol edip yeniden deneyin.',
     installerUntrusted:
       "İndirilen Ollama kurulum dosyasının imzası doğrulanamadı; dosya çalıştırılmadı. Yeniden deneyin ya da Ollama'yı ollama.com adresinden kendiniz kurun.",
     installFailed: (code: number | null) => `Ollama kurulumu tamamlanamadı (kod ${code}).`,

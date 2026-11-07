@@ -12,6 +12,7 @@ export const main: Dict['main'] = {
     installerDownloadFailed: (status: number) => `Couldn't download the Ollama installer (${status}).`,
     installerUnreachable: "Couldn't download the Ollama installer. Check your internet connection and try again.",
     installerIncomplete: 'The Ollama installer was only partly downloaded. Try again.',
+    installerWriteFailed: "The Ollama installer couldn't be saved to disk. Check that there is free space and try again.",
     installerUntrusted:
       "The signature of the downloaded Ollama installer could not be verified, so it was not run. Try again, or install Ollama yourself from ollama.com.",
     installFailed: (code: number | null) => `Ollama setup didn't finish (code ${code}).`,

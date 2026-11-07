@@ -23,6 +23,7 @@ const TIMEOUT_MS = 10_000
 export function inRepo(url: string, path = ''): boolean {
   try {
     const parsed = new URL(url)
+    // Sondaki eğik çizgi şart: "/kadirify/atlas-sahte" bu deponun altında sayılmaz.
     return parsed.origin === 'https://github.com' && parsed.pathname.toLowerCase().startsWith(`/${REPO}/${path}`.toLowerCase())
   } catch {
     return false

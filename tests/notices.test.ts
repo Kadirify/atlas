@@ -21,7 +21,7 @@ describe('lisans seçimi', () => {
   })
 
   it('yalnızca copyleft olan, belirsiz ya da belirtilmemiş lisansı reddeder', () => {
-    for (const bad of ['GPL-3.0-only', 'AGPL-3.0', 'LGPL-2.1', 'MIT AND GPL-2.0', 'GPL-2.0 OR GPL-3.0', 'UNLICENSED', 'SEE LICENSE IN LICENSE.txt', '', undefined, null]) {
+    for (const bad of ['GPL-2.0-only AND (MIT OR Apache-2.0)', '(MIT OR Apache-2.0) AND BSD-3-Clause', 'Apache-2.0 WITH LLVM-exception', 'GPL-3.0-only', 'AGPL-3.0', 'LGPL-2.1', 'MIT AND GPL-2.0', 'GPL-2.0 OR GPL-3.0', 'UNLICENSED', 'SEE LICENSE IN LICENSE.txt', '', undefined, null]) {
       expect(chooseLicense(bad), String(bad)).toBeNull()
     }
   })

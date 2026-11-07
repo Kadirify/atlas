@@ -48,7 +48,7 @@
 
 ### Diğer
 - Açık kaynak bildirimleri: kurulum dosyasına Atlas'ın lisansı ve içindeki açık kaynak yazılımların lisans metinleri eklendi; **Ayarlar → Hakkında → Açık kaynak bildirimleri** ile açılır. Her derlemede lisansı belli olmayan ya da uygun olmayan paket var mı diye denetleniyor.
-- Lisansı bildirilmemiş bir paketi getiren eski bir alt bağımlılık yenisiyle değiştirildi; kurulum dosyasına giren paket sayısı 308'den 205'e indi.
+- Lisansı bildirilmemiş bir paketi getiren eski bir alt bağımlılık yenisiyle değiştirildi; kurulum dosyasına `node_modules` olarak giren paket sayısı 308'den 205'e indi.
 - Kod alanında git: proje bir git deposuysa **Değişiklikler** sekmesi son commit'e göre değişen dosyaları ve satır satır farkı gösteriyor. Seçili dosyalarla commit, commit mesajı önerisi, yeni dal açma ve dosyayı son commit'teki haline döndürme (şimdiki hali çöp kutusuna gider). Commit yalnızca senin tıklamanla atılır; push yoktur.
 - Yazı boyutu ayarı: Ayarlar → Genel ya da Ctrl + / Ctrl - / Ctrl 0.
 - Sohbeti yazdırma: dışa aktarma menüsünde "Yazdır…".

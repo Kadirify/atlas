@@ -2,7 +2,7 @@ import { mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
-import { compareRuns, findBaseline, loadRun, wilson, type Attempt } from '../eval/ajan/compare'
+import { compareRuns, findBaseline, gatePreconditions, loadRun, recordGate, wilson, type Attempt } from '../eval/ajan/compare'
 
 const M = 'atlas-guclu:latest'
 
@@ -97,5 +97,33 @@ describe('findBaseline: karşılaştırılacak önceki tur', () => {
     const dir = join('eval', 'ajan', 'results')
     expect(findBaseline(dir, '2026-12-01-00-00.json', M)).toBe(join(dir, '2026-11-15-07-33.json'))
     expect(findBaseline(dir, '2026-11-15-07-33.json', M)).toBeNull()
+  })
+})
+
+describe('kapının güvenceleri', () => {
+  it('eksik turu kapıdan geçirmez', () => {
+    expect(gatePreconditions({ repeat: 3, tasks: null }, runs(['a:kod:111']), M)).toEqual([])
+    expect(gatePreconditions({ repeat: 1, tasks: null }, runs(['a:kod:1']), M)[0]).toContain('en az 3')
+    expect(gatePreconditions({ repeat: 3, tasks: ['a'] }, runs(['a:kod:111']), M)[0]).toContain('AJAN_TASKS')
+    const skipped = [{ task: 'git-durum', category: 'komut', model: M, ok: false, skipped: 'git kurulu değil' }]
+    expect(gatePreconditions({ repeat: 3, tasks: null }, skipped, M)[0]).toContain('git-durum (git kurulu değil)')
+  })
+
+  it('kapıdan düşen ya da filtreli tur çizgi sayılmaz', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'atlas-kapi-'))
+    try {
+      const write = (name: string, meta: Record<string, unknown>): void =>
+        writeFileSync(join(dir, name), JSON.stringify({ meta: { repeat: 3, ...meta }, results: runs(['a:kod:111']) }))
+      write('2026-11-15-07-33.json', {})
+      write('2026-11-16-00-00.json', { full: false })
+      write('2026-11-17-00-00.json', {})
+      recordGate(join(dir, '2026-11-17-00-00.json'), 'dustu')
+      expect(loadRun(join(dir, '2026-11-17-00-00.json'))?.gate).toBe('dustu')
+      expect(findBaseline(dir, '2026-11-20-00-00.json', M)).toBe(join(dir, '2026-11-15-07-33.json'))
+      recordGate(join(dir, '2026-11-17-00-00.json'), 'gecti')
+      expect(findBaseline(dir, '2026-11-20-00-00.json', M)).toBe(join(dir, '2026-11-17-00-00.json'))
+    } finally {
+      rmSync(dir, { recursive: true, force: true })
+    }
   })
 })

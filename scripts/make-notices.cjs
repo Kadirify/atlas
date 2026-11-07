@@ -34,8 +34,11 @@ function licenseExpression(pkg) {
  * Uygun bir seçenek yoksa null döner.
  */
 function chooseLicense(expression) {
-  const text = String(expression ?? '').trim().replace(/^\(([\s\S]*)\)$/, '$1').trim()
+  const text = String(expression ?? '').trim().replace(/^\(([^()]*)\)$/, '$1').trim()
   if (!text) return null
+  // İç içe parantez ("GPL-2.0-only AND (MIT OR Apache-2.0)") ya da istisna (WITH) içeren ifade burada doğru
+  // değerlendirilemez; elle bakılması için uygun sayılmaz.
+  if (/[()]/.test(text) || /\sWITH\s/i.test(text)) return null
   const allPermissive = (part) =>
     part
       .split(/\s+AND\s+/i)
@@ -245,4 +248,4 @@ function main() {
 
 if (require.main === module) main()
 
-module.exports = { chooseLicense, closure, importsOf, licenseExpression, packageName, resolveDependency }
+module.exports = { main, chooseLicense, closure, importsOf, licenseExpression, packageName, resolveDependency }

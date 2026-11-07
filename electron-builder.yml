@@ -1,6 +1,7 @@
 appId: com.atlasasistan.app
 productName: Atlas
 copyright: Copyright © 2026 Kadir
+beforePack: scripts/before-pack.cjs
 directories:
   output: release
   buildResources: build

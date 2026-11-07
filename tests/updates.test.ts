@@ -87,6 +87,7 @@ describe('pickAsset', () => {
     }
     expect(inRepo('https://github.com/Kadirify/atlas/releases/tag/v9.0.0')).toBe(true)
     expect(inRepo('https://example.com/kadirify/atlas/')).toBe(false)
+    expect(inRepo('https://github.com/kadirify/atlas-sahte/releases')).toBe(false)
   })
 })
 

@@ -1,4 +1,4 @@
-import { readdirSync, readFileSync } from 'node:fs'
+import { readdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { basename, join } from 'node:path'
 
 /**
@@ -77,12 +77,35 @@ export function compareRuns(previous: Attempt[], current: Attempt[], model: stri
   return { tasks: common.size, problems }
 }
 
+/** Kapı açıkken şimdiki turun karşılaştırılabilir olup olmadığı: değilse nedenleri */
+export function gatePreconditions(options: { repeat: number; tasks: string[] | null }, results: Attempt[], model: string): string[] {
+  const reasons: string[] = []
+  if (options.repeat < 3) reasons.push(`tekrar sayısı ${options.repeat}; kapı için en az 3 gerekir (AJAN_REPEAT=3)`)
+  if (options.tasks) reasons.push('yalnızca bazı görevler çalıştırıldı (AJAN_TASKS); kapı bütün setle çalışır')
+  const skipped = [...new Set(results.filter((r) => r.model === model && r.skipped).map((r) => `${r.task} (${r.skipped})`))]
+  if (skipped.length > 0) reasons.push(`atlanan görevler var: ${skipped.join(', ')}`)
+  return reasons
+}
+
+/** Kapının sonucunu sonuç dosyasına yazar; düşen tur sonraki turların çizgisi olmaz. */
+export function recordGate(file: string, gate: 'gecti' | 'dustu'): void {
+  const data = JSON.parse(readFileSync(file, 'utf8')) as { meta?: Record<string, unknown> }
+  data.meta = { ...data.meta, gate }
+  writeFileSync(file, JSON.stringify(data, null, 2))
+}
+
 /** Bir sonuç dosyasını okur; okunamazsa ya da biçimi bozuksa null. */
-export function loadRun(file: string): { repeat: number; results: Attempt[] } | null {
+export function loadRun(file: string): { repeat: number; full: boolean; gate: string | null; results: Attempt[] } | null {
   try {
-    const data = JSON.parse(readFileSync(file, 'utf8')) as { meta?: { repeat?: unknown }; results?: unknown }
+    const data = JSON.parse(readFileSync(file, 'utf8')) as { meta?: { repeat?: unknown; full?: unknown; gate?: unknown }; results?: unknown }
     if (!Array.isArray(data.results)) return null
-    return { repeat: typeof data.meta?.repeat === 'number' ? data.meta.repeat : 0, results: data.results as Attempt[] }
+    return {
+      repeat: typeof data.meta?.repeat === 'number' ? data.meta.repeat : 0,
+      // Eski dosyalarda bu alanlar yok: tam tur ve kapıdan geçmiş sayılır.
+      full: data.meta?.full !== false,
+      gate: typeof data.meta?.gate === 'string' ? data.meta.gate : null,
+      results: data.results as Attempt[]
+    }
   } catch {
     return null
   }
@@ -92,8 +115,9 @@ export function loadRun(file: string): { repeat: number; results: Attempt[] } | 
 const RESULT_FILE = /^\d{4}-\d{2}-\d{2}-\d{2}-\d{2}\.json$/
 
 /**
- * Karşılaştırılacak önceki tur: sonuç klasöründe şimdiki turdan önce yazılmış, en az üç tekrarlı ve bu modelin
- * sonuçlarını içeren en yeni dosya. Bulunamazsa null.
+ * Karşılaştırılacak önceki tur: sonuç klasöründe şimdiki turdan önce yazılmış, en az üç tekrarlı, bütün görevlerle
+ * yapılmış, kapıdan düşmemiş ve bu modelin sonuçlarını içeren en yeni dosya. Bulunamazsa null. Kapıdan düşen tur çizgi
+ * sayılmaz: yoksa aynı tur yeniden çalıştırılınca düşüş görünmez olurdu.
  */
 export function findBaseline(dir: string, currentFile: string, model: string): string | null {
   let names: string[]
@@ -106,7 +130,7 @@ export function findBaseline(dir: string, currentFile: string, model: string): s
   const candidates = names.filter((name) => RESULT_FILE.test(name) && name < current).sort().reverse()
   for (const name of candidates) {
     const run = loadRun(join(dir, name))
-    if (run && run.repeat >= 3 && run.results.some((r) => r.model === model && !r.skipped)) return join(dir, name)
+    if (run && run.repeat >= 3 && run.full && run.gate !== 'dustu' && run.results.some((r) => r.model === model && !r.skipped)) return join(dir, name)
   }
   return null
 }

@@ -473,6 +473,8 @@ interface Meta {
   ollama: string
   numCtx: number
   repeat: number
+  /** Bütün görevlerle mi yapıldı (AJAN_TASKS verilmedi) */
+  full: boolean
   models: string[]
   tasks: number
 }
@@ -559,6 +561,8 @@ export async function runSuite(options: Options): Promise<Summary & { file: stri
     ollama: await ollamaVersion(),
     numCtx,
     repeat: options.repeat,
+    // Kapı yalnızca bütün görevlerle yapılmış turları çizgi sayar.
+    full: !options.tasks,
     models: options.models,
     tasks: tasks.length
   }

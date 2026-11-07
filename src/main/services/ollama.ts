@@ -277,7 +277,11 @@ export async function downloadInstaller(
     })
     try {
       await pipeline(body, createWriteStream(file))
-    } catch {
+    } catch (err) {
+      // Diske yazılamadıysa (yer yok, izin yok, dosya kilitli) sorun internet değildir.
+      const code = (err as { code?: unknown } | null)?.code
+      log('warn', 'Ollama installer download failed', typeof code === 'string' ? code : err instanceof Error ? err.name : 'unknown')
+      if (typeof code === 'string' && /^(?:ENOSPC|EACCES|EPERM|EBUSY|EROFS|EMFILE)$/.test(code)) throw new OllamaError(t.installerWriteFailed)
       throw new OllamaError(t.installerUnreachable)
     }
     // Yarım inen dosya çalıştırılmaz. Sıkıştırılarak gönderilen cevapta bildirilen boyut inen boyutla karşılaştırılamaz.
@@ -292,7 +296,17 @@ export async function downloadInstaller(
  * Resmi kurulum dosyasını indirir, Windows imzasını denetler ve sessiz modda çalıştırır (şimdilik sadece Windows).
  * İmzası geçerli olmayan ya da Ollama'ya ait olmayan dosya çalıştırılmaz. Dosya her durumda silinir.
  */
-export async function install(onProgress: (p: DownloadProgress) => void): Promise<OllamaStatus> {
+let installing: Promise<OllamaStatus> | null = null
+
+export function install(onProgress: (p: DownloadProgress) => void): Promise<OllamaStatus> {
+  // Sayfa yenilenip düğmeye yeniden basılırsa ikinci bir kurulum başlamaz; süren kurulum beklenir.
+  installing ??= installOnce(onProgress).finally(() => {
+    installing = null
+  })
+  return installing
+}
+
+async function installOnce(onProgress: (p: DownloadProgress) => void): Promise<OllamaStatus> {
   if (process.platform !== 'win32') {
     throw new OllamaError(L().main.ollama.autoInstallWindowsOnly)
   }

@@ -18,7 +18,7 @@ vi.mock('../../src/main/services/catalog', async (importOriginal) => {
 })
 
 import { join } from 'node:path'
-import { compareRuns, findBaseline, loadRun } from './compare'
+import { compareRuns, findBaseline, gatePreconditions, loadRun, recordGate } from './compare'
 import { categoryScore, optionsFromEnv, runSuite } from './harness'
 
 it('ajan test seti', async () => {
@@ -27,7 +27,13 @@ it('ajan test seti', async () => {
   // Sürüm kapısı: AJAN_GATE_ONCEKI=1 verilirse sonuç bir önceki üç tekrarlı tam turla karşılaştırılır; belirgin düşüş
   // varsa test düşer (tanımı compare.ts'de). Bir sonuç dosyasının yolu verilirse onunla karşılaştırılır.
   if (options.gatePrevious) {
+    const problems: string[] = []
     for (const model of summary.models) {
+      const reasons = gatePreconditions(options, summary.results, model.model)
+      if (reasons.length > 0) {
+        problems.push(...reasons.map((r) => `${model.model}: ${r}`))
+        continue
+      }
       const auto = options.gatePrevious === '1'
       const file = auto ? findBaseline(join('eval', 'ajan', 'results'), summary.file, model.model) : options.gatePrevious
       const previous = file ? loadRun(file) : null
@@ -38,8 +44,12 @@ it('ajan test seti', async () => {
       }
       const comparison = compareRuns(previous.results, summary.results, model.model)
       console.log(`${model.model}: ${file} ile ${comparison.tasks} ortak görevde karşılaştırıldı.`)
-      expect(comparison.problems, `${model.model}: bir önceki tura göre belirgin düşüş`).toEqual([])
+      if (comparison.tasks === 0) problems.push(`${model.model}: önceki turla ortak görev yok`)
+      problems.push(...comparison.problems.map((p) => `${model.model}: ${p}`))
     }
+    // Düşen tur sonuç dosyasında işaretlenir: sonraki turlar onunla karşılaştırılmaz.
+    if (summary.file.endsWith('.json')) recordGate(summary.file, problems.length > 0 ? 'dustu' : 'gecti')
+    expect(problems, 'sürüm kapısı: bir önceki tura göre belirgin düşüş ya da eksik tur').toEqual([])
   }
   // İsteğe bağlı mutlak sınırlar: AJAN_GATE=0.7 verilirse başarı oranı bunun altındaki her model testi düşürür.
   if (options.gate !== null) {
