@@ -12,3 +12,11 @@ GELISTIRME-PLANI.md
 ONERILER.md
 PLAN.md
 RAPOR.md
+
+# Büyük model dosyaları ve gizli bilgiler
+*.gguf
+*.safetensors
+Modelfile
+.env*
+coverage/
+*.tsbuildinfo
