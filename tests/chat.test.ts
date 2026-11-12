@@ -125,3 +125,29 @@ describe('claimsWrite', () => {
     expect(claimsWrite('Önce package.json dosyasını okumam gerekiyor.')).toBe(false)
   })
 })
+
+import { compactToolResults } from '../src/main/services/chat'
+import type { OllamaMessage } from '../src/main/services/ollama'
+
+describe('dürtme ve bağlam yardımcıları (denetimden)', () => {
+  it('cümle başındaki "İ" de yakalanır', () => {
+    expect(asksPermission('Dosyaları listeledim. İstersen README dosyasını da okuyayım mı?')).toBe(true)
+    expect(claimsWrite('İndex.html dosyasına yazdım.')).toBe(true)
+  })
+
+  it('bağlam taşınca eski araç sonuçları kısalır; son turunkiler ve ilk istek kalır', () => {
+    const big = 'x'.repeat(5000)
+    const messages: OllamaMessage[] = [
+      { role: 'system', content: 'talimat' },
+      { role: 'user', content: `asıl görev ${big}` },
+      { role: 'tool', tool_name: 'read_file', content: big },
+      { role: 'tool', tool_name: 'read_file', content: big },
+      { role: 'tool', tool_name: 'read_file', content: big }
+    ]
+    compactToolResults(messages, 9000, 4, '(kısaltıldı)')
+    expect(messages[1].content.length).toBeGreaterThan(5000)
+    expect(messages[2].content.length).toBeLessThan(400)
+    expect(messages[2].content).toContain('(kısaltıldı)')
+    expect(messages[4].content).toBe(big)
+  })
+})

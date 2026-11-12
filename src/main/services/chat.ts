@@ -30,7 +30,34 @@ const MAX_TOOL_ROUNDS = 12
 /** Model araç sonucundan sonra sustuğunda en çok kaç kez "devam et" denir */
 const MAX_NUDGES = 3
 /** Ollama'nın model çalıştırıcısının çöktüğünü gösteren hata metinleri */
-const RUNNER_CRASH = /unexpectedly stopped|llama-server|forcibly closed|zorla kapat|ECONNRESET|socket hang up|EOF/i
+const RUNNER_CRASH =
+  /unexpectedly stopped|llama-server|forcibly closed|zorla kapat|ECONNRESET|socket hang up|EOF|bad_alloc|0xc0000409|GGML_ASSERT|fetch failed|status(?: code)? 5\d\d|HTTP 5\d\d/i
+/** Çöken çalıştırıcı için en çok kaç kez yeniden denenir (aralar giderek uzar) */
+const CRASH_RETRIES = 2
+/** Klasörde bir şeyi değiştiren araçlar; biri başarılıysa model iş yapmış sayılır */
+const CHANGE_TOOLS = new Set(['write_file', 'edit_file', 'move_file', 'create_folder'])
+/** Yalnızca plan güncelleyen turlar araç sınırından düşmez; ama en çok bu kadar */
+const MAX_PLAN_ONLY_ROUNDS = 4
+
+/** JavaScript'in büyük-küçük harf duyarsız araması "İ"yi "i" saymaz ("İstersen..." kaçmasın). */
+function fold(text: string): string {
+  return text.replace(/İ/g, 'i')
+}
+
+/**
+ * Araç turlarında bağlam taşmasın: toplam metin sınırı aşınca eski araç sonuçları kısaltılır. Son turun sonuçları
+ * (keepFrom'dan sonrası) ve kullanıcının ilk isteği olduğu gibi kalır; model gerekirse aracı yeniden çağırır.
+ */
+export function compactToolResults(messages: OllamaMessage[], budget: number, keepFrom: number, note: string): void {
+  let total = messages.reduce((n, m) => n + m.content.length, 0)
+  for (let i = 0; i < keepFrom && total > budget; i++) {
+    const m = messages[i]
+    if (m.role !== 'tool' || m.content.length <= 500) continue
+    const short = `${m.content.slice(0, 300)}\n… ${note}`
+    total -= m.content.length - short.length
+    messages[i] = { ...m, content: short }
+  }
+}
 
 /** Cevabın sonunda "şimdi şunu yapıyorum" diye bir işlem duyuruluyor mu (ama araç çağrılmamış) */
 const ANNOUNCE =
@@ -48,7 +75,8 @@ const LEAVES_WORK =
   /(göz atılabilir|bakılabilir|incelenebilir|okunabilir|açılabilir|içeriklerini görmek için|içeriğini görmek için|daha fazla bilgi için .{0,40}(?:bak|incele)|could (?:also )?(?:look|check|open|read)|can be (?:checked|opened|read|inspected)|to see (?:its|their) contents)/i
 
 export function asksPermission(text: string): boolean {
-  return ASKS_PERMISSION.test(text.slice(-300)) || LEAVES_WORK.test(text.slice(-1200))
+  const folded = fold(text)
+  return ASKS_PERMISSION.test(folded.slice(-300)) || LEAVES_WORK.test(folded.slice(-1200))
 }
 
 /** Cevapta kod bloklarının içinde toplam bu kadar satır varsa "kod döküldü" sayılır */
@@ -60,7 +88,7 @@ const CLAIMS_WRITE =
   /(dosyas[ıi]na[^.\n]{0,60}?(?:yazd[ıi]m|kaydettim|ekledim)|dosyas[ıi]n[ıi][^.\n]{0,40}?(?:oluşturdum|yazd[ıi]m|güncelledim)|olarak kaydettim|dosyalar[ıi] oluşturdum|(?:created|wrote|saved) (?:the )?(?:file|files)|(?:wrote|saved) (?:it|the code) (?:to|into|in))/i
 
 export function claimsWrite(text: string): boolean {
-  return CLAIMS_WRITE.test(text)
+  return CLAIMS_WRITE.test(fold(text))
 }
 
 export function dumpsCode(text: string): boolean {
@@ -70,7 +98,7 @@ export function dumpsCode(text: string): boolean {
 }
 
 export function announcesAction(text: string): boolean {
-  return ANNOUNCE.test(text.slice(-500))
+  return ANNOUNCE.test(fold(text).slice(-500))
 }
 
 export interface ChatEvents {
@@ -254,6 +282,12 @@ export class ChatService {
     for (const c of this.active.values()) c.abort()
   }
 
+  /** Süren cevaplar kaydedilip bitene kadar en çok ms milisaniye bekler (uygulama kapanırken). */
+  async settle(ms: number): Promise<void> {
+    const until = Date.now() + ms
+    while (this.active.size > 0 && Date.now() < until) await new Promise((resolve) => setTimeout(resolve, 50))
+  }
+
   /** Geçmişi modelin anlayacağı hale getirir: dosya metinleri mesaja eklenir, resimler ayrı verilir. */
   private async toModelMessages(history: Message[], model: string): Promise<OllamaMessage[]> {
     const vision = await supportsVision(model)
@@ -263,6 +297,11 @@ export class ChatService {
     }
 
     return history.map((m) => {
+      // Model bir sonraki turda önceki cevapta neyi okuyup neyi değiştirdiğini bilsin (yalnızca metin kalıyordu).
+      if (m.role === 'assistant' && m.steps.length > 0) {
+        const log = L().prompts.chat.actionLog(m.steps.slice(-12).map((s) => s.label).join('; '))
+        return { role: m.role, content: `${log}\n\n${m.content}` } as OllamaMessage
+      }
       if (m.attachments.length === 0) return { role: m.role, content: m.content } as OllamaMessage
       const files = this.db.attachmentContents(m.attachments.map((a) => a.id))
       const block = attachmentsBlock(files, ATTACHMENT_CHAR_BUDGET)
@@ -285,6 +324,8 @@ export class ChatService {
 
     /** Bu cevap boyunca modelin düşüncesi; cevapla birlikte saklanır */
     let thoughts = ''
+    /** Dürtmeden önce yazılmış ve kaybolmaması gereken metin (modelin tanısı gibi) */
+    let carry = ''
     const save = (
       text: string,
       partial: boolean,
@@ -293,7 +334,8 @@ export class ChatService {
     ): Message | null => {
       // Yalnızca araç kullanılıp metin yazılmadıysa da adımlar kaybolmasın.
       if (!text.trim() && steps.length === 0) return null
-      return this.db.addMessage({
+      // Geri alma kaydı ancak mesaj kaydedildikten sonra silinir: kayıt başarısız olursa kaybolmasın.
+      const message = this.db.addMessage({
         conversationId,
         role: 'assistant',
         content: text,
@@ -303,8 +345,18 @@ export class ChatService {
         partial,
         steps,
         thinking: thoughts,
-        undo: this.files.takeEdits(conversationId)
+        undo: this.files.peekEdits(conversationId)
       })
+      this.files.clearEdits(conversationId)
+      return message
+    }
+    /** Hata yolunda kayıt da başarısız olabilir (sohbet bu arada silindiyse); yine de arayüze haber verilir. */
+    const trySave = (text: string): Message | null => {
+      try {
+        return save(text, true)
+      } catch {
+        return null
+      }
     }
 
     try {
@@ -316,12 +368,15 @@ export class ChatService {
       // Araçlı sohbetlerde (klasör, veritabanı) bağlam büyük tutulur; geçmiş de buna göre daha uzun kalır.
       const toolSession = Boolean(conversation.folderId || conversation.sqlId)
       const numCtx = toolSession ? await toolContextSize() : undefined
-      const kept = trimHistory(all, numCtx && numCtx > 8192 ? Math.round((HISTORY_CHAR_BUDGET * numCtx) / 8192 / 1.5) : HISTORY_CHAR_BUDGET)
+      // Araçlı sohbette bağlamın çoğu araç sonuçlarına (dosya, sorgu) kalmalı; eski mesajlara daha az yer ayrılır.
+      const kept = trimHistory(all, numCtx ? Math.max(6000, Math.round(numCtx * 0.75)) : HISTORY_CHAR_BUDGET)
       // Bağlama sığmayan baştaki mesajlar; içerikleri özetle temsil edilir.
       const dropped = history.slice(0, all.length - kept.length)
 
       const lastUser = history.findLast((m) => m.role === 'user')
-      const useMemory = settings.memoryEnabled && !conversation.private
+      // Araçlı sohbetlerde kişisel bellek kullanılmaz ve öğrenilmez: her turda değişip istemin başını bozuyor
+      // (önbellek boşa gidiyor) ve ayrı bağlam boyuyla çağrıldığı için modeli yeniden yüklüyordu.
+      const useMemory = settings.memoryEnabled && !conversation.private && !toolSession
       const memories = useMemory && lastUser?.content ? await this.memory.relevant(lastUser.content) : []
       const summary = dropped.length > 0 ? this.db.getSummary(conversationId).summary : ''
 
@@ -379,20 +434,20 @@ export class ChatService {
           streamGuarded({ model: streamModel, messages, tools: withTools ? tools : undefined, think, onThinking, numCtx }, controller, (delta) =>
             this.events.chunk({ conversationId, delta })
           )
-        try {
-          return await once()
-        } catch (err) {
-          const partial = err instanceof PartialError ? err.partial : ''
-          const message = err instanceof Error ? err.message : String(err)
-          if (partial || controller.signal.aborted || !RUNNER_CRASH.test(message)) throw err
-          await new Promise((resolve) => setTimeout(resolve, 1500))
-          return once()
+        for (let attempt = 0; ; attempt++) {
+          try {
+            return await once()
+          } catch (err) {
+            const partial = err instanceof PartialError ? err.partial : ''
+            const cause = err instanceof PartialError ? err.original : err
+            const message = `${err instanceof Error ? err.message : String(err)} ${cause instanceof Error ? cause.message : ''}`
+            if (partial || controller.signal.aborted || attempt >= CRASH_RETRIES || !RUNNER_CRASH.test(message)) throw err
+            await new Promise((resolve) => setTimeout(resolve, 1500 * (attempt + 1) ** 2))
+          }
         }
       }
       let result = await guarded(true)
       let nudges = 0
-      /** Dürtmeden önce yazılmış ve kaybolmaması gereken metin (modelin tanısı gibi) */
-      let carry = ''
       const stream = guarded
       /**
        * Yerel modeller iki biçimde yarıda kalır: araç sonucundan sonra hiçbir şey yazmaz ya da "şimdi düzeltiyorum"
@@ -401,10 +456,12 @@ export class ChatService {
       const nudge = async (): Promise<void> => {
         while (tools && !result.looped && (result.stats.toolCalls?.length ?? 0) === 0 && nudges < MAX_NUDGES) {
           const silent = !result.text.trim()
-          const asking = !silent && asksPermission(result.text)
+          // Bu cevapta bir dosya gerçekten değiştiyse model iş yapmıştır: sondaki "istersen şunu da yaparım" önerisi ve
+          // yaptığını özetleyen kod parçası dürtülmez (yoksa "kodu dosyaya yaz" denip düzgün dosyanın üstüne yazılıyordu).
+          const changed = steps.some((s) => CHANGE_TOOLS.has(s.tool) && s.status === 'ok')
+          const asking = !silent && !changed && asksPermission(result.text)
           // Klasöre yazma izni varken kodu sohbete döküp dosya oluşturmayan cevap: kod dosyalara yazılmalı.
-          const wroteNothing = !steps.some((s) => s.tool === 'write_file' && s.status === 'ok')
-          const dumping = !silent && !!folder && canWrite && wroteNothing && (dumpsCode(result.text) || claimsWrite(result.text))
+          const dumping = !silent && !!folder && canWrite && !changed && (dumpsCode(result.text) || claimsWrite(result.text))
           if (silent ? steps.length === 0 : !announcesAction(result.text) && !asking && !dumping) return
           nudges++
           if (dumping) {
@@ -431,10 +488,17 @@ export class ChatService {
       }
       await nudge()
       // Model araç istedikçe çalıştır, sonucunu ver ve devam ettir.
-      for (let round = 0; (folder || connection) && (result.stats.toolCalls?.length ?? 0) > 0 && !result.looped; round++) {
+      let round = 0
+      let planOnly = 0
+      /** Bağlamın araç turlarına ayrılan kısmı (karakter; Türkçede bir belirteç ortalama 2,6-3,5 karakter) */
+      const budget = Math.round((numCtx ?? 8192) * 2.6)
+      while ((folder || connection) && (result.stats.toolCalls?.length ?? 0) > 0 && !result.looped) {
         const calls = result.stats.toolCalls!
         messages.push({ role: 'assistant', content: result.text, tool_calls: calls.map((c) => ({ function: c })) })
+        const roundStart = messages.length
         for (const call of calls) {
+          // Kullanıcı durdurduysa sıradaki araçlar çalıştırılmaz.
+          if (controller.signal.aborted) break
           const outcome =
             connection && sql.isSqlTool(call.name)
               ? await sql.execute(conversationId, connection.id, call, controller.signal)
@@ -446,8 +510,12 @@ export class ChatService {
           messages.push({ role: 'tool', tool_name: call.name, content: outcome.result })
         }
         if (controller.signal.aborted) throw new PartialError(new Error('durduruldu'), '')
+        // Yalnızca planı güncelleyen turlar (birkaç kez) sınırdan sayılmaz.
+        if (calls.every((c) => c.name === 'update_plan') && planOnly < MAX_PLAN_ONLY_ROUNDS) planOnly++
+        else round++
+        compactToolResults(messages, budget, roundStart, L().prompts.chat.toolResultTrimmed)
         // Sınıra gelindiyse son turda araç verilmez; model elindekiyle cevap yazar.
-        const last = round + 1 >= MAX_TOOL_ROUNDS
+        const last = round >= MAX_TOOL_ROUNDS
         if (last) messages.push({ role: 'user', content: L().prompts.chat.toolLimit })
         result = await stream(!last)
         if (last) break
@@ -477,13 +545,13 @@ export class ChatService {
       const partial = err instanceof PartialError ? err.partial : ''
       const cause = err instanceof PartialError ? err.original : err
       if (controller.signal.aborted) {
-        // Kullanıcı durdurdu: yazılan kısım kalır, hata gösterilmez.
-        const message = save(partial, true)
+        // Kullanıcı durdurdu: yazılan kısım (dürtmeden önce yazılanlar dahil) kalır, hata gösterilmez.
+        const message = trySave(carry + partial)
         if (message) this.events.done({ conversationId, message })
         else this.events.error({ conversationId, error: '', message: null })
         return
       }
-      this.events.error({ conversationId, error: describeError(cause), message: save(partial, true) })
+      this.events.error({ conversationId, error: describeError(cause), message: trySave(carry + partial) })
     }
   }
 

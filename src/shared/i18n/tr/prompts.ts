@@ -32,14 +32,17 @@ export const prompts = {
     /** Yalnızca dosya gönderilip metin yazılmadığında modele giden mesaj */
     lookAtFile: 'Bu dosyaya bak.',
     toolLimit: 'Araç kullanma sınırına ulaşıldı. Şimdiye kadar öğrendiklerinle cevap ver.',
+    /** Geçmişteki asistan cevabına eklenen kısa iş kaydı: model bir sonraki turda neyi yaptığını bilsin */
+    toolResultTrimmed: '(eski araç sonucu, yer açmak için kısaltıldı; gerekirse aracı yeniden çağır)',
+    actionLog: (items: string) => `[Bu cevapta yapılanlar: ${items}]`,
     codeToFiles:
-      'Kodu sohbete yazma: bu sohbete bir proje klasörü bağlı ve dosya yazabiliyorsun. Az önce yazdığın kodu write_file ile klasöre dosya olarak kaydet; birden çok dosya gerekiyorsa (package.json, index.html, src/... gibi) her birini ayrı ayrı oluştur. Bittiğinde hangi dosyaları oluşturduğunu ve nasıl çalıştırılacağını kısaca yaz.',
+      'Kodu sohbete yazma: bu sohbete bir proje klasörü bağlı ve dosya yazabiliyorsun. Az önce yazdığın kodu klasöre kaydet: yeni dosyaları write_file ile oluştur, var olan bir dosyadaki küçük değişiklik için edit_file kullan; birden çok dosya gerekiyorsa (package.json, index.html, src/... gibi) her birini ayrı ayrı yaz. Bittiğinde hangi dosyaları oluşturduğunu ve nasıl çalıştırılacağını kısaca yaz.',
     dontAsk:
       'İzin isteme: okuma, listeleme ve arama için izin gerekmez, değiştiren işlemler için de uygulama kendisi onay kartı gösterir. Önerdiğin adımı şimdi ilgili aracı çağırarak yap ve görev bitene kadar devam et.',
     actDontTell:
-      'Yapacağını anlatma, şimdi yap: söylediğin işlem için ilgili aracı hemen çağır (dosyayı değiştirmek için write_file, komut için run_command, sorgu için sql_query). Aracı çağırmadan bitirme.',
+      'Yapacağını anlatma, şimdi yap: söylediğin işlem için elindeki araçlardan uygun olanı hemen çağır. Aracı çağırmadan bitirme.',
     continueAfterTools:
-      'Devam et. İş bitmediyse gereken aracı şimdi çağır (dosyayı düzeltmek için write_file, kontrol etmek için run_command). İş bittiyse ne yaptığını ve sonucu kısaca yaz.',
+      'Devam et. İş bitmediyse gereken aracı şimdi çağır. İş bittiyse ne yaptığını ve sonucu kısaca yaz.',
 
     errors: {
       noModel: 'Henüz bir model seçilmedi. Ayarlar → Modeller bölümünden bir model seçin.',
