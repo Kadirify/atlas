@@ -316,7 +316,7 @@ function toMessage(r: Row): Message {
     attachments: [],
     steps: r.steps ? (JSON.parse(r.steps as string) as ToolStep[]) : [],
     thinking: (r.thinking as string | null) ?? '',
-    undoCount: r.undo ? (JSON.parse(r.undo as string) as UndoEntry[]).length : 0
+    undoCount: typeof r.undo_count === 'number' ? r.undo_count : r.undo ? (JSON.parse(r.undo as string) as UndoEntry[]).length : 0
   }
 }
 
@@ -479,7 +479,12 @@ export class Db {
   listMessages(conversationId: string): Message[] {
     const messages = (
       this.db
-        .prepare('SELECT * FROM messages WHERE conversation_id = ? ORDER BY created_at ASC')
+        // Geri alma kaydının kendisi (dosyaların eski halleri, büyük olabilir) okunmaz; yalnızca kaç öğe olduğu sayılır.
+        .prepare(
+          `SELECT id, conversation_id, role, content, created_at, model, duration_ms, tokens, partial, steps, thinking,
+                  json_array_length(undo) AS undo_count
+           FROM messages WHERE conversation_id = ? ORDER BY created_at ASC`
+        )
         .all(conversationId) as Row[]
     ).map(toMessage)
     const rows = this.db
@@ -879,6 +884,16 @@ export class Db {
   }
 
   /** Bir cevabın geri alma kaydını verir ve siler (geri alma bir kez yapılır) */
+  getUndo(messageId: string): UndoEntry[] {
+    const row = this.db.prepare('SELECT undo FROM messages WHERE id = ?').get(messageId) as Row | undefined
+    return row?.undo ? (JSON.parse(row.undo as string) as UndoEntry[]) : []
+  }
+
+  /** Geri alınamayıp kalan kayıtlar saklanır; liste boşsa kayıt silinir. */
+  setUndo(messageId: string, entries: UndoEntry[]): void {
+    this.db.prepare('UPDATE messages SET undo = ? WHERE id = ?').run(entries.length > 0 ? JSON.stringify(entries) : null, messageId)
+  }
+
   takeUndo(messageId: string): UndoEntry[] {
     const row = this.db.prepare('SELECT undo FROM messages WHERE id = ?').get(messageId) as Row | undefined
     if (!row?.undo) return []

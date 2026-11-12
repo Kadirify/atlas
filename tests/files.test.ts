@@ -288,9 +288,110 @@ describe('Kod alanı araçları', () => {
     expect(approvals[0]).toMatchObject({ kind: 'write', path: 'notlar.txt' })
     expect(await readFile(join(root, 'notlar.txt'), 'utf8')).toBe('Proje kod adı: Zümrüt-7\nTeslim tarihi 10 Mart\nSorumlu: Deniz Akar')
     expect(service.takeEdits('sohbet')).toEqual([
-      { folderId: folder.id, path: 'notlar.txt', before: 'Proje kod adı: Zümrüt-7\nTeslim tarihi 3 Mart\nSorumlu: Deniz Akar' }
+      {
+        folderId: folder.id,
+        path: 'notlar.txt',
+        before: 'Proje kod adı: Zümrüt-7\nTeslim tarihi 3 Mart\nSorumlu: Deniz Akar',
+        afterHash: expect.any(String)
+      }
     ])
     expect(service.takeEdits('sohbet')).toEqual([])
+  })
+
+  it('düzenlemenin sonucunu ve yanlışlıkla tekrarlanan satırı modele gösterir', async () => {
+    await writeFile(join(root, 'app.js'), "import a from 'a'\nconsole.log(a)\n")
+    const out = await run('edit_file', { path: 'app.js', old_text: "import a from 'a'", new_text: "import a from 'a'\nimport a from 'a'" })
+    expect(out.result).toContain("2: import a from 'a'")
+    expect(out.result).toMatch(/iki kez|twice/)
+  })
+
+  it('UTF-8 olmayan dosyayı (Windows-1254 CSV) bozmaz', async () => {
+    // "TOPLAM;100\nüş" Windows-1254 ile: ü = FC, ş = FE
+    const bytes = Buffer.from([0x54, 0x4f, 0x50, 0x4c, 0x41, 0x4d, 0x3b, 0x31, 0x30, 0x30, 0x0a, 0xfc, 0xfe])
+    await writeFile(join(root, 'rapor.csv'), bytes)
+    const out = await run('edit_file', { path: 'rapor.csv', old_text: 'TOPLAM;100', new_text: 'TOPLAM;200' })
+    expect(out.result).toContain('UTF-8')
+    expect(await readFile(join(root, 'rapor.csv'))).toEqual(bytes)
+    expect((await run('write_file', { path: 'rapor.csv', content: 'yeni' })).result).toContain('UTF-8')
+    expect(approvals).toEqual([])
+  })
+
+  it('onay beklenirken kullanıcının değiştirdiği dosyanın üstüne yazmaz', async () => {
+    const racing = new FilesService(
+      db,
+      {
+        approval: (a) => void writeFile(join(root, 'notlar.txt'), 'kullanıcı değiştirdi').then(() => racing.respond(a.id, true)),
+        indexProgress: () => {}
+      },
+      noSemantic
+    )
+    const call = { name: 'edit_file', arguments: { path: 'notlar.txt', old_text: 'Teslim tarihi 3 Mart', new_text: 'Teslim tarihi 10 Mart' } }
+    const out = await racing.execute('sohbet', folder, call, new AbortController().signal, true)
+    expect(out.step.status).toBe('error')
+    expect(await readFile(join(root, 'notlar.txt'), 'utf8')).toBe('kullanıcı değiştirdi')
+    expect(racing.takeEdits('sohbet')).toEqual([])
+  })
+
+  it('durdurulmuş cevapta izin verilmiş işlemler de yapılmaz', async () => {
+    const controller = new AbortController()
+    controller.abort()
+    const out = await service.execute('sohbet', folder, { name: 'write_file', arguments: { path: 'x.txt', content: 'x' } }, controller.signal, true)
+    expect(out.step.status).toBe('denied')
+    await expect(stat(join(root, 'x.txt'))).rejects.toThrow()
+  })
+
+  it('korunan dosyalar "hep izin ver" olsa da her seferinde sorulur', async () => {
+    const remembering = new FilesService(
+      db,
+      {
+        approval: (a) => {
+          approvals.push(a)
+          queueMicrotask(() => remembering.respond(a.id, true, true))
+        },
+        indexProgress: () => {}
+      },
+      noSemantic
+    )
+    const exec = (name: string, args: Record<string, unknown>) =>
+      remembering.execute('sohbet', folder, { name, arguments: args }, new AbortController().signal, true)
+    await exec('write_file', { path: 'a.txt', content: '1' })
+    await exec('write_file', { path: 'b.txt', content: '2' })
+    expect(approvals).toHaveLength(1)
+    await exec('write_file', { path: 'package.json', content: '{}' })
+    await exec('write_file', { path: 'derle.bat', content: 'echo derle' })
+    await exec('write_file', { path: '.git/config', content: '[core]' })
+    await exec('write_file', { path: 'package.json', content: '{"a":1}' })
+    expect(approvals).toHaveLength(5)
+    expect(approvals.slice(1).every((a) => a.protected)).toBe(true)
+  })
+
+  it('.env gibi gizli dosyaları modele okutmaz; Windows yol hilelerini reddeder', async () => {
+    await writeFile(join(root, '.env'), 'DB_PASS=cokgizli')
+    for (const path of ['.env', '.env.', 'notlar.txt:akis', 'raporlar/CON']) {
+      const out = await run('read_file', { path })
+      expect(out.step.status).toBe('error')
+      expect(out.result).not.toContain('cokgizli')
+    }
+    expect((await run('search_files', { query: 'DB_PASS' })).result).not.toContain('cokgizli')
+  })
+
+  it('taşıma geri alınabilir, çalıştırılabilir türe yeniden adlandırılamaz', async () => {
+    await run('edit_file', { path: 'notlar.txt', old_text: '3 Mart', new_text: '4 Mart' })
+    expect((await run('move_file', { from: 'notlar.txt', to: 'baglan.rdp' })).step.status).toBe('error')
+    expect((await run('move_file', { from: 'notlar.txt', to: 'arsiv/notlar.txt' })).step.status).toBe('ok')
+    expect(service.takeEdits('sohbet').map((e) => [e.path, e.movedFrom ?? null])).toEqual([
+      ['notlar.txt', null],
+      ['arsiv/notlar.txt', 'notlar.txt']
+    ])
+  })
+
+  it('hedefi olmayan bağlantı üzerinden klasör dışına yazdırmaz', async () => {
+    try {
+      await symlink(join(outside, 'yok'), join(root, 'kisayol'), 'junction')
+    } catch {
+      return // bu sistemde bağlantı oluşturulamıyor
+    }
+    await expect(resolveInside(root, 'kisayol/yeni.txt')).rejects.toThrow()
   })
 
   it('edit_file bulunamayan ya da birden çok yerde geçen metni yazmaz', async () => {

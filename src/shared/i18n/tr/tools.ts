@@ -100,6 +100,13 @@ export const tools = {
       dontRepeatContent:
         '- Bir dosyayı yazdıktan sonra içeriğini cevabında baştan sona tekrar etme; neyi nereye kaydettiğini bir cümleyle söyle.',
       readOnly: '- Yalnızca okuma araçların var; dosya oluşturamaz, değiştiremez ya da silemezsin. İstenirse içeriği sohbete yaz.',
+      windowsShell:
+        "- Komutlar Windows'ta cmd.exe ile çalışır: dosya listelemek için dir, okumak için type, aramak için findstr kullan; ls, cat, grep ve rm yoktur; PowerShell komutları da çalıştırılmaz.",
+      fixCodeNotTests:
+        '- Bir test başarısız olursa önce kodu düzelt. Testi yalnızca testin kendisi açıkça yanlışsa değiştir ve bunu kullanıcıya söyle.',
+      testCommand: (command: string) => `- Bu projenin test komutu: ${command}`,
+      overridesPersona:
+        '- Bu klasör kuralları, yukarıdaki kişilik talimatlarındaki kod gösterme alışkanlıklarından önce gelir: kodu sohbete değil dosyaya yaz.',
       citeFile: '- Cevabında bilgiyi hangi dosyadan aldığını dosya adıyla belirt.',
       planFirst:
         '- Birden çok adımlı işlerde (yeni bir uygulama, birkaç dosyada değişiklik, hata ayıklama) önce update_plan ile kısa bir plan yaz, her adım bittikçe güncelle. Var olan dosyada küçük değişiklik için edit_file kullan; dosyanın tamamını yeniden yazma.',
@@ -126,6 +133,7 @@ export const tools = {
       plan: (done: number, total: number) => `Plan: ${done} / ${total} adım bitti`,
       edited: (path: string) => `Düzenlendi: ${path}`,
       editNotFound: (path: string) => `Düzenlenemedi, metin bulunamadı: ${path}`,
+      changedMeanwhile: (path: string) => `Yazılmadı, dosya bu arada değişti: ${path}`,
       editAmbiguous: (path: string) => `Düzenlenemedi, metin birden çok yerde: ${path}`
     },
 
@@ -160,6 +168,12 @@ export const tools = {
         `old_text "${path}" dosyasında birebir bulunamadı. Önce read_file ile dosyanın güncel halini oku, değiştirmek istediğin kısmı boşlukları ve satır sonlarıyla aynen kopyala ve yeniden dene.`,
       editAmbiguous: (path: string, count: number) =>
         `old_text "${path}" dosyasında ${count} yerde geçiyor. Tek bir yeri gösterecek kadar çevresindeki satırları da ekleyip yeniden dene.`,
+      changedMeanwhile: (path: string) =>
+        `"${path}" onay beklenirken değişti (kullanıcı ya da başka bir program düzenledi); hiçbir şey yazılmadı. read_file ile güncel halini oku ve değişikliği yeniden yap.`,
+      editedRegion: (path: string, region: string) => `"${path}" düzenlendi. Değişen bölümün şimdiki hali:
+${region}`,
+      duplicateLine: (line: string) =>
+        `Dikkat: değişikliğin hemen yanında aynı satır art arda iki kez geçiyor ("${line}"). Yanlışlıkla tekrar etmiş olabilirsin; kontrol et ve gerekiyorsa düzelt.`,
       error: (message: string) => `Hata: ${message}`
     },
 
@@ -189,7 +203,9 @@ export const tools = {
       folderNotFound: 'Klasör bulunamadı.',
       emptyPlan: 'Plan boş; en az bir adım yaz.',
       editMissing: (path: string) => `"${path}" diye bir dosya yok. Yeni dosya için write_file kullan.`,
-      editEmpty: 'old_text boş olamaz.'
+      editEmpty: 'old_text boş olamaz.',
+      notUtf8: (path: string) =>
+        `"${path}" UTF-8 değil (büyük olasılıkla Windows-1254 ya da UTF-16). Bozulmasın diye bu dosya değiştirilmez. Kullanıcıya dosyayı UTF-8 olarak kaydetmesini söyle.`
     },
 
     search: {
@@ -212,8 +228,8 @@ export const tools = {
   /** Veritabanı araçları (services/sql.ts) */
   sql: {
     defs: {
-      schema: 'Bağlı veritabanının tablolarını listeler. "table" verilirse o tablonun sütunlarını ve türlerini verir. Sorgu yazmadan önce bunu kullan.',
-      schemaTableArg: 'Tablo adı (isteğe bağlı). Örnek: Personel ya da dbo.Personel',
+      schema: 'Veritabanındaki bir nesneye bakar. "table" bir tablo ya da görünüm adıysa sütunlarını ve türlerini, yordam, işlev, tetikleyici ya da zamanlanmış iş adıysa kodunu verir. Talimattaki listede olmayan ya da ayrıntısını bilmediğin nesneler için kullan.',
+      schemaTableArg: 'Nesne adı: tablo, görünüm, yordam, işlev, tetikleyici ya da iş. Örnek: Personel, dbo.Personel, dbo.trg_SiparisIptal',
       query: 'Bağlı veritabanında bir SQL sorgusu çalıştırır. SELECT hemen çalışır. Veri ya da yapı değiştiren sorgular kullanıcıya onaya sunulur. DELETE, DROP ve TRUNCATE çalıştırılmaz.',
       querySqlArg: 'Çalıştırılacak tek bir SQL ifadesi'
     },
@@ -223,7 +239,7 @@ export const tools = {
       objectsTitle: 'Programlanabilir nesneler (kodunu görmek için sql_schema ile adını ver):',
       objectsHint:
         '- Yordam, işlev, tetikleyici, görünüm ya da zamanlanmış işin ne yaptığı sorulursa önce sql_schema ile adını vererek kodunu oku, sonra açıkla. Bir yordamı çalıştırmak (EXEC) veriyi değiştirebileceği için onay kartıyla sorulur.',
-      schemaMore: (n: number) => `(${n} tablo daha var; sql_schema ile bak)`,
+      schemaMore: (n: number) => `(${n} nesne daha var; sql_schema ile bak)`,
       schemaFirst: 'Yalnızca bu listedeki gerçek tablo ve sütun adlarını kullan; ad uydurma. Listede yoksa sql_schema ile bak.',
       readFree: 'Veri okumak için sql_query ile SELECT çalıştır; bunun için kullanıcıdan izin isteme. Sonucu kısa ve anlaşılır biçimde özetle.',
       writeApproval: 'INSERT, UPDATE, CREATE, ALTER gibi değiştiren sorguları da sql_query ile gönder: uygulama kullanıcıya onay kartı gösterir. Kullanıcı reddederse üsteleme.',
@@ -250,6 +266,7 @@ export const tools = {
       noTables: 'Veritabanında tablo yok.',
       noTable: (table: string) => `"${table}" adında bir tablo yok. sql_schema aracını tablo adı vermeden çağırıp listeye bak.`,
       emptySql: 'Sorgu boş.',
+      noRows: '(Sorgu çalıştı; hiç satır dönmedi.)',
       more: (shown: number, total: number, truncated: boolean) =>
         truncated ? `(ilk ${shown} satır gösterildi; sonuç daha uzun ve kesildi)` : `(${total} satırın ilk ${shown} tanesi gösterildi)`,
       wrote: (rows: number) => `Kullanıcı onayladı. Sorgu çalıştı ve kalıcı oldu: ${rows} satır etkilendi.`,
@@ -268,6 +285,7 @@ export const tools = {
       notFound: 'Bu veritabanı bağlantısı artık yok.',
       connect: (message: string) => `Veritabanına bağlanılamadı: ${message}`,
       unreachable: (host: string, port: number) => `Sunucuya ulaşılamadı (${host}, port ${port}). Sunucunun çalıştığını, adresin ve portun doğru olduğunu kontrol et.`,
+      stopped: 'Cevap durduruldu; sorgu çalıştırılmadı.',
       panelReadOnly: 'Buradan yalnızca SELECT sorguları çalıştırılır. Değiştiren sorguları Atlas\'a yazdır; onay kartıyla çalışır. Silme işlemlerini kendi aracınla yap.'
     }
   },

@@ -1,13 +1,12 @@
-import { randomUUID } from 'node:crypto'
-import { mkdir, readdir, readFile, realpath, rename, stat, writeFile } from 'node:fs/promises'
+import { createHash, randomUUID } from 'node:crypto'
+import { lstat, mkdir, readdir, readFile, realpath, rename, stat, writeFile } from 'node:fs/promises'
 import { basename, dirname, extname, join, relative, resolve, sep } from 'node:path'
-import { shell } from 'electron'
 import type { FileApproval, Folder, FolderCapability, IndexProgress, PlanItem, ToolStep, UndoEntry } from '@shared/types'
 import type { Db, FileChunkRow } from '../db'
 import { L, locale } from '../i18n'
-import { extractText, TEXT_EXTENSIONS } from './attachments'
+import { decodeText, extractText, TEXT_EXTENSIONS } from './attachments'
 import { classifyCommand } from '@shared/command'
-import { runCommand } from './code'
+import { isSecretFile, runCommand } from './code'
 import { scanHardware } from './hardware'
 import { cosine, EMBEDDING_MODEL, tokens, type MemoryService } from './memory'
 import * as ollama from './ollama'
@@ -27,21 +26,96 @@ const MAX_CHUNKS_PER_FILE = 60
 
 /** İçeriği metne çevrilebilen belge türleri */
 const DOCUMENT_EXTENSIONS = new Set(['.pdf', '.docx', '.xlsx'])
-/** Gezilmeyen klasörler */
-const SKIP_DIRS = new Set(['node_modules', '$RECYCLE.BIN', 'System Volume Information', '__pycache__'])
+/** Gezilmeyen klasörler: sistem klasörleri ve derleme çıktıları (aramayı boğmasınlar) */
+const SKIP_DIRS = new Set([
+  'node_modules',
+  '$RECYCLE.BIN',
+  'System Volume Information',
+  '__pycache__',
+  'bin',
+  'obj',
+  'dist',
+  'build',
+  'out',
+  'target',
+  'coverage',
+  'venv'
+])
 
 export class FileToolError extends Error {}
 
-function samePath(a: string, b: string): boolean {
-  return process.platform === 'win32' ? a.toLowerCase() === b.toLowerCase() : a === b
+/** Başka programların kendiliğinden çalıştırdığı ya da okuduğu yerler: git kancaları, editör görevleri, CI, npm betikleri */
+const PROTECTED_DIRS = new Set(['.git', '.vscode', '.idea', '.github', '.husky', '.devcontainer'])
+const PROTECTED_NAME =
+  /^(?:package\.json|\.npmrc|\.yarnrc(?:\.yml)?|\.pnpmfile\.cjs|makefile|gnumakefile|directory\.build\.(?:props|targets)|nuget\.config|\.gitattributes|\.gitmodules|\.env(?:\..*)?)$/i
+const PROTECTED_EXT = new Set(['.bat', '.cmd', '.ps1', '.psm1', '.psd1', '.sh', '.vbs', '.vbe', '.wsf', '.reg', '.props', '.targets', '.lnk', '.url'])
+
+/**
+ * Atlas bu dosyaları değiştirebilir ama "hep izin ver" bunları kapsamaz: kart her seferinde uyarıyla sorulur.
+ * Aksi halde izinli bir düzenleme, sonradan başka bir programın (git, VS Code, npm) çalıştıracağı kod bırakabilirdi.
+ */
+export function isProtectedPath(rel: string): boolean {
+  const parts = rel.split(/[\\/]+/).filter(Boolean)
+  const name = parts.at(-1) ?? ''
+  return parts.some((p) => PROTECTED_DIRS.has(p.toLowerCase())) || PROTECTED_NAME.test(name) || PROTECTED_EXT.has(extname(name).toLowerCase())
 }
 
+function contentHash(text: string): string {
+  return createHash('sha256').update(text, 'utf8').digest('hex')
+}
+
+/** Düzenlenecek dosyanın metni. UTF-8 olmayan dosyalar (Windows-1254 CSV gibi) bozulmasın diye düzenlenmez. */
+async function readEditable(full: string, rel: string): Promise<string> {
+  const bytes = await readFile(full)
+  const utf16 = bytes.length >= 2 && ((bytes[0] === 0xff && bytes[1] === 0xfe) || (bytes[0] === 0xfe && bytes[1] === 0xff))
+  try {
+    if (utf16) throw new Error('utf-16')
+    // ignoreBOM: dosyanın başındaki BOM metinde kalır, yazarken de korunur.
+    return new TextDecoder('utf-8', { fatal: true, ignoreBOM: true }).decode(bytes)
+  } catch {
+    throw new FileToolError(L().tools.files.errors.notUtf8(rel))
+  }
+}
+
+/**
+ * Düzenlenen bölümün şimdiki hali (çevresiyle, satır numaralı) ve hemen yanında art arda tekrar eden bir satır varsa o satır.
+ * Model değişikliğin sonucunu görsün; yanlışlıkla iki kez yazdığı satırı fark etsin.
+ */
+export function editedRegion(after: string, start: number, length: number): { region: string; duplicate: string | null } {
+  const lines = after.split(/\r?\n/)
+  const first = after.slice(0, start).split(/\r?\n/).length - 1
+  const last = after.slice(0, start + length).split(/\r?\n/).length - 1
+  const from = Math.max(0, first - 4)
+  const to = Math.min(lines.length - 1, last + 4)
+  let duplicate: string | null = null
+  for (let i = Math.max(from, 1); i <= to && !duplicate; i++) {
+    const line = lines[i].trim()
+    if (line.length >= 8 && line === lines[i - 1].trim()) duplicate = line
+  }
+  const region = lines
+    .slice(from, to + 1)
+    .map((line, i) => `${from + i + 1}: ${line}`)
+    .join('\n')
+  return { region: region.length > 2000 ? `${region.slice(0, 2000)}\n…` : region, duplicate }
+}
+
+/**
+ * İki yol da realpath ile diskteki gerçek yazılışına çevrildiği için birebir karşılaştırılır. Küçük harfe çevirerek
+ * karşılaştırmak, "K" (Kelvin işareti) gibi benzer harfli bir kardeş klasörü içeride saydırabiliyordu.
+ */
 function isInside(root: string, target: string): boolean {
-  if (samePath(root, target)) return true
+  if (root === target) return true
   const prefix = root.endsWith(sep) ? root : root + sep
-  return process.platform === 'win32'
-    ? target.toLowerCase().startsWith(prefix.toLowerCase())
-    : target.startsWith(prefix)
+  return target.startsWith(prefix)
+}
+
+/**
+ * Windows'un yanıltıcı yol biçimleri: alternatif veri akışı ("a.txt:gizli"), sonda nokta ya da boşluk (Windows siler,
+ * ".env." aslında ".env" olur) ve aygıt adları (CON, NUL, COM1...).
+ */
+function badSegment(part: string): boolean {
+  if (part === '.' || part === '..' || part === '') return false
+  return part.includes(':') || /[. ]$/.test(part) || /^(?:con|prn|aux|nul|com\d|lpt\d)(?:\..*)?$/i.test(part)
 }
 
 /**
@@ -51,6 +125,7 @@ function isInside(root: string, target: string): boolean {
 export async function resolveInside(root: string, requested: unknown): Promise<string> {
   const raw = typeof requested === 'string' ? requested.trim() : ''
   const cleaned = raw.replace(/^[\\/]+/, '') || '.'
+  if (cleaned.split(/[\\/]+/).some(badSegment)) throw new FileToolError(L().tools.files.errors.outside(raw))
   const rootReal = await realpath(root)
   let existing = resolve(rootReal, cleaned)
   const rest: string[] = []
@@ -61,6 +136,8 @@ export async function resolveInside(root: string, requested: unknown): Promise<s
       if (!isInside(rootReal, full)) break
       return full
     } catch {
+      // Var olup çözülemeyen bir yol (hedefi olmayan kısayol gibi) dışarıya yazdırabilir: reddedilir.
+      if (await lstat(existing).then(() => true, () => false)) break
       const parent = dirname(existing)
       if (parent === existing) break
       rest.push(basename(existing))
@@ -85,7 +162,12 @@ function hidden(name: string): boolean {
 }
 
 /** Klasörü gezer; gizli klasörleri atlar. Dosya yollarını kök klasöre göre göreli döndürür. */
-export async function walk(root: string, limit = MAX_WALK_FILES): Promise<{ path: string; full: string }[]> {
+export async function walk(
+  root: string,
+  limit = MAX_WALK_FILES,
+  /** Yalnızca bu süzgeçten geçen dosyalar sayılır ve döner */
+  accept: (name: string) => boolean = () => true
+): Promise<{ path: string; full: string }[]> {
   const found: { path: string; full: string }[] = []
   const visit = async (dir: string, depth: number): Promise<void> => {
     if (found.length >= limit || depth > MAX_DEPTH) return
@@ -100,7 +182,7 @@ export async function walk(root: string, limit = MAX_WALK_FILES): Promise<{ path
       if (hidden(entry.name) || entry.isSymbolicLink()) continue
       const full = join(dir, entry.name)
       if (entry.isDirectory()) await visit(full, depth + 1)
-      else if (entry.isFile()) found.push({ path: toRelative(root, full), full })
+      else if (entry.isFile() && accept(entry.name)) found.push({ path: toRelative(root, full), full })
     }
   }
   await visit(root, 0)
@@ -240,6 +322,20 @@ export async function projectRules(root: string): Promise<{ file: string; text: 
   return null
 }
 
+/** Projenin test komutu (package.json'daki test betiği, .NET çözümü, pytest); modele söylenir ki doğrulamayı tahmin etmesin. */
+export async function testCommand(root: string): Promise<string | null> {
+  const pkg = await readFile(join(root, 'package.json'), 'utf8').then(
+    (text) => JSON.parse(text) as { scripts?: Record<string, unknown> },
+    () => null
+  )
+  const test = pkg?.scripts?.test
+  if (typeof test === 'string' && test.trim() && !/no test specified/i.test(test)) return 'npm test'
+  const entries = await readdir(root).catch(() => [] as string[])
+  if (entries.some((name) => /\.sln$/i.test(name))) return 'dotnet test'
+  if (entries.some((name) => name === 'pytest.ini' || name === 'conftest.py')) return 'python -m pytest'
+  return null
+}
+
 export class FilesService {
   private pending = new Map<string, (approved: boolean) => void>()
   /**
@@ -248,7 +344,7 @@ export class FilesService {
    */
   private trust = new Map<string, { edits: boolean; commands: Set<string> }>()
   /** Onay bekleyen işlemlerin sohbeti ve türü; "hep izin ver" denince neyin hatırlanacağını bilmek için */
-  private pendingInfo = new Map<string, { conversationId: string; kind: FileApproval['kind']; command?: string }>()
+  private pendingInfo = new Map<string, { conversationId: string; kind: FileApproval['kind']; command?: string; protected?: boolean }>()
   /** Süren cevapta değiştirilen dosyaların ilk halleri (aynı dosya ikinci kez değişirse ilk hal korunur) */
   private turnEdits = new Map<string, UndoEntry[]>()
 
@@ -259,11 +355,31 @@ export class FilesService {
     return entries
   }
 
-  private remember(conversationId: string, folderId: string, path: string, before: string | null): void {
+  /** Cevap kaydedilirken çağrılır: geri alma kaydını sıfırlamadan verir. Kayıt başarılı olunca clearEdits çağrılır. */
+  peekEdits(conversationId: string): UndoEntry[] {
+    return [...(this.turnEdits.get(conversationId) ?? [])]
+  }
+
+  clearEdits(conversationId: string): void {
+    this.turnEdits.delete(conversationId)
+  }
+
+  /** written: Atlas'ın yazdığı içerik; geri alırken dosyanın sonradan değişip değişmediğine bakmak için özeti saklanır. */
+  private remember(conversationId: string, folderId: string, path: string, before: string | null, written: string): void {
     const list = this.turnEdits.get(conversationId) ?? []
-    if (!list.some((e) => e.folderId === folderId && e.path === path)) list.push({ folderId, path, before })
+    const known = list.find((e) => e.folderId === folderId && e.path === path && !e.movedFrom)
+    if (known) known.afterHash = contentHash(written)
+    else list.push({ folderId, path, before, afterHash: contentHash(written) })
     this.turnEdits.set(conversationId, list)
     this.events.edited?.({ conversationId, folderId, path, before })
+  }
+
+  /** Taşıma da geri alınabilsin: geri alırken dosya eski yerine taşınır. Kayıtlar sondan başa geri alınır. */
+  private rememberMove(conversationId: string, folderId: string, from: string, to: string): void {
+    const list = this.turnEdits.get(conversationId) ?? []
+    list.push({ folderId, path: to, before: null, movedFrom: from })
+    this.turnEdits.set(conversationId, list)
+    this.events.edited?.({ conversationId, folderId, path: to, before: null })
   }
   private capabilityCache: FolderCapability | null = null
   private chunks = new Map<string, FileChunkRow[]>()
@@ -301,6 +417,7 @@ export class FilesService {
   async promptBlock(folder: Folder, write: boolean): Promise<string> {
     const t = L().tools.files.prompt
     const rules = await projectRules(folder.path)
+    const test = write ? await testCommand(folder.path) : null
     return [
       t.intro(folder.name),
       ...(rules ? [t.projectRules(rules.file, rules.text)] : []),
@@ -308,7 +425,17 @@ export class FilesService {
       t.lookFirst,
       t.proactive,
       t.relativePaths,
-      ...(write ? [t.callDirectly, t.dontAskApproval, t.dontRepeatContent] : [t.readOnly]),
+      ...(write
+        ? [
+            t.callDirectly,
+            t.dontAskApproval,
+            t.dontRepeatContent,
+            t.overridesPersona,
+            t.fixCodeNotTests,
+            ...(process.platform === 'win32' ? [t.windowsShell] : []),
+            ...(test ? [t.testCommand(test)] : [])
+          ]
+        : [t.readOnly]),
       t.citeFile
     ].join('\n')
   }
@@ -316,7 +443,8 @@ export class FilesService {
   /** Onay kartına verilen cevap. remember: bu sohbette aynı türdeki işlemlere bir daha sorma. */
   respond(approvalId: string, approved: boolean, remember = false): void {
     const info = this.pendingInfo.get(approvalId)
-    if (approved && remember && info) {
+    // Korunan dosyaların kartı "hep izin ver" iznini açmaz.
+    if (approved && remember && info && !info.protected) {
       const trust = this.trustFor(info.conversationId)
       if (info.kind === 'command' && info.command) trust.commands.add(info.command)
       else if (info.kind === 'write' || info.kind === 'move' || info.kind === 'mkdir') trust.edits = true
@@ -347,9 +475,17 @@ export class FilesService {
 
   /** İzin verilmişse onay sormadan geçer; verilmemişse kullanıcıya sorar. */
   private async allow(approval: FileApproval, signal: AbortSignal): Promise<boolean> {
+    // Kullanıcı durdurduysa izin verilmiş işlemler de yapılmaz.
+    if (signal.aborted) return false
     const trust = this.trust.get(approval.conversationId)
-    if (approval.kind === 'command' ? trust?.commands.has(approval.path) : (approval.kind === 'write' || approval.kind === 'move') && trust?.edits) return true
-    this.pendingInfo.set(approval.id, { conversationId: approval.conversationId, kind: approval.kind, command: approval.kind === 'command' ? approval.path : undefined })
+    const trusted = approval.kind === 'command' ? trust?.commands.has(approval.path) : (approval.kind === 'write' || approval.kind === 'move') && trust?.edits
+    if (trusted && !approval.protected) return true
+    this.pendingInfo.set(approval.id, {
+      conversationId: approval.conversationId,
+      kind: approval.kind,
+      command: approval.kind === 'command' ? approval.path : undefined,
+      protected: approval.protected
+    })
     return this.ask(approval, signal)
   }
 
@@ -358,6 +494,7 @@ export class FilesService {
       const finish = (approved: boolean): void => {
         signal.removeEventListener('abort', onAbort)
         this.pending.delete(approval.id)
+        this.pendingInfo.delete(approval.id)
         resolvePromise(approved)
       }
       const onAbort = (): void => finish(false)
@@ -409,6 +546,8 @@ export class FilesService {
 
         case 'read_file': {
           const full = await resolveInside(root, args.path)
+          // Parola ve anahtar dosyaları modele verilmez (kod alanında da içerikleri gösterilmez).
+          if (isSecretFile(full)) throw new FileToolError(L().tools.code.secretFile)
           const info = await stat(full)
           if (info.isDirectory()) throw new FileToolError(t.errors.isFolder)
           if (info.size > MAX_READ_BYTES) throw new FileToolError(t.errors.tooLarge)
@@ -481,7 +620,7 @@ export class FilesService {
           if (!info) throw new FileToolError(t.errors.editMissing(rel))
           if (info.isDirectory()) throw new FileToolError(t.errors.pathIsFolder)
           if (info.size > MAX_GREP_BYTES) throw new FileToolError(t.errors.tooLarge)
-          const before = await readFile(full, 'utf8')
+          const before = await readEditable(full, rel)
           let oldText = str(args.old_text)
           let newText = str(args.new_text)
           if (!oldText) throw new FileToolError(t.errors.editEmpty)
@@ -493,14 +632,18 @@ export class FilesService {
           const count = before.split(oldText).length - 1
           if (count === 0) return done(t.step.editNotFound(rel), t.result.editNotFound(rel), 'error')
           if (count > 1) return done(t.step.editAmbiguous(rel), t.result.editAmbiguous(rel, count), 'error')
-          const after = before.replace(oldText, () => newText)
+          const at = before.indexOf(oldText)
+          const after = before.slice(0, at) + newText + before.slice(at + oldText.length)
           if (after === before) return done(t.step.unchanged(rel), t.result.unchanged)
-          const approved = await this.allow({ id: randomUUID(), conversationId, kind: 'write', path: rel, before, after }, signal)
+          const approved = await this.allow({ id: randomUUID(), conversationId, kind: 'write', path: rel, before, after, protected: isProtectedPath(rel) }, signal)
           if (!approved) return done(t.step.denied(rel), t.result.writeDenied, 'denied')
+          // Onay beklenirken dosya değiştiyse (kullanıcı düzenlediyse) onun değişikliği ezilmez.
+          if ((await readEditable(full, rel)) !== before) return done(t.step.changedMeanwhile(rel), t.result.changedMeanwhile(rel), 'error')
           await writeFile(full, after, 'utf8')
           this.db.logFileAction({ folderId: folder.id, kind: 'write', path: rel, detail: t.log.contentChanged })
-          this.remember(conversationId, folder.id, rel, before)
-          return done(t.step.edited(rel), t.result.edited(rel))
+          this.remember(conversationId, folder.id, rel, before, after)
+          const { region, duplicate } = editedRegion(after, at, newText.length)
+          return done(t.step.edited(rel), [t.result.editedRegion(rel, region), duplicate ? t.result.duplicateLine(duplicate) : ''].filter(Boolean).join('\n\n'))
         }
 
         case 'write_file': {
@@ -515,19 +658,23 @@ export class FilesService {
           if (content.length > MAX_WRITE_CHARS) throw new FileToolError(t.errors.contentTooLong)
           const existing = await stat(full).catch(() => null)
           if (existing?.isDirectory()) throw new FileToolError(t.errors.pathIsFolder)
-          const before = existing && existing.size <= MAX_GREP_BYTES ? await readFile(full, 'utf8').catch(() => null) : null
+          // Var olan dosyanın önceki hali geri alma için birebir saklanabilmeli: çok büyük ya da UTF-8 olmayan dosyaya yazılmaz.
+          if (existing && existing.size > MAX_GREP_BYTES) throw new FileToolError(t.errors.tooLarge)
+          const before = existing ? await readEditable(full, rel) : null
           if (before === content) return done(t.step.unchanged(rel), t.result.unchanged)
 
           const approved = await this.allow(
-            { id: randomUUID(), conversationId, kind: 'write', path: rel, before: existing ? (before ?? '') : null, after: content },
+            { id: randomUUID(), conversationId, kind: 'write', path: rel, before, after: content, protected: isProtectedPath(rel) || isSecretFile(rel) },
             signal
           )
           if (!approved) return done(t.step.denied(rel), t.result.writeDenied, 'denied')
+          // Onay beklenirken dosya değiştiyse ya da bu arada oluştuysa üstüne yazılmaz.
+          const current = (await stat(full).catch(() => null)) ? await readEditable(full, rel) : null
+          if (current !== before) return done(t.step.changedMeanwhile(rel), t.result.changedMeanwhile(rel), 'error')
           await mkdir(dirname(full), { recursive: true })
-          // Geri alma için önceki hal saklanır (yeni dosyada null).
-          const previous = existing ? await readFile(full, 'utf8').catch(() => before ?? '') : null
           await writeFile(full, content, 'utf8')
-          this.remember(conversationId, folder.id, rel, previous)
+          // Geri alma için önceki hal saklanır (yeni dosyada null).
+          this.remember(conversationId, folder.id, rel, before, content)
           this.db.logFileAction({
             folderId: folder.id,
             kind: 'write',
@@ -545,10 +692,19 @@ export class FilesService {
           if (await stat(to).catch(() => null)) throw new FileToolError(t.errors.targetExists)
           const relFrom = toRelative(root, from)
           const relTo = toRelative(root, to)
-          const approved = await this.allow({ id: randomUUID(), conversationId, kind: 'move', path: relFrom, target: relTo }, signal)
+          // Yeniden adlandırma dosyayı çalıştırılabilir bir türe çeviremez (notlar.txt → baglan.rdp gibi).
+          const fromExt = extname(from).toLowerCase()
+          const toExt = extname(to).toLowerCase()
+          if (toExt !== fromExt && !TEXT_EXTENSIONS.has(toExt) && !DOCUMENT_EXTENSIONS.has(toExt)) throw new FileToolError(t.errors.unsupportedType(toExt))
+          const approved = await this.allow(
+            { id: randomUUID(), conversationId, kind: 'move', path: relFrom, target: relTo, protected: isProtectedPath(relFrom) || isProtectedPath(relTo) },
+            signal
+          )
           if (!approved) return done(t.step.denied(relFrom), t.result.moveDenied, 'denied')
+          if (await stat(to).catch(() => null)) throw new FileToolError(t.errors.targetExists)
           await mkdir(dirname(to), { recursive: true })
           await rename(from, to)
+          this.rememberMove(conversationId, folder.id, relFrom, relTo)
           this.db.logFileAction({ folderId: folder.id, kind: 'move', path: relFrom, detail: t.log.movedTo(relTo) })
           return done(t.step.moved(relFrom, relTo), t.result.moved(relFrom, relTo))
         }
@@ -592,7 +748,11 @@ export class FilesService {
     // Küçük harfe çevirme dilin kuralına göre yapılır: Türkçede "I" → "ı", İngilizcede "I" → "i".
     const lower = (s: string): string => s.toLocaleLowerCase(locale())
     const needle = lower(query)
-    const files = await walk(folder.path)
+    // Yalnızca aranabilecek dosyalar sayılır; derleme çıktıları ve ikili dosyalar sınırı doldurmasın.
+    const files = await walk(folder.path, MAX_WALK_FILES, (name) => {
+      const ext = extname(name).toLowerCase()
+      return (TEXT_EXTENSIONS.has(ext) || DOCUMENT_EXTENSIONS.has(ext)) && !isSecretFile(name)
+    })
     const sections: string[] = []
     let count = 0
 
@@ -608,7 +768,7 @@ export class FilesService {
       if (!TEXT_EXTENSIONS.has(extname(file.path).toLowerCase())) continue
       const info = await stat(file.full).catch(() => null)
       if (!info || info.size > MAX_GREP_BYTES) continue
-      const content = await readFile(file.full, 'utf8').catch(() => '')
+      const content = await readFile(file.full).then(decodeText, () => '')
       content.split('\n').forEach((line, i) => {
         if (lines.length < 30 && lower(line).includes(needle)) {
           lines.push(t.lineHit(file.path, i + 1, line.trim().slice(0, 200)))
@@ -650,13 +810,18 @@ export class FilesService {
   async index(folderId: string): Promise<Folder> {
     const folder = this.db.getFolder(folderId)
     if (!folder) throw new FileToolError(L().tools.files.errors.folderNotFound)
-    const files = (await walk(folder.path, MAX_INDEX_FILES)).filter((f) => {
-      const ext = extname(f.path).toLowerCase()
-      return TEXT_EXTENSIONS.has(ext) || DOCUMENT_EXTENSIONS.has(ext)
+    const files = await walk(folder.path, MAX_INDEX_FILES, (name) => {
+      const ext = extname(name).toLowerCase()
+      return (TEXT_EXTENSIONS.has(ext) || DOCUMENT_EXTENSIONS.has(ext)) && !isSecretFile(name)
     })
     const known = this.db.indexedFiles(folderId)
     const present = new Set(files.map((f) => f.path))
-    for (const path of known.keys()) if (!present.has(path)) this.db.removeFileChunks(folderId, path)
+    // Sınıra gelindiyse gezilmeyen dosyalar indeksten silinmez; yalnızca gerçekten silinmiş olanlar çıkarılır.
+    const complete = files.length < MAX_INDEX_FILES
+    for (const path of known.keys()) {
+      if (present.has(path)) continue
+      if (complete || !(await stat(join(folder.path, path)).catch(() => null))) this.db.removeFileChunks(folderId, path)
+    }
 
     const semantic = await this.memory.hasSemantic(true)
     for (let i = 0; i < files.length; i++) {

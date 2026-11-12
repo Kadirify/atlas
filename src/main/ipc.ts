@@ -1,9 +1,11 @@
-import { readFile, rm, stat, writeFile, mkdir } from 'node:fs/promises'
+import { createHash } from 'node:crypto'
+import { readFile, rename, rm, stat, writeFile, mkdir } from 'node:fs/promises'
 import { realpath } from 'node:fs/promises'
 import { join, dirname } from 'node:path'
-import { app, BrowserWindow, clipboard, dialog, ipcMain, shell } from 'electron'
+import { app, BrowserWindow, clipboard, dialog, ipcMain, shell, type IpcMainInvokeEvent } from 'electron'
 import type {
   ImproveRequest,
+  UndoEntry,
   InstalledModel,
   Level,
   MemoryCategory,
@@ -70,10 +72,20 @@ export interface DesktopHooks {
   quit(): void
 }
 
+/** Yalnızca uygulamanın kendi sayfası (en üst çerçeve) çağırabilir; gömülü bir çerçeve ya da başka bir adres değil. */
+function trustedSender(event: IpcMainInvokeEvent): boolean {
+  const frame = event.senderFrame
+  if (!frame || frame.parent) return false
+  if (frame.url.startsWith('file://')) return true
+  const dev = process.env.ELECTRON_RENDERER_URL
+  return !app.isPackaged && !!dev && frame.url.startsWith(dev)
+}
+
 /** Hatalar arayüze geçerli dilde düz mesaj olarak ulaşsın diye her cevap sarmalanır. */
 function handle<A extends unknown[], R>(channel: string, fn: (...args: A) => R | Promise<R>): void {
-  ipcMain.handle(channel, async (_event, ...args): Promise<IpcResult<R>> => {
+  ipcMain.handle(channel, async (event, ...args): Promise<IpcResult<R>> => {
     try {
+      if (!trustedSender(event)) throw new Error('untrusted sender')
       if (isLocked() && !OPEN_WHEN_LOCKED.has(channel)) throw new Error(L().main.lock.locked)
       return { ok: true, data: await fn(...(args as A)) }
     } catch (err) {
@@ -210,9 +222,11 @@ export function registerIpc(
       sqlId: options?.sqlId && sqlService().get(options.sqlId) ? options.sqlId : null
     })
   )
-  handle('conversations:setFolder', (id: string, folderId: string | null) =>
-    db.setConversationFolder(id, folderId && db.getFolder(folderId) ? folderId : null)
-  )
+  handle('conversations:setFolder', (id: string, folderId: string | null) => {
+    // "Hep izin ver" izinleri klasöre özgüdür: sohbetin klasörü değişince unutulur.
+    files.revokeTrust(String(id))
+    return db.setConversationFolder(id, folderId && db.getFolder(folderId) ? folderId : null)
+  })
   handle('conversations:setSql', (id: string, sqlId: string | null) => db.setConversationSql(id, sqlId && sqlService().get(sqlId) ? sqlId : null))
 
   // --- Kod alanı: proje dosya ağacı ve dosya görüntüleme ---
@@ -410,21 +424,40 @@ export function registerIpc(
   handle('folders:trust', (conversationId: string) => files.trustState(conversationId))
   // Kullanıcı bir cevaptaki dosya değişikliklerini geri alır. Atlas'ın oluşturduğu dosyalar silinmez, çöp kutusuna gider.
   handle('folders:undo', async (messageId: string) => {
+    const id = String(messageId)
+    const left: UndoEntry[] = []
     let restored = 0
-    for (const entry of db.takeUndo(String(messageId))) {
+    // Sondan başa: en son yapılan değişiklik önce geri alınır (önce düzenleyip sonra taşıdıysa doğru çözülsün).
+    for (const entry of [...db.getUndo(id)].reverse()) {
       const folder = db.getFolder(entry.folderId)
       if (!folder) continue
-      const full = await resolveInside(folder.path, entry.path).catch(() => null)
-      if (!full) continue
-      if (entry.before === null) {
-        if (await stat(full).catch(() => null)) await shell.trashItem(full)
-      } else {
-        await mkdir(dirname(full), { recursive: true })
-        await writeFile(full, entry.before, 'utf8')
+      try {
+        const full = await resolveInside(folder.path, entry.path)
+        if (entry.movedFrom) {
+          const back = await resolveInside(folder.path, entry.movedFrom)
+          // Dosya artık orada değilse ya da eski yerinde yeni bir dosya varsa dokunulmaz.
+          if (!(await stat(full).catch(() => null)) || (await stat(back).catch(() => null))) continue
+          await mkdir(dirname(back), { recursive: true })
+          await rename(full, back)
+        } else {
+          const now = await readFile(full).catch(() => null)
+          // Atlas'tan sonra dosya değiştiyse (kullanıcı ya da başka bir cevap düzenlediyse) o değişiklik ezilmez.
+          if (entry.afterHash && (!now || createHash('sha256').update(now).digest('hex') !== entry.afterHash)) continue
+          if (entry.before === null) {
+            if (now) await shell.trashItem(full)
+          } else {
+            await mkdir(dirname(full), { recursive: true })
+            await writeFile(full, entry.before, 'utf8')
+          }
+        }
+        db.logFileAction({ folderId: folder.id, kind: 'write', path: entry.path, detail: L().main.folders.undone })
+        restored++
+      } catch {
+        // Kilitli dosya gibi geçici bir hata: kayıt kalır, kullanıcı yeniden deneyebilir.
+        left.unshift(entry)
       }
-      db.logFileAction({ folderId: folder.id, kind: 'write', path: entry.path, detail: L().main.folders.undone })
-      restored++
     }
+    db.setUndo(id, left)
     return restored
   })
   handle('folders:revokeTrust', (conversationId: string) => files.revokeTrust(conversationId))
