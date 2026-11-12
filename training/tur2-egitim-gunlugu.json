@@ -1,0 +1,303 @@
+{
+ "taban": "taban/gemma-4-E4B-it",
+ "epoch": 1.0,
+ "ornek": 7510,
+ "adim": 470,
+ "lr": 0.0001,
+ "r": 16,
+ "ilk_dogrulama": 0.5766114965081215,
+ "son_dogrulama": 0.11608900772276684,
+ "gunluk": [
+  {
+   "adim": 0,
+   "dogrulama": 0.5766
+  },
+  {
+   "adim": 10,
+   "kayip": 0.5642,
+   "dakika": 0.9,
+   "gb": 10.0
+  },
+  {
+   "adim": 20,
+   "kayip": 0.2183,
+   "dakika": 1.8,
+   "gb": 10.0
+  },
+  {
+   "adim": 30,
+   "kayip": 0.1879,
+   "dakika": 2.7,
+   "gb": 10.0
+  },
+  {
+   "adim": 40,
+   "kayip": 0.1926,
+   "dakika": 3.7,
+   "gb": 10.0
+  },
+  {
+   "adim": 50,
+   "kayip": 0.1664,
+   "dakika": 4.5,
+   "gb": 10.0
+  },
+  {
+   "adim": 60,
+   "kayip": 0.1847,
+   "dakika": 5.4,
+   "gb": 10.0
+  },
+  {
+   "adim": 70,
+   "kayip": 0.1698,
+   "dakika": 6.3,
+   "gb": 10.0
+  },
+  {
+   "adim": 80,
+   "kayip": 0.156,
+   "dakika": 7.2,
+   "gb": 10.0
+  },
+  {
+   "adim": 90,
+   "kayip": 0.155,
+   "dakika": 8.1,
+   "gb": 10.0
+  },
+  {
+   "adim": 100,
+   "kayip": 0.1364,
+   "dakika": 9.0,
+   "gb": 10.0,
+   "dogrulama": 0.1402
+  },
+  {
+   "adim": 110,
+   "kayip": 0.1494,
+   "dakika": 10.3,
+   "gb": 10.0
+  },
+  {
+   "adim": 120,
+   "kayip": 0.1396,
+   "dakika": 11.2,
+   "gb": 10.0
+  },
+  {
+   "adim": 130,
+   "kayip": 0.1385,
+   "dakika": 12.1,
+   "gb": 10.0
+  },
+  {
+   "adim": 140,
+   "kayip": 0.1449,
+   "dakika": 13.0,
+   "gb": 10.0
+  },
+  {
+   "adim": 150,
+   "kayip": 0.1599,
+   "dakika": 13.9,
+   "gb": 10.0
+  },
+  {
+   "adim": 160,
+   "kayip": 0.1304,
+   "dakika": 14.9,
+   "gb": 10.0
+  },
+  {
+   "adim": 170,
+   "kayip": 0.1367,
+   "dakika": 15.8,
+   "gb": 10.0
+  },
+  {
+   "adim": 180,
+   "kayip": 0.1562,
+   "dakika": 16.7,
+   "gb": 10.0
+  },
+  {
+   "adim": 190,
+   "kayip": 0.1433,
+   "dakika": 17.6,
+   "gb": 10.0
+  },
+  {
+   "adim": 200,
+   "kayip": 0.1546,
+   "dakika": 18.5,
+   "gb": 10.0,
+   "dogrulama": 0.1341
+  },
+  {
+   "adim": 210,
+   "kayip": 0.1343,
+   "dakika": 19.8,
+   "gb": 10.0
+  },
+  {
+   "adim": 220,
+   "kayip": 0.1226,
+   "dakika": 20.7,
+   "gb": 10.0
+  },
+  {
+   "adim": 230,
+   "kayip": 0.1371,
+   "dakika": 21.6,
+   "gb": 10.0
+  },
+  {
+   "adim": 240,
+   "kayip": 0.1365,
+   "dakika": 22.5,
+   "gb": 10.0
+  },
+  {
+   "adim": 250,
+   "kayip": 0.1363,
+   "dakika": 23.4,
+   "gb": 10.0
+  },
+  {
+   "adim": 260,
+   "kayip": 0.1296,
+   "dakika": 24.3,
+   "gb": 10.0
+  },
+  {
+   "adim": 270,
+   "kayip": 0.1287,
+   "dakika": 25.2,
+   "gb": 10.0
+  },
+  {
+   "adim": 280,
+   "kayip": 0.1192,
+   "dakika": 26.1,
+   "gb": 10.0
+  },
+  {
+   "adim": 290,
+   "kayip": 0.1462,
+   "dakika": 27.0,
+   "gb": 10.0
+  },
+  {
+   "adim": 300,
+   "kayip": 0.14,
+   "dakika": 28.0,
+   "gb": 10.0,
+   "dogrulama": 0.1204
+  },
+  {
+   "adim": 310,
+   "kayip": 0.1226,
+   "dakika": 29.2,
+   "gb": 10.0
+  },
+  {
+   "adim": 320,
+   "kayip": 0.1367,
+   "dakika": 30.1,
+   "gb": 10.0
+  },
+  {
+   "adim": 330,
+   "kayip": 0.1448,
+   "dakika": 31.1,
+   "gb": 10.0
+  },
+  {
+   "adim": 340,
+   "kayip": 0.138,
+   "dakika": 32.0,
+   "gb": 10.0
+  },
+  {
+   "adim": 350,
+   "kayip": 0.1328,
+   "dakika": 32.9,
+   "gb": 10.0
+  },
+  {
+   "adim": 360,
+   "kayip": 0.1373,
+   "dakika": 33.8,
+   "gb": 10.0
+  },
+  {
+   "adim": 370,
+   "kayip": 0.1224,
+   "dakika": 34.7,
+   "gb": 10.0
+  },
+  {
+   "adim": 380,
+   "kayip": 0.1196,
+   "dakika": 35.6,
+   "gb": 10.0
+  },
+  {
+   "adim": 390,
+   "kayip": 0.1551,
+   "dakika": 36.5,
+   "gb": 10.0
+  },
+  {
+   "adim": 400,
+   "kayip": 0.1464,
+   "dakika": 37.4,
+   "gb": 10.0,
+   "dogrulama": 0.1164
+  },
+  {
+   "adim": 410,
+   "kayip": 0.1358,
+   "dakika": 38.7,
+   "gb": 10.0
+  },
+  {
+   "adim": 420,
+   "kayip": 0.1287,
+   "dakika": 39.6,
+   "gb": 10.0
+  },
+  {
+   "adim": 430,
+   "kayip": 0.1261,
+   "dakika": 40.5,
+   "gb": 10.0
+  },
+  {
+   "adim": 440,
+   "kayip": 0.1133,
+   "dakika": 41.4,
+   "gb": 10.0
+  },
+  {
+   "adim": 450,
+   "kayip": 0.115,
+   "dakika": 42.3,
+   "gb": 10.0
+  },
+  {
+   "adim": 460,
+   "kayip": 0.0986,
+   "dakika": 43.2,
+   "gb": 10.0
+  },
+  {
+   "adim": 470,
+   "kayip": 0.1307,
+   "dakika": 44.1,
+   "gb": 10.0,
+   "dogrulama": 0.1161
+  }
+ ]
+}
