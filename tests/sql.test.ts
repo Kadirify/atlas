@@ -13,7 +13,7 @@ describe('classifySql: okuma', () => {
 
   it('metin sabitinin ya da tırnaklı adın içindeki kelimeler karar değiştirmez', () => {
     expect(kind("SELECT 'DROP TABLE x; DELETE FROM y' AS metin")).toBe('read')
-    expect(kind('SELECT [Delete], "update" FROM [Drop Kayıtları]')).toBe('read')
+    expect(classifySql('SELECT [Delete], "update" FROM [Drop Kayıtları]', 'mssql').kind).toBe('read')
     expect(kind("SELECT 'it''s; delete' FROM t")).toBe('read')
   })
 })
@@ -61,10 +61,42 @@ describe('stripSql', () => {
   it('yorumları ve metinleri çıkarır, iç içe yorumu doğru kapatır', () => {
     expect(stripSql('SELECT /* a /* b */ c */ 1').replace(/\s+/g, ' ').trim()).toBe('SELECT 1')
     expect(stripSql("SELECT 'a' -- son").replace(/\s+/g, ' ').trim()).toBe('SELECT x')
-    expect(stripSql('SELECT $$ drop $$').replace(/\s+/g, ' ').trim()).toBe('SELECT x')
+    expect(stripSql('SELECT $$ drop $$', 'postgres').replace(/\s+/g, ' ').trim()).toBe('SELECT x')
   })
 
   it('kapanmamış metin sabiti kalan her şeyi yutar; gizli ifade çalışan kısımda kalamaz', () => {
     expect(stripSql("SELECT 'açık kaldı; DELETE FROM t").replace(/\s+/g, ' ').trim()).toBe('SELECT x')
+  })
+})
+
+describe('classifySql: veritabanına göre okunuş (güvenlik denetiminden)', () => {
+  const as = (sql: string, dialect?: 'mssql' | 'postgres' | 'mysql' | 'sqlite'): string => classifySql(sql, dialect).kind
+
+  it('metin ya da ad gibi görünüp çalışan kod gizlenemez', () => {
+    for (const dialect of ['mssql', 'postgres', 'sqlite', undefined] as const) {
+      expect(as('SELECT 1 AS a$$; COMMIT; DROP TABLE dbo.Orders;', dialect)).toBe('forbidden')
+      expect(as("SELECT '\\'; COMMIT; DELETE FROM users; --'", dialect)).toBe('forbidden')
+    }
+    expect(as('SELECT 1\n# 2; COMMIT; DELETE FROM users', 'postgres')).toBe('forbidden')
+    expect(as("SELECT '\\'; COMMIT; DELETE FROM users; --'", 'mysql')).toBe('forbidden')
+    expect(as('UPDATE t SET a$$ = 1; DELETE FROM users', 'mssql')).toBe('forbidden')
+  })
+
+  it('salt okunur işlemde bile yan etkisi olan okumalar onay ister', () => {
+    expect(as('SELECT pg_terminate_backend(pid) FROM pg_stat_activity', 'postgres')).toBe('write')
+    expect(as("SELECT dblink_exec('baglanti', 'DELETE FROM t')", 'postgres')).toBe('write')
+    expect(as('SELECT NEXT VALUE FOR dbo.Sira', 'mssql')).toBe('write')
+    expect(as('SELECT * FROM t WITH (TABLOCKX, HOLDLOCK) CROSS JOIN u', 'mssql')).toBe('write')
+    expect(as("SELECT 1 /*! INTO OUTFILE '/tmp/x' */", 'mysql')).toBe('write')
+    expect(as("SELECT 1 /* /* */ INTO OUTFILE '/tmp/x' -- */", 'mysql')).toBe('write')
+    expect(as("SELECT \"\\\"\", 1 INTO OUTFILE '/tmp/x' #\"", 'mysql')).toBe('write')
+    expect(as("ATTACH DATABASE 'C:/x.db' AS x", 'sqlite')).toBe('forbidden')
+  })
+
+  it('sütun ve işlev adları okumayı yazma yapmaz', () => {
+    expect(as('SELECT Comment, Export, Load FROM t', 'mssql')).toBe('read')
+    expect(as("SELECT REPLACE(Ad, 'a', 'b') FROM t", 'mysql')).toBe('read')
+    expect(as('SELECT * FROM t ORDER BY id OFFSET 10 ROWS FETCH NEXT 10 ROWS ONLY', 'mssql')).toBe('read')
+    expect(as("SELECT E'it\\'s' AS x", 'postgres')).toBe('read')
   })
 })
