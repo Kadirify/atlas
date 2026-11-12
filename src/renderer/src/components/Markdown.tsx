@@ -3,6 +3,7 @@ import { memo, useRef, useState, type ComponentProps } from 'react'
 import ReactMarkdown from 'react-markdown'
 import rehypeHighlight from 'rehype-highlight'
 import remarkGfm from 'remark-gfm'
+import { isSafeImage, isSafeLink, markdownUrlTransform } from '@/lib/safeUrl'
 import { useT } from '@/lib/useT'
 
 export function useCopy(): [boolean, (text: string) => void] {
@@ -44,19 +45,30 @@ function CodeBlock({ children, ...rest }: ComponentProps<'pre'>) {
   )
 }
 
+/** Uzak adresli resmin yerine yazılan not (bkz. lib/safeUrl) */
+function BlockedImage({ alt }: { alt?: string }) {
+  const t = useT()
+  return <span className="text-[13px] text-ink-3 italic">{t.chat.imageBlocked(alt ?? '')}</span>
+}
+
 function Markdown({ text }: { text: string }) {
   return (
     <div className="prose prose-chat">
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}
         rehypePlugins={[[rehypeHighlight, { detect: false, ignoreMissing: true }]]}
+        urlTransform={markdownUrlTransform}
         components={{
           pre: CodeBlock,
-          a: ({ children, href }) => (
-            <a href={href} target="_blank" rel="noreferrer">
-              {children}
-            </a>
-          ),
+          img: ({ src, alt }) => (isSafeImage(src) ? <img src={src} alt={alt ?? ''} /> : <BlockedImage alt={alt} />),
+          a: ({ children, href }) =>
+            isSafeLink(href) ? (
+              <a href={href} target="_blank" rel="noreferrer">
+                {children}
+              </a>
+            ) : (
+              <span>{children}</span>
+            ),
           table: ({ children }) => (
             <div className="overflow-x-auto">
               <table>{children}</table>

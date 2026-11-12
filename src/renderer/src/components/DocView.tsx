@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import type { DocumentOriginal, SheetView } from '@shared/types'
+import type { PageViewport, PDFPageProxy } from 'pdfjs-dist'
 import { cn } from '@/lib/format'
 import { useT } from '@/lib/useT'
 
@@ -68,6 +69,12 @@ function PdfView({ bytes }: { bytes: Uint8Array }) {
     let cancelled = false
     const tasks: { cancel(): void }[] = []
     let destroy: (() => void) | null = null
+    // Genişlik değişince sayfalar yeniden çizilir; okunan yer kaybolmasın diye görünen sayfa ve sayfadaki konum saklanır.
+    const scroller = host.parentElement
+    const previous = Array.from(host.children) as HTMLElement[]
+    const top = scroller ? scroller.scrollTop : 0
+    const visible = previous.findIndex((el) => el.offsetTop + el.offsetHeight > top)
+    const within = visible >= 0 ? (top - previous[visible].offsetTop) / Math.max(1, previous[visible].offsetHeight) : 0
 
     void (async () => {
       try {
@@ -79,19 +86,20 @@ function PdfView({ bytes }: { bytes: Uint8Array }) {
         destroy = () => void loading.destroy()
         const pdf = await loading.promise
         if (cancelled) return
-        host.replaceChildren()
         const shown = Math.min(pdf.numPages, MAX_PDF_PAGES)
         setState({ error: false, pages: pdf.numPages, shown })
         const ratio = window.devicePixelRatio || 1
         const pageWidth = width - 24
 
+        // Önce bütün sayfaların boş kalıpları yerleşir (boyutları bellidir), sonra okunan yere dönülür ve
+        // sayfalar o sayfadan başlayarak çizilir.
+        const sheets: { page: PDFPageProxy; viewport: PageViewport; canvas: HTMLCanvasElement; layer: HTMLDivElement }[] = []
+        const fresh: HTMLElement[] = []
         for (let n = 1; n <= shown; n++) {
           const page = await pdf.getPage(n)
           if (cancelled) return
           const base = page.getViewport({ scale: 1 })
-          const scale = pageWidth / base.width
-          const viewport = page.getViewport({ scale })
-
+          const viewport = page.getViewport({ scale: pageWidth / base.width })
           const sheet = document.createElement('div')
           sheet.className = 'pdf-page'
           sheet.style.width = `${Math.floor(viewport.width)}px`
@@ -101,10 +109,18 @@ function PdfView({ bytes }: { bytes: Uint8Array }) {
           canvas.height = Math.floor(viewport.height * ratio)
           const layer = document.createElement('div')
           layer.className = 'textLayer'
-          layer.style.setProperty('--total-scale-factor', String(scale))
+          layer.style.setProperty('--total-scale-factor', String(viewport.scale))
           sheet.append(canvas, layer)
-          host.append(sheet)
+          fresh.push(sheet)
+          sheets.push({ page, viewport, canvas, layer })
+        }
+        host.replaceChildren(...fresh)
+        const target = visible >= 0 ? fresh[Math.min(visible, fresh.length - 1)] : undefined
+        if (scroller && target) scroller.scrollTop = target.offsetTop + within * target.offsetHeight
 
+        const start = Math.max(0, Math.min(visible, sheets.length - 1))
+        const order = [...sheets.slice(start), ...sheets.slice(0, start)]
+        for (const { page, viewport, canvas, layer } of order) {
           const render = page.render({
             canvas,
             canvasContext: canvas.getContext('2d')!,
@@ -117,6 +133,7 @@ function PdfView({ bytes }: { bytes: Uint8Array }) {
           const text = new pdfjs.TextLayer({ textContentSource: await page.getTextContent(), container: layer, viewport })
           tasks.push(text)
           await text.render()
+          if (cancelled) return
         }
       } catch (e) {
         if (!cancelled && (e as { name?: string })?.name !== 'RenderingCancelledException') setState((s) => ({ ...s, error: true }))
@@ -155,7 +172,15 @@ function DocxView({ bytes }: { bytes: Uint8Array }) {
       try {
         const { renderAsync } = await import('docx-preview')
         const holder = document.createElement('div')
-        await renderAsync(new Blob([bytes.slice()]), holder, undefined, { className: 'docx', inWrapper: true, breakPages: true, experimental: true })
+        // Belgeye gömülü HTML parçaları (altChunk) çizilmez: korumasız bir çerçeve olarak uygulamanın içine girerler.
+        // Belgenin stilleri yalnızca kendi sınıf adının altında geçerlidir; uygulamanın öğelerine dokunmaz.
+        await renderAsync(new Blob([bytes.slice()]), holder, undefined, {
+          className: 'atlas-docx',
+          inWrapper: true,
+          breakPages: true,
+          experimental: true,
+          renderAltChunks: false
+        })
         if (cancelled) return
         host.replaceChildren(...holder.childNodes)
         setReady((n) => n + 1)
