@@ -4,7 +4,7 @@
  * "kanka" diye seslenir, "sjsjsj" diye güler, art arda kısa mesajlar atar.
  */
 
-const KADIR = [
+const DENIZ = [
   'Emre yarın maça geliyor musun?',
   'Akşam bir şeyler yiyelim mi?',
   'Toplantı çok uzun sürdü, yeni çıktım.',
@@ -54,7 +54,7 @@ const EMRE: string[][] = [
 const pad = (n: number): string => String(n).padStart(2, '0')
 
 export interface FixtureOptions {
-  /** Kaç tur konuşma üretileceği (her tur 1 Kadir + 2-3 Emre mesajı) */
+  /** Kaç tur konuşma üretileceği (her tur 1 Deniz + 2-3 Emre mesajı) */
   rounds?: number
   format?: 'android' | 'ios'
 }
@@ -73,21 +73,21 @@ export function makeWhatsAppExport({ rounds = 120, format = 'android' }: Fixture
   for (let i = 0; i < rounds; i++) {
     // Her tur üç saat sonra başlar; tur içindeki mesajlar birer dakika arayla gelir.
     const at = new Date(start.getTime() + i * 3 * 60 * 60_000)
-    const k = i % KADIR.length
-    lines.push(`${stamp(at)}Kadir: ${KADIR[k]}`)
+    const k = i % DENIZ.length
+    lines.push(`${stamp(at)}Deniz: ${DENIZ[k]}`)
     EMRE[k].forEach((text, j) => {
       const when = new Date(at.getTime() + (j + 1) * 60_000)
       // Aynı cümleler tekrar etmesin diye tur numarasına göre küçük değişiklikler.
-      const lap = Math.floor(i / KADIR.length)
+      const lap = Math.floor(i / DENIZ.length)
       const varied = lap > 0 && j === 0 ? `${text} ${['ya', 'valla', 'aynen', 'kanka'][lap % 4]}` : text
       lines.push(`${stamp(when)}Emre: ${varied}`)
     })
     if (i % 9 === 4) {
       lines.push(`${stamp(new Date(at.getTime() + 5 * 60_000))}Emre: <Medya dahil edilmedi>`)
-      lines.push(`${stamp(new Date(at.getTime() + 6 * 60_000))}Kadir: Bu mesaj silindi`)
+      lines.push(`${stamp(new Date(at.getTime() + 6 * 60_000))}Deniz: Bu mesaj silindi`)
     }
     if (i % 11 === 3) {
-      lines.push(`${stamp(new Date(at.getTime() + 7 * 60_000))}Kadir: Şunlar lazım:`)
+      lines.push(`${stamp(new Date(at.getTime() + 7 * 60_000))}Deniz: Şunlar lazım:`)
       lines.push('- ekmek')
       lines.push('- süt')
     }

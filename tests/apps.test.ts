@@ -111,12 +111,12 @@ describe('form değerleri', () => {
 })
 
 describe('corporateBlock', () => {
-  const base = { userName: 'Kadir', jobTitle: 'IT Direktörü', company: 'Acme', signature: 'Saygılarımla,\nKadir' }
+  const base = { userName: 'Deniz', jobTitle: 'IT Direktörü', company: 'Acme', signature: 'Saygılarımla,\nDeniz' }
   it('kurumsal kullanım açıkken unvan, şirket ve imzayı verir', () => {
     const block = corporateBlock({ ...base, corporateMode: true })
     expect(block).toContain('IT Direktörü')
     expect(block).toContain('Acme')
-    expect(block).toContain('Saygılarımla,\nKadir')
+    expect(block).toContain('Saygılarımla,\nDeniz')
   })
   it('seçilen hitap ve kapanışı verir; imza varsa kapanış yerine imza kullanılır', () => {
     const plain = corporateBlock({ ...base, corporateMode: false, salutation: 'Merhaba', closing: 'İyi çalışmalar' })
@@ -125,12 +125,12 @@ describe('corporateBlock', () => {
     const signed = corporateBlock({ ...base, corporateMode: true, salutation: 'Sayın', closing: 'İyi çalışmalar' })
     expect(signed).toContain('"Sayın" ile hitap et')
     expect(signed).not.toContain('İyi çalışmalar')
-    expect(signed).toContain('Saygılarımla,\nKadir')
+    expect(signed).toContain('Saygılarımla,\nDeniz')
   })
 
   it('kapalıyken yalnızca adı verir', () => {
     const block = corporateBlock({ ...base, corporateMode: false })
-    expect(block).toContain('Kadir')
+    expect(block).toContain('Deniz')
     expect(block).not.toContain('Acme')
     expect(block).not.toContain('Saygılarımla')
   })
@@ -154,7 +154,7 @@ describe('buildRunMessages', () => {
   }
 
   it('talimatı, ortak kuralları ve form değerlerini modele verir', () => {
-    db.setSettings({ corporateMode: true, userName: 'Kadir', company: 'Acme' })
+    db.setSettings({ corporateMode: true, userName: 'Deniz', company: 'Acme' })
     const [system, user] = buildRunMessages(app, { appId: app.id, values, attachmentIds: [] }, db)
     expect(system.content).toContain(app.prompt)
     expect(system.content).toContain('Verilmeyen bilgiyi uydurma')
@@ -307,7 +307,7 @@ describe('İngilizce', () => {
     const db = new Db(':memory:')
     db.syncBuiltinApps(builtinApps('en'))
     const app = db.getApp('builtin:email')!
-    db.setSettings({ corporateMode: true, userName: 'Kadir', company: 'Acme', salutation: 'Dear', closing: 'Best regards' })
+    db.setSettings({ corporateMode: true, userName: 'Deniz', company: 'Acme', salutation: 'Dear', closing: 'Best regards' })
     const values = {
       alan_1: 'New email',
       alan_2: 'Ms. Taylor',

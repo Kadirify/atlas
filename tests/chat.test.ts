@@ -42,8 +42,8 @@ describe('cleanTitle', () => {
 
 describe('buildSystemPrompt', () => {
   it('kullanıcı bilgisi varsa ekler', () => {
-    const p = buildSystemPrompt({ userName: 'Kadir', corporateMode: true, company: '', jobTitle: 'IT Direktörü' })
-    expect(p).toContain('adı Kadir')
+    const p = buildSystemPrompt({ userName: 'Deniz', corporateMode: true, company: '', jobTitle: 'IT Direktörü' })
+    expect(p).toContain('adı Deniz')
     expect(p).toContain('IT Direktörü')
     expect(
       buildSystemPrompt({ userName: '', corporateMode: false, company: '', jobTitle: '' })
@@ -51,14 +51,14 @@ describe('buildSystemPrompt', () => {
   })
 
   it('seçilen hitaba göre sen ya da siz der', () => {
-    const base = { userName: 'Kadir', corporateMode: false, company: '', jobTitle: '' }
+    const base = { userName: 'Deniz', corporateMode: false, company: '', jobTitle: '' }
     expect(buildSystemPrompt({ ...base, addressUser: 'siz' })).toContain('"siz" diye hitap et')
     expect(buildSystemPrompt({ ...base, addressUser: 'sen' })).toContain('"sen" diye hitap et')
   })
 
   it('kurumsal kullanım kapalıysa unvan ve şirketi eklemez', () => {
-    const p = buildSystemPrompt({ userName: 'Kadir', corporateMode: false, company: 'Acme', jobTitle: 'IT Direktörü' })
-    expect(p).toContain('adı Kadir')
+    const p = buildSystemPrompt({ userName: 'Deniz', corporateMode: false, company: 'Acme', jobTitle: 'IT Direktörü' })
+    expect(p).toContain('adı Deniz')
     expect(p).not.toContain('Acme')
     expect(p).not.toContain('IT Direktörü')
   })
@@ -70,21 +70,21 @@ describe('buildSystemPrompt (İngilizce)', () => {
   it('dil İngilizce olunca talimatı İngilizce kurar', () => {
     setLanguage('en')
     const p = buildSystemPrompt(
-      { userName: 'Kadir', corporateMode: true, company: 'Acme', jobTitle: 'IT Director', addressUser: 'siz' },
+      { userName: 'Deniz', corporateMode: true, company: 'Acme', jobTitle: 'IT Director', addressUser: 'siz' },
       new Date(2026, 10, 11)
     )
     expect(p).toContain('Your name is Atlas.')
     expect(p).toContain('if unsure, reply in English')
     expect(p).toContain('Address the user formally')
     expect(p).toContain("Today's date: Wednesday, November 11, 2026.")
-    expect(p).toContain('About the user: their name is Kadir, their job title is IT Director, they work at Acme.')
+    expect(p).toContain('About the user: their name is Deniz, their job title is IT Director, they work at Acme.')
     expect(p).not.toContain('Kullanıcı')
   })
 
   it('dil geri alınınca yine Türkçe kurar', () => {
-    const p = buildSystemPrompt({ userName: 'Kadir', corporateMode: false, company: '', jobTitle: '' })
+    const p = buildSystemPrompt({ userName: 'Deniz', corporateMode: false, company: '', jobTitle: '' })
     expect(p).toContain('Adın Atlas.')
-    expect(p).toContain('Kullanıcı hakkında: adı Kadir.')
+    expect(p).toContain('Kullanıcı hakkında: adı Deniz.')
   })
 })
 

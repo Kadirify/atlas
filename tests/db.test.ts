@@ -61,10 +61,10 @@ describe('Db', () => {
 
   it('ayarları saklar ve bilinmeyen anahtarı yok sayar', () => {
     expect(db.getSettings().setupDone).toBe(false)
-    db.setSettings({ setupDone: true, userName: 'Kadir', ...({ hack: 1 } as object) })
+    db.setSettings({ setupDone: true, userName: 'Deniz', ...({ hack: 1 } as object) })
     const s = db.getSettings()
     expect(s.setupDone).toBe(true)
-    expect(s.userName).toBe('Kadir')
+    expect(s.userName).toBe('Deniz')
     expect('hack' in s).toBe(false)
   })
 })
