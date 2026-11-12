@@ -1,4 +1,5 @@
 import { spawn, type ChildProcessWithoutNullStreams } from 'node:child_process'
+import { join } from 'node:path'
 import { clipboard, ClipboardItem } from 'electron'
 
 /**
@@ -123,8 +124,9 @@ export class SelectionHelper {
     this.ready = new Promise<boolean>((resolve) => {
       let child: ChildProcessWithoutNullStreams
       try {
+        // Tam yol: PATH ya da çalışma klasöründeki aynı adlı bir dosya araya giremesin.
         child = spawn(
-          'powershell.exe',
+          join(process.env.SystemRoot ?? 'C:\Windows', 'System32', 'WindowsPowerShell', 'v1.0', 'powershell.exe'),
           ['-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass', '-EncodedCommand', Buffer.from(SCRIPT, 'utf16le').toString('base64')],
           { windowsHide: true }
         )
