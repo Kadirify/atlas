@@ -360,7 +360,7 @@ export default function DocPane({ attachmentId }: { attachmentId: string }) {
   }
 
   return (
-    <aside aria-label={d.paneLabel} className="flex w-[44%] max-w-[820px] min-w-[300px] flex-col border-l border-line bg-bg">
+    <aside aria-label={d.paneLabel} className="flex w-[44%] max-w-[820px] min-w-[232px] flex-col border-l border-line bg-bg">
       {/* Pencere düğmeleri bu köşede durur; başlık onların altına girmesin diye sağda boşluk bırakılır. */}
       <header className="drag flex h-10 shrink-0 items-center gap-2 pr-[150px] pl-4">
         <FileText size={15} className="shrink-0 text-accent" aria-hidden />
@@ -497,9 +497,9 @@ export default function DocPane({ attachmentId }: { attachmentId: string }) {
 
           <div className="shrink-0 border-t border-line bg-surface px-3 py-3">
             {proposal ? (
-              <div aria-live="polite">
+              <div aria-busy={proposal.busy}>
                 <div className="mb-1.5 flex items-center justify-between">
-                  <h3 className="text-[13px] font-semibold text-ink">
+                  <h3 className="text-[13px] font-semibold text-ink" role="status">
                     {proposal.busy ? (proposal.progress ? d.progress(proposal.progress.done, proposal.progress.total) : t.panel.writing) : d.proposal}
                   </h3>
                   {proposal.busy ? (

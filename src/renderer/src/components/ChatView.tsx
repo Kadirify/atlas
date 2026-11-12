@@ -16,6 +16,7 @@ import { AttachButton, AttachmentList } from '@/components/Attachments'
 import { Button, IconButton, Notice } from '@/components/ui'
 import { filesFrom, useAttachments, type AttachmentState } from '@/lib/files'
 import { cn, errorText, wordsPerSec } from '@/lib/format'
+import { asksShowOnSide } from '@/lib/intent'
 import { useT } from '@/lib/useT'
 import { useApp } from '@/stores/app'
 
@@ -24,17 +25,25 @@ const NO_MEMORIES: import('@shared/types').Memory[] = []
 const NO_STEPS: import('@shared/types').ToolStep[] = []
 const NO_APPROVALS: import('@shared/types').FileApproval[] = []
 
-function UserMessage({ message, disabled }: { message: Message; disabled: boolean }) {
+function UserMessage({ message, disabled, laterUndo }: { message: Message; disabled: boolean; laterUndo: boolean }) {
   const t = useT()
   const edit = useApp((s) => s.edit)
   const [editing, setEditing] = useState(false)
   const [draft, setDraft] = useState(message.content)
+  /** Düzenleme sonraki cevapları siler; onlardaki dosya değişikliklerinin geri alınamayacağı onaylandı mı */
+  const [confirmLoss, setConfirmLoss] = useState(false)
 
   if (editing) {
-    const submit = (): void => {
+    const close = (): void => {
       setEditing(false)
+      setConfirmLoss(false)
+    }
+    const submit = (): void => {
       const changed = draft.trim() !== message.content
-      if (changed && (draft.trim() || message.attachments.length > 0)) void edit(message.id, draft)
+      if (!changed || !(draft.trim() || message.attachments.length > 0)) return close()
+      if (laterUndo && !confirmLoss) return setConfirmLoss(true)
+      close()
+      void edit(message.id, draft)
     }
     return (
       <div className="rounded-2xl border border-accent bg-surface p-3">
@@ -47,20 +56,29 @@ function UserMessage({ message, disabled }: { message: Message; disabled: boolea
               e.preventDefault()
               submit()
             }
-            if (e.key === 'Escape') setEditing(false)
+            if (e.key === 'Escape') {
+              e.preventDefault()
+              close()
+            }
           }}
           rows={Math.min(10, Math.max(2, draft.split('\n').length))}
           aria-label={t.chat.message.edit}
           className="w-full resize-none bg-transparent text-[15px] leading-relaxed text-ink outline-none"
         />
         <div className="mt-2 flex items-center justify-between gap-2">
-          <span className="text-xs text-ink-3">{t.chat.message.editHint}</span>
-          <span className="flex gap-2">
-            <Button size="sm" variant="ghost" onClick={() => setEditing(false)}>
+          {confirmLoss ? (
+            <span className="text-xs font-medium text-danger" role="alert">
+              {t.chat.undo.lostWarningLater}
+            </span>
+          ) : (
+            <span className="text-xs text-ink-3">{t.chat.message.editHint}</span>
+          )}
+          <span className="flex shrink-0 gap-2">
+            <Button size="sm" variant="ghost" onClick={close}>
               {t.common.actions.cancel}
             </Button>
             <Button size="sm" variant="primary" onClick={submit}>
-              {t.chat.composer.send}
+              {confirmLoss ? t.chat.undo.continue : t.chat.composer.send}
             </Button>
           </span>
         </div>
@@ -108,6 +126,8 @@ function AssistantMessage({
   const t = useT()
   const regenerate = useApp((s) => s.regenerate)
   const [copied, copy] = useCopy()
+  /** Yeniden yazdırma bu cevabı siler; dosya değişikliklerinin geri alınamayacağı soruluyor mu */
+  const [confirmRegen, setConfirmRegen] = useState(false)
   const speed =
     // Çok kısa cevaplarda hız ölçümü anlamsız çıkar.
     message.tokens && message.tokens >= 20 && message.durationMs && message.durationMs > 0
@@ -123,11 +143,34 @@ function AssistantMessage({
         <IconButton label={copied ? t.common.actions.copied : t.chat.message.copyAnswer} onClick={() => copy(message.content)}>
           {copied ? <Check size={14} aria-hidden /> : <Copy size={14} aria-hidden />}
         </IconButton>
-        {isLast && (
-          <IconButton label={t.chat.message.regenerate} disabled={busy} onClick={() => void regenerate()}>
-            <RefreshCw size={14} aria-hidden />
-          </IconButton>
-        )}
+        {isLast &&
+          (confirmRegen ? (
+            <span className="ml-1 flex items-center gap-1.5 text-xs text-ink-2" role="alert">
+              {t.chat.undo.lostWarning}
+              <Button
+                size="sm"
+                variant="primary"
+                disabled={busy}
+                onClick={() => {
+                  setConfirmRegen(false)
+                  void regenerate()
+                }}
+              >
+                {t.chat.undo.continue}
+              </Button>
+              <Button size="sm" variant="ghost" onClick={() => setConfirmRegen(false)}>
+                {t.common.actions.cancel}
+              </Button>
+            </span>
+          ) : (
+            <IconButton
+              label={t.chat.message.regenerate}
+              disabled={busy}
+              onClick={() => (message.undoCount > 0 ? setConfirmRegen(true) : void regenerate())}
+            >
+              <RefreshCw size={14} aria-hidden />
+            </IconButton>
+          ))}
         {message.undoCount > 0 && <UndoButton messageId={message.id} count={message.undoCount} disabled={busy} />}
         <span className="ml-2 text-xs text-ink-3 opacity-0 transition-opacity group-hover:opacity-100">
           {[message.partial && t.chat.message.partial, message.model, speed && `~${wordsPerSec(speed)} ${t.common.units.wordsPerSecond}`]
@@ -231,6 +274,9 @@ function ThoughtBox({ text, done }: { text: string; done: boolean }) {
   )
 }
 
+/** Sohbet başına yazılmış ama gönderilmemiş metin; "" yeni sohbetin taslağıdır. Uygulama açıkken saklanır. */
+const drafts = new Map<string, string>()
+
 function Composer({
   busy,
   model,
@@ -241,14 +287,29 @@ function Composer({
   busy: boolean
   model: string
   attachments: AttachmentState
-  onSend(text: string, attachmentIds: string[]): void
+  /** Mesaj gönderildiyse (ya da istek yerine getirildiyse) true; değilse metin kutuda kalır. */
+  onSend(text: string, attachmentIds: string[]): Promise<boolean>
   onStop(): void
 }) {
   const t = useT()
   const activeId = useApp((s) => s.activeId)
-  const [text, setText] = useState('')
+  const key = activeId ?? ''
+  const [text, setText] = useState(() => drafts.get(key) ?? '')
   const [visionMissing, setVisionMissing] = useState(false)
   const ref = useRef<HTMLTextAreaElement>(null)
+  const sending = useRef(false)
+
+  // Başka sohbete geçince yazılan metin o sohbette kalır; açılan sohbetin taslağı geri gelir.
+  const keyRef = useRef(key)
+  const textRef = useRef(text)
+  textRef.current = text
+  useEffect(() => {
+    if (keyRef.current === key) return
+    if (textRef.current.trim()) drafts.set(keyRef.current, textRef.current)
+    else drafts.delete(keyRef.current)
+    keyRef.current = key
+    setText(drafts.get(key) ?? '')
+  }, [key])
   // "/" ile başlayan tek kelime hazır istem menüsünü açar; Esc ile kapatılan menü metin değişene kadar açılmaz.
   const slash = /^\/(\S*)$/.exec(text)
   const [slashClosedFor, setSlashClosedFor] = useState<string | null>(null)
@@ -303,14 +364,29 @@ function Composer({
   }, [hasImage, model])
 
   const canSend = !busy && pending === 0 && (text.trim() !== '' || items.length > 0)
-  const submit = (): void => {
-    if (!canSend) return
-    onSend(
-      text,
-      items.map((a) => a.id)
-    )
-    setText('')
-    attachments.reset()
+  const submit = async (): Promise<void> => {
+    if (!canSend || sending.current) return
+    sending.current = true
+    const value = text
+    const sentFrom = key
+    try {
+      const ok = await onSend(
+        value,
+        items.map((a) => a.id)
+      )
+      if (ok) {
+        // Yeni sohbette gönderim sırasında sohbet değişmiş olabilir; gönderilen metin taslak olarak kalmasın.
+        drafts.delete(sentFrom)
+        setText((current) => (current === value ? '' : current))
+        attachments.reset()
+      } else {
+        // Gönderilemeyen metin kaybolmaz; kullanıcı düzeltip yeniden dener.
+        drafts.delete(sentFrom)
+        setText((current) => current || value)
+      }
+    } finally {
+      sending.current = false
+    }
   }
 
   return (
@@ -333,6 +409,7 @@ function Composer({
           <ThinkToggle />
           <textarea
             ref={ref}
+            data-composer
             rows={1}
             value={text}
             onChange={(e) => setText(e.target.value)}
@@ -346,7 +423,7 @@ function Composer({
               if (slashOpen && slashMenu.current?.onKeyDown(e)) return
               if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing) {
                 e.preventDefault()
-                submit()
+                void submit()
               }
             }}
             placeholder={t.chat.composer.placeholder}
@@ -366,7 +443,7 @@ function Composer({
           ) : (
             <button
               type="button"
-              onClick={submit}
+              onClick={() => void submit()}
               disabled={!canSend}
               aria-label={t.chat.composer.send}
               title={t.chat.composer.sendTitle}
@@ -407,7 +484,7 @@ function ModelSelect() {
         if (activeId) void setModel(activeId, e.target.value)
         else void saveSettings({ defaultModel: e.target.value })
       }}
-      className="h-8 max-w-[220px] min-w-0 shrink cursor-pointer rounded-md bg-transparent px-2 text-[13px] text-ink-2 hover:bg-surface-2 hover:text-ink focus:outline-none"
+      className="h-8 max-w-[220px] min-w-[72px] shrink cursor-pointer rounded-md bg-transparent px-2 text-[13px] text-ink-2 hover:bg-surface-2 hover:text-ink focus:outline-none focus-visible:ring-2 focus-visible:ring-accent"
     >
       {options.map((name) => (
         <option key={name} value={name} className="bg-surface text-ink">
@@ -431,7 +508,10 @@ function ExportMenu({ conversationId }: { conversationId: string }) {
       if (!ref.current?.contains(e.target as Node)) setOpen(false)
     }
     const onKey = (e: KeyboardEvent): void => {
-      if (e.key === 'Escape') setOpen(false)
+      if (e.key !== 'Escape') return
+      // Esc yalnızca menüyü kapatır; süren cevabı durdurmasın diye işlendi olarak işaretlenir.
+      e.preventDefault()
+      setOpen(false)
     }
     window.addEventListener('mousedown', onDown)
     window.addEventListener('keydown', onKey)
@@ -486,10 +566,6 @@ function ExportMenu({ conversationId }: { conversationId: string }) {
   )
 }
 
-/** "yanda göster", "sağda aç", "show it on the side" gibi belge panelini açma istekleri */
-const SHOW_ON_SIDE =
-  /(?:\b(?:yanda|sağda|sagda|yan\s+tarafta|sağ\s+tarafta)\b.{0,40}\b(?:göster|goster|aç|ac|açar|görün|gorun)|\b(?:show|open|display)\b.{0,40}\b(?:on the (?:side|right)|side panel|side by side))/i
-
 export default function ChatView() {
   const t = useT()
   const docId = useApp((s) => s.docId)
@@ -540,6 +616,23 @@ export default function ChatView() {
   const filesOpen = useApp((s) => s.filesOpen)
   const codeFile = useApp((s) => s.codeFile)
   const viewing = codeFolder && codeFile?.folderId === codeFolder.id ? codeFile : null
+  // Başlığın genişliği izlenir: dar alanda (yan panel açık, küçük pencere) rozetler yalnızca simgelerine iner.
+  const headerRef = useRef<HTMLElement>(null)
+  const [headerWidth, setHeaderWidth] = useState(1000)
+  /** Çok darken (dosya ağacı ve yan panel birlikte açık) ikincil düğmeler (bellek, dışa aktarma, kişilik) gizlenir. */
+  const tight = headerWidth < 400
+  useLayoutEffect(() => {
+    const el = headerRef.current
+    if (!el) return
+    const observer = new ResizeObserver(() => setHeaderWidth(el.clientWidth))
+    observer.observe(el)
+    setHeaderWidth(el.clientWidth)
+    return () => observer.disconnect()
+  }, [])
+  // Veritabanı paneli yalnızca bu sohbete bağlı bir bağlantı varsa görünür; başlık düzeni de buna göre kurulur.
+  const sqlId = conversation?.sqlId ?? (activeId ? null : draft.sqlId)
+  const sqlShown = sqlPaneOpen && !!sqlId && !docId && !viewing
+  const sidePanel = !!docId || !!viewing || sqlShown
 
   // Ctrl+F sohbet içinde aramayı açar; sohbet değişince arama kapanır.
   useEffect(() => {
@@ -556,6 +649,24 @@ export default function ChatView() {
   const [sendError, setSendError] = useState('')
   const attachments = useAttachments()
   const [dragging, setDragging] = useState(false)
+
+  // Ekler o sohbete aittir: başka sohbete geçince kutudan kalkar (gizli sohbetin eki normal sohbete gitmesin).
+  const resetAttachments = attachments.reset
+  useEffect(() => {
+    resetAttachments()
+  }, [activeId, resetAttachments])
+
+  // Ekran okuyucu için tek duyuru: akan metin her parçada okunmaz, yalnızca durum değişince söylenir.
+  const sqlWaiting = useSql((s) => (activeId ? (s.approvals[activeId]?.length ?? 0) > 0 : false))
+  const waitingApproval = approvals.length > 0 || sqlWaiting
+  const [announce, setAnnounce] = useState('')
+  const announced = useRef<{ id: string | null; busy: boolean }>({ id: activeId, busy })
+  useEffect(() => {
+    const previous = announced.current
+    announced.current = { id: activeId, busy }
+    if (busy) setAnnounce(waitingApproval ? t.chat.live.approval : t.chat.live.writing)
+    else setAnnounce(previous.id === activeId && previous.busy ? t.chat.live.done : '')
+  }, [activeId, busy, waitingApproval, t])
 
   // Klasör bağlıyken seçili model araç kullanamıyorsa göndermeden önce uyar.
   useEffect(() => {
@@ -587,30 +698,43 @@ export default function ChatView() {
     scrollToBottom()
   }, [activeId])
 
+  // Esc süren cevabı durdurur; açık bir menü, pencere ya da arama kutusu Esc'i kendisi kullandıysa durdurmaz.
   useEffect(() => {
+    if (!busy) return
     const onKey = (e: KeyboardEvent): void => {
-      if (e.key === 'Escape' && busy) void stop()
+      if (e.key !== 'Escape' || e.isComposing) return
+      const target = e.target instanceof HTMLElement ? e.target : null
+      if (target?.closest('[role="dialog"], [role="menu"], [role="search"], [role="listbox"]')) return
+      // Mesaj kutusu dışındaki bir yazı alanında Esc o alana aittir (başlık düzenleme, belge, arama).
+      if (target?.matches('input, textarea, select, [contenteditable="true"]') && !target.closest('[data-composer]')) return
+      // Karar, bu tuşu dinleyen bütün işleyiciler çalıştıktan sonra verilir: biri Esc'i işlediyse cevap sürer.
+      setTimeout(() => {
+        if (!e.defaultPrevented) void stop()
+      }, 0)
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
   }, [busy, stop])
 
-  const handleSend = (text: string, attachmentIds: string[] = []): void => {
+  const handleSend = async (text: string, attachmentIds: string[] = []): Promise<boolean> => {
     setSendError('')
-    // "CV'yi yanda göster" gibi bir istek modele gitmez; belge paneli açılır.
-    if (SHOW_ON_SIDE.test(text)) {
-      const fromMessages = messages.flatMap((m) => m.attachments).filter((a) => a.kind === 'text')
+    // Mesajın tamamı "CV'yi yanda göster" gibi bir istekse ve sohbette belge varsa belge paneli açılır.
+    if (asksShowOnSide(text)) {
       const pendingDoc = attachments.items.find((a) => a.kind === 'text' && attachmentIds.includes(a.id))
-      const target = pendingDoc ?? fromMessages.at(-1)
-      if (target) openDoc(target.id)
-      // Yeni eklenen dosya varsa mesaj yine gönderilir; yoksa yalnızca panel açılır.
-      if (attachmentIds.length === 0) {
-        if (!target) setSendError(t.chat.doc.noDocument)
-        return
+      const target = pendingDoc ?? messages.flatMap((m) => m.attachments).filter((a) => a.kind === 'text').at(-1)
+      if (target) {
+        openDoc(target.id)
+        // Yeni eklenen dosya varsa mesaj yine gönderilir; yoksa istek yerine getirilmiştir.
+        if (attachmentIds.length === 0) return true
       }
     }
     pinnedToBottom.current = true
-    send(text, attachmentIds).catch((e: unknown) => setSendError(e instanceof Error ? e.message : String(e)))
+    try {
+      return await send(text, attachmentIds)
+    } catch (e) {
+      setSendError(errorText(e))
+      return false
+    }
   }
 
   const lastIsUser = messages.at(-1)?.role === 'user'
@@ -619,7 +743,7 @@ export default function ChatView() {
     <>
     {codeFolder && filesOpen && <FileTree folderId={codeFolder.id} name={codeFolder.name} />}
     <main
-      className="relative flex min-w-[340px] flex-1 flex-col bg-surface"
+      className="relative flex min-w-[300px] flex-1 flex-col bg-surface"
       onDragOver={(e) => {
         if (!e.dataTransfer.types.includes('Files')) return
         e.preventDefault()
@@ -639,32 +763,37 @@ export default function ChatView() {
           <p className="font-display text-xl font-semibold text-accent">{t.chat.dropHere}</p>
         </div>
       )}
-      {/* Pencere düğmeleri sağ üst köşededir; belge paneli açıkken o köşe panele aittir. */}
-      <header className={cn('drag flex h-10 shrink-0 items-center pl-5', docId || viewing || sqlPaneOpen ? 'gap-1.5 pr-3' : 'gap-3 pr-[150px]')}>
-        <h1 className="min-w-0 truncate text-sm font-medium text-ink">{title === undefined || title === UNTITLED_CONVERSATION ? t.common.newChat : title}</h1>
-        {/* Yan panel açıkken başlıkta yer kalmaz; kişilik adı gizlenir. */}
-        {persona && persona.id !== DEFAULT_PERSONA_ID && !(docId || viewing || sqlPaneOpen) && (
-          <span className="flex shrink-0 items-center gap-1.5 text-[13px] text-ink-2">
+      {/*
+        Pencere düğmeleri sağ üst köşededir; yan panel açıkken o köşe panele aittir. Başlık taşmasın diye
+        dar alanda kişilik, gizli sohbet, klasör ve veritabanı rozetleri yalnızca simgelerine iner.
+      */}
+      <header ref={headerRef} className={cn('drag flex h-10 shrink-0 items-center pl-5', sidePanel ? 'gap-1.5 pr-3' : 'gap-3 pr-[150px]')}>
+        <h1 className="min-w-[48px] shrink truncate text-sm font-medium text-ink">{title === undefined || title === UNTITLED_CONVERSATION ? t.common.newChat : title}</h1>
+        {persona && persona.id !== DEFAULT_PERSONA_ID && !tight && (
+          <span className="flex min-w-0 shrink items-center gap-1.5 text-[13px] text-ink-2" title={persona.name}>
             <PersonaAvatar icon={persona.icon} letter={persona.whatsapp ? persona.name : undefined} size={20} />
-            {persona.name}
+            <span className={headerWidth >= 720 ? 'truncate' : 'sr-only'}>{persona.name}</span>
           </span>
         )}
         {isPrivate && (
           <span
-            className="flex shrink-0 items-center gap-1.5 rounded-full bg-surface-2 px-2.5 py-0.5 text-xs font-medium text-ink-2"
+            className="flex shrink-0 items-center gap-1.5 rounded-full bg-surface-2 px-2 py-0.5 text-xs font-medium text-ink-2"
             title={t.chat.privateHint}
           >
             <EyeOff size={12} aria-hidden />
-            {t.chat.privateBadge}
+            <span className={headerWidth >= 640 ? '' : 'sr-only'}>{t.chat.privateBadge}</span>
           </span>
         )}
         <ModelSelect />
-        <MemoryMenu />
+        {!tight && <MemoryMenu />}
         {codeFolder && <FilesToggle />}
-        <FolderMenu />
-        <SqlMenu compact={!!docId || !!viewing || sqlPaneOpen} />
-        {activeId && messages.length > 0 && <ExportMenu conversationId={activeId} />}
+        <FolderMenu compact={headerWidth < 880} />
+        <SqlMenu compact={headerWidth < 880} />
+        {activeId && messages.length > 0 && !tight && <ExportMenu conversationId={activeId} />}
       </header>
+      <p className="sr-only" role="status" aria-live="polite">
+        {announce}
+      </p>
 
       <div className="relative min-h-0 flex-1">
         {finding && <FindBar container={scrollRef.current} version={`${activeId}:${messages.length}:${streaming?.length ?? 0}`} onClose={() => setFinding(false)} />}
@@ -686,6 +815,14 @@ export default function ChatView() {
                 {bubbles ? t.chat.greetingQuestionCasual : t.chat.greetingQuestion}
               </h2>
 
+              {(error || sendError) && (
+                <div className="mt-6">
+                  <Notice tone="danger">{error || sendError}</Notice>
+                </div>
+              )}
+
+              {/* Kişilik ve gizlilik yalnızca henüz başlamamış yeni sohbette seçilir; başlamış sohbette değişmez. */}
+              {!activeId && (
               <div role="radiogroup" aria-label={t.chat.personaPicker} className="mt-7 flex flex-wrap gap-2">
                 {personas.map((p) => (
                   <button
@@ -715,7 +852,8 @@ export default function ChatView() {
                   {t.chat.addFromWhatsapp}
                 </button>
               </div>
-              {persona && <p className="mt-3 text-[13px] text-ink-3">{persona.tagline}</p>}
+              )}
+              {persona && <p className={cn('text-[13px] text-ink-3', activeId ? 'mt-6' : 'mt-3')}>{persona.tagline}</p>}
 
               {persona?.id === DEFAULT_PERSONA_ID && (
                 <ul className="mt-6 grid grid-cols-2 gap-2.5">
@@ -723,7 +861,7 @@ export default function ChatView() {
                     <li key={starter}>
                       <button
                         type="button"
-                        onClick={() => handleSend(starter)}
+                        onClick={() => void handleSend(starter)}
                         className="h-full w-full rounded-xl border border-line px-4 py-3 text-left text-sm leading-snug text-ink-2 transition-colors hover:border-accent hover:text-ink"
                       >
                         {starter}
@@ -733,22 +871,24 @@ export default function ChatView() {
                 </ul>
               )}
 
-              <label className="mt-6 flex w-fit cursor-pointer items-center gap-2.5 text-[13px] text-ink-2">
-                <input
-                  type="checkbox"
-                  checked={draft.private}
-                  onChange={(e) => setDraft({ private: e.target.checked })}
-                  className="h-4 w-4 accent-[var(--accent)]"
-                />
-                <EyeOff size={14} aria-hidden />
-                {t.chat.privateOption}
-              </label>
+              {!activeId && (
+                <label className="mt-6 flex w-fit cursor-pointer items-center gap-2.5 text-[13px] text-ink-2">
+                  <input
+                    type="checkbox"
+                    checked={draft.private}
+                    onChange={(e) => setDraft({ private: e.target.checked })}
+                    className="h-4 w-4 accent-[var(--accent)]"
+                  />
+                  <EyeOff size={14} aria-hidden />
+                  {t.chat.privateOption}
+                </label>
+              )}
             </div>
           ) : (
-            <div className="mx-auto w-full max-w-[780px] space-y-7 px-6 pt-6 pb-10" aria-live="polite">
+            <div className="mx-auto w-full max-w-[780px] space-y-7 px-6 pt-6 pb-10">
               {messages.map((m, i) =>
                 m.role === 'user' ? (
-                  <UserMessage key={m.id} message={m} disabled={busy} />
+                  <UserMessage key={m.id} message={m} disabled={busy} laterUndo={messages.slice(i + 1).some((later) => later.undoCount > 0)} />
                 ) : (
                   <AssistantMessage key={m.id} message={m} isLast={i === messages.length - 1} busy={busy} bubbles={bubbles} />
                 )
@@ -847,7 +987,7 @@ export default function ChatView() {
       {activeId && <TrustStrip conversationId={activeId} />}
       <Composer busy={busy} model={model} attachments={attachments} onSend={handleSend} onStop={() => void stop()} />
     </main>
-    {docId ? <DocPane attachmentId={docId} /> : viewing ? <CodeViewer folderId={viewing.folderId} path={viewing.path} /> : sqlPaneOpen && <SqlPane />}
+    {docId ? <DocPane attachmentId={docId} /> : viewing ? <CodeViewer folderId={viewing.folderId} path={viewing.path} /> : sqlShown && <SqlPane />}
     </>
   )
 }

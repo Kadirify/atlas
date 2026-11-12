@@ -3,6 +3,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { SQL_ENGINES, type SqlApproval, type SqlConnection, type SqlConnectionInput, type SqlEngine, type SqlObjectType, type SqlResult, type SqlTable } from '@shared/types'
 import { Button, Field, IconButton, Input, Notice } from '@/components/ui'
+import { fold } from '@/lib/fold'
 import { cn, errorText } from '@/lib/format'
 import { useT } from '@/lib/useT'
 import { useApp } from '@/stores/app'
@@ -40,7 +41,9 @@ export function SqlMenu({ compact = false }: { compact?: boolean }) {
       if (!root.current?.contains(e.target as Node)) setOpen(false)
     }
     const onKey = (e: KeyboardEvent): void => {
-      if (e.key === 'Escape') setOpen(false)
+      if (e.key !== 'Escape') return
+      e.preventDefault()
+      setOpen(false)
     }
     document.addEventListener('mousedown', onDown)
     document.addEventListener('keydown', onKey)
@@ -53,7 +56,7 @@ export function SqlMenu({ compact = false }: { compact?: boolean }) {
   const item = 'flex min-h-9 w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-left text-[13px] hover:bg-surface-2'
 
   return (
-    <div ref={root} className="relative shrink-0">
+    <div ref={root} className={cn('relative', compact ? 'shrink-0' : 'min-w-0 shrink')}>
       <button
         type="button"
         aria-haspopup="menu"
@@ -62,12 +65,12 @@ export function SqlMenu({ compact = false }: { compact?: boolean }) {
         aria-label={current ? q.connected(current.name) : q.connect}
         onClick={() => setOpen((o) => !o)}
         className={cn(
-          'flex h-8 max-w-[200px] items-center gap-1.5 rounded-md px-2 text-[13px] transition-colors hover:bg-surface-2',
+          'flex h-8 max-w-[200px] min-w-0 items-center gap-1.5 rounded-md px-2 text-[13px] transition-colors hover:bg-surface-2',
           current ? 'text-accent' : 'text-ink-2 hover:text-ink'
         )}
       >
         <Database size={15} className="shrink-0" aria-hidden />
-        {/* Yan panel açıkken başlıkta yer kalmaz; yalnızca simge gösterilir. */}
+        {/* Başlık darken (yan panel açık, küçük pencere) yalnızca simge gösterilir. */}
         {!compact && <span className="truncate">{current ? current.name : q.connect}</span>}
         {!compact && <ChevronDown size={13} className="shrink-0 opacity-70" aria-hidden />}
       </button>
@@ -82,8 +85,10 @@ export function SqlMenu({ compact = false }: { compact?: boolean }) {
                 aria-checked={c.id === sqlId}
                 className={cn(item, 'min-w-0 flex-1')}
                 onClick={() => {
-                  void attachSql(c.id === sqlId ? null : c.id)
-                  if (c.id !== sqlId) setPane(true)
+                  // Seçili bağlantıya yeniden tıklamak onu sohbetten ayırır; panel de kapanır.
+                  const detach = c.id === sqlId
+                  void attachSql(detach ? null : c.id)
+                  setPane(!detach)
                   setOpen(false)
                 }}
               >
@@ -127,7 +132,10 @@ export function SqlMenu({ compact = false }: { compact?: boolean }) {
           }}
           onRemoved={(id) => {
             void load()
-            if (id === sqlId) void attachSql(null)
+            if (id === sqlId) {
+              void attachSql(null)
+              setPane(false)
+            }
             setForm(null)
           }}
         />
@@ -161,10 +169,14 @@ function ConnectionForm({
   const [file, setFile] = useState(editing?.file ?? '')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
+  /** Silme iki adımlıdır: kayıtlı parola da gider, geri alınamaz. */
+  const [confirmRemove, setConfirmRemove] = useState(false)
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent): void => {
-      if (e.key === 'Escape') onClose()
+      if (e.key !== 'Escape') return
+      e.preventDefault()
+      onClose()
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
@@ -174,19 +186,18 @@ function ConnectionForm({
     setBusy(true)
     setError('')
     const input: SqlConnectionInput = { name, engine, host, port: Number(port) || PORTS[engine], database, user, password: password || undefined, encrypt, trustCert, file }
+    let createdId: string | null = null
     try {
       const saved = await window.api.sql.save(input, editing?.id)
+      if (!editing) createdId = saved.id
       // Kaydedilen bağlantı hemen denenir; bağlanamıyorsa form açık kalır ve neden gösterilir.
       await window.api.sql.test(saved.id)
       onSaved(saved)
     } catch (e) {
       setError(errorText(e))
-      // Yeni bağlantı bağlanamadıysa yarım kayıt bırakılmaz.
-      if (!editing) {
-        const list = await window.api.sql.list().catch(() => [])
-        const half = list.find((c) => c.name === name.trim())
-        if (half) await window.api.sql.remove(half.id).catch(() => undefined)
-      }
+      // Yeni bağlantı bağlanamadıysa yarım kayıt bırakılmaz. Yalnızca az önce kaydedilen silinir
+      // (ada göre aranırsa aynı adlı eski bir bağlantı silinebilirdi).
+      if (createdId) await window.api.sql.remove(createdId).catch(() => undefined)
     } finally {
       setBusy(false)
     }
@@ -289,17 +300,28 @@ function ConnectionForm({
           {error && <Notice tone="danger">{error}</Notice>}
         </div>
         <footer className="flex items-center gap-2 border-t border-line px-5 py-3.5">
-          {editing && (
-            <Button
-              variant="ghost"
-              className="text-danger"
-              onClick={() => void window.api.sql.remove(editing.id).then(() => onRemoved(editing.id))}
-            >
-              <Trash2 size={14} aria-hidden />
-              {q.remove}
-            </Button>
-          )}
-          <div className="ml-auto flex gap-2">
+          {editing &&
+            (confirmRemove ? (
+              <span className="flex min-w-0 items-center gap-2" role="alert">
+                <span className="text-[13px] text-danger">{q.removeConfirm}</span>
+                <Button
+                  variant="ghost"
+                  className="shrink-0 text-danger"
+                  onClick={() => void window.api.sql.remove(editing.id).then(() => onRemoved(editing.id), (e) => setError(errorText(e)))}
+                >
+                  {t.common.actions.yesDelete}
+                </Button>
+                <Button variant="ghost" className="shrink-0" onClick={() => setConfirmRemove(false)}>
+                  {t.common.actions.cancel}
+                </Button>
+              </span>
+            ) : (
+              <Button variant="ghost" className="text-danger" onClick={() => setConfirmRemove(true)}>
+                <Trash2 size={14} aria-hidden />
+                {q.remove}
+              </Button>
+            ))}
+          <div className={cn('ml-auto flex gap-2', confirmRemove && 'hidden')}>
             <Button variant="ghost" onClick={onClose}>
               {q.cancel}
             </Button>
@@ -433,10 +455,10 @@ export function SqlPane() {
   }, [last])
 
   const shown = useMemo(() => {
-    const needle = filter.trim().toLocaleLowerCase('tr')
+    const needle = fold(filter.trim())
     const order: SqlObjectType[] = ['table', 'view', 'procedure', 'function', 'trigger', 'job']
     return (tables ?? [])
-      .filter((table) => !needle || `${table.schema}.${table.name}`.toLocaleLowerCase('tr').includes(needle))
+      .filter((table) => !needle || fold(`${table.schema}.${table.name}`).includes(needle))
       .sort((a, b) => order.indexOf(a.type) - order.indexOf(b.type))
   }, [tables, filter])
 
@@ -473,7 +495,7 @@ export function SqlPane() {
   }
 
   return (
-    <aside aria-label={q.paneLabel} className="flex w-[44%] max-w-[820px] min-w-[300px] flex-col border-l border-line bg-bg">
+    <aside aria-label={q.paneLabel} className="flex w-[44%] max-w-[820px] min-w-[232px] flex-col border-l border-line bg-bg">
       <header className="drag flex h-10 shrink-0 items-center gap-2 pr-[150px] pl-4">
         <Database size={15} className="shrink-0 text-accent" aria-hidden />
         <span className="min-w-0 truncate text-[13px] font-medium text-ink">{connection.name}</span>

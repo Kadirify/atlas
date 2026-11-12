@@ -2,7 +2,7 @@ import { Cpu } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import type { LoadedModel } from '@shared/types'
 import { Button } from '@/components/ui'
-import { cn } from '@/lib/format'
+import { cn, decimal } from '@/lib/format'
 import { useT } from '@/lib/useT'
 
 const POLL_MS = 15000
@@ -36,7 +36,9 @@ export default function MemoryMenu() {
       if (!root.current?.contains(e.target as Node)) setOpen(false)
     }
     const onKey = (e: KeyboardEvent): void => {
-      if (e.key === 'Escape') setOpen(false)
+      if (e.key !== 'Escape') return
+      e.preventDefault()
+      setOpen(false)
     }
     window.addEventListener('mousedown', onDown)
     window.addEventListener('keydown', onKey)
@@ -67,7 +69,7 @@ export default function MemoryMenu() {
         aria-haspopup="dialog"
         aria-expanded={open}
         aria-label={m.button}
-        title={models.length > 0 ? `${m.button}: ${m.size(total.toFixed(1))}` : m.button}
+        title={models.length > 0 ? `${m.button}: ${m.size(decimal(total, 1))}` : m.button}
         onClick={() => setOpen((o) => !o)}
         className={cn(
           'relative flex h-8 w-8 items-center justify-center rounded-md text-ink-3 transition-colors hover:bg-surface-2 hover:text-ink',
@@ -90,7 +92,7 @@ export default function MemoryMenu() {
                     <div className="min-w-0 flex-1">
                       <p className="truncate text-[13px] font-medium text-ink">{model.label}</p>
                       <p className="text-xs text-ink-3 tabular-nums">
-                        {m.size(model.sizeGb.toFixed(1))}, {m.onGpu(model.gpuPercent)}
+                        {m.size(decimal(model.sizeGb, 1))}, {m.onGpu(model.gpuPercent)}
                       </p>
                     </div>
                     <Button size="sm" variant="ghost" disabled={busy} onClick={() => void unload(model.name)}>

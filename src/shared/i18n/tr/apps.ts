@@ -32,6 +32,7 @@ export const apps = {
     continueInChat: 'Sohbette devam et',
     empty: 'Formu doldurup “Üret”e bas. Sonuç burada görünecek.',
     writing: 'Yazıyor',
+    ready: 'Sonuç hazır',
     history: 'Geçmiş',
     /** Formda metin yokken geçmiş satırının adı */
     fromFile: 'Dosyadan üretildi',

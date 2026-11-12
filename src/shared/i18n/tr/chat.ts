@@ -22,6 +22,14 @@ export const chat = {
   typing: 'Yazıyor',
   jumpToBottom: 'En alta in',
   writeAnswer: 'Cevap yazdır',
+  /** Model çıktısındaki uzak adresli resim yerine gösterilen not */
+  imageBlocked: (alt: string) => (alt ? `Dış adresteki resim gösterilmedi: ${alt}` : 'Dış adresteki resim gösterilmedi'),
+  /** Ekran okuyucuya bildirilen durum */
+  live: {
+    writing: 'Atlas yazıyor',
+    approval: 'Atlas onayını bekliyor',
+    done: 'Cevap hazır'
+  },
 
   message: {
     edit: 'Mesajı düzenle',
@@ -112,7 +120,10 @@ export const chat = {
     confirm: (n: number) => `${n} dosya önceki haline dönecek. Sonradan yaptığın değişiklikler de gider.`,
     yes: 'Geri al',
     no: 'Vazgeç',
-    done: (n: number) => `${n} dosya geri alındı.`
+    done: (n: number) => `${n} dosya geri alındı.`,
+    lostWarning: 'Bu cevaptaki dosya değişiklikleri artık geri alınamayacak. Devam edilsin mi?',
+    lostWarningLater: 'Sonraki cevaplardaki dosya değişiklikleri artık geri alınamayacak. Devam edilsin mi?',
+    continue: 'Devam et'
   },
 
   viewer: {
@@ -123,7 +134,8 @@ export const chat = {
     copied: 'Kopyalandı',
     save: 'Resmi kaydet',
     previous: 'Önceki resim (sol ok)',
-    next: 'Sonraki resim (sağ ok)'
+    next: 'Sonraki resim (sağ ok)',
+    zoomLevel: (percent: number) => `%${percent}`
   },
 
   codeArea: {
@@ -182,6 +194,7 @@ export const chat = {
     file: 'SQLite dosyası',
     browse: 'Seç…',
     remove: 'Bağlantıyı sil',
+    removeConfirm: 'Bu bağlantı ve kayıtlı parolası silinsin mi?',
     cancel: 'Vazgeç',
     saveAndConnect: 'Kaydet ve bağlan',
     connecting: 'Bağlanılıyor…',
@@ -277,6 +290,7 @@ export const chat = {
     titleLabel: 'Sohbet adı',
     answering: 'Cevap yazılıyor',
     privateChat: 'Gizli sohbet',
+    waitingApproval: 'Onayını bekliyor',
     optionsFor: (title: string) => `${title} için seçenekler`,
     confirmDelete: 'Bu sohbet kalıcı olarak silinsin mi?',
     pin: 'Sabitle',
@@ -325,7 +339,8 @@ export const chat = {
     command: 'Atlas bu komutu çalıştırmak istiyor',
     commandNote: 'Komut proje klasöründe çalışır ve çıktısı Atlas\'a verilir. En çok 2 dakika sürebilir.',
     moveTo: 'şuraya:',
-    trashNote: 'Dosya kalıcı olarak silinmez; çöp kutusundan geri alınabilir.'
+    trashNote: 'Dosya kalıcı olarak silinmez; çöp kutusundan geri alınabilir.',
+    protectedWarning: 'Bu dosya başka programlar tarafından kendiliğinden çalıştırılabilir; dikkatle bak.'
   },
 
   folder: {

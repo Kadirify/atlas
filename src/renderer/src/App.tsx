@@ -102,6 +102,23 @@ export default function App() {
       .then(() => refreshInstalled())
   }, [ready, setupDone, refreshInstalled])
 
+  // Ollama'ya dışarıdan model kurulup silinebilir; pencereye dönülünce kurulu modeller yeniden okunur.
+  useEffect(() => {
+    if (!ready || !setupDone) return
+    let last = Date.now()
+    const refresh = (): void => {
+      if (document.visibilityState !== 'visible' || Date.now() - last < 5000) return
+      last = Date.now()
+      void refreshInstalled()
+    }
+    window.addEventListener('focus', refresh)
+    document.addEventListener('visibilitychange', refresh)
+    return () => {
+      window.removeEventListener('focus', refresh)
+      document.removeEventListener('visibilitychange', refresh)
+    }
+  }, [ready, setupDone, refreshInstalled])
+
   useEffect(() => {
     if (!setupDone) return
     const onKey = (e: KeyboardEvent): void => {
@@ -129,6 +146,11 @@ export default function App() {
   if (!lock || !ready) return <div className="drag h-full bg-bg" />
   if (!setupDone) return <Setup key={language} />
 
+  const closeWhatsNew = (): void => {
+    setWhatsNew(null)
+    void window.api.app.dismissWhatsNew()
+  }
+
   // Dil değişince bütün ekran yeniden kurulur; her metin yeni dilde çizilir.
   return (
     <div key={language} className="flex h-full">
@@ -145,6 +167,11 @@ export default function App() {
             role="dialog"
             aria-modal="true"
             aria-label={t.settings.about.whatsNewTitle(whatsNew.version)}
+            onKeyDown={(e) => {
+              if (e.key !== 'Escape') return
+              e.preventDefault()
+              closeWhatsNew()
+            }}
             className="flex max-h-[min(560px,100%)] w-full max-w-[560px] flex-col rounded-2xl border border-line bg-surface shadow-pop"
           >
             <div className="border-b border-line px-6 py-4">
@@ -155,14 +182,7 @@ export default function App() {
               <Markdown text={whatsNew.notes} />
             </div>
             <div className="flex justify-end border-t border-line px-6 py-3">
-              <Button
-                variant="primary"
-                autoFocus
-                onClick={() => {
-                  setWhatsNew(null)
-                  void window.api.app.dismissWhatsNew()
-                }}
-              >
+              <Button variant="primary" autoFocus onClick={closeWhatsNew}>
                 {t.settings.about.whatsNewClose}
               </Button>
             </div>

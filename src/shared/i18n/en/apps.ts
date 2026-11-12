@@ -32,6 +32,7 @@ export const apps: Dict['apps'] = {
     continueInChat: 'Continue in chat',
     empty: 'Fill in the form and select “Generate”. The result will appear here.',
     writing: 'Writing',
+    ready: 'Result ready',
     history: 'History',
     fromFile: 'Generated from a file',
     removeRun: 'Remove this result from history',

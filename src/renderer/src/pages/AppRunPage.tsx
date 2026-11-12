@@ -48,7 +48,9 @@ function AppMenu({ app }: { app: MiniApp }) {
       if (!ref.current?.contains(e.target as Node)) setOpen(false)
     }
     const esc = (e: KeyboardEvent): void => {
-      if (e.key === 'Escape') setOpen(false)
+      if (e.key !== 'Escape') return
+      e.preventDefault()
+      setOpen(false)
     }
     document.addEventListener('mousedown', close)
     document.addEventListener('keydown', esc)
@@ -347,7 +349,11 @@ export default function AppRunPage({ appId }: { appId: string }) {
 
         {/* Sonuç */}
         <section aria-label={t.apps.run.resultSection} className="flex min-w-0 flex-1 flex-col bg-bg">
-          <div className="min-h-0 flex-1 overflow-y-auto px-8 py-7" aria-live="polite">
+          <div className="min-h-0 flex-1 overflow-y-auto px-8 py-7" aria-busy={job.running}>
+            {/* Akan metin ekran okuyucuya parça parça okunmaz; yalnızca durum bildirilir. */}
+            <p className="sr-only" role="status">
+              {job.running ? t.apps.run.writing : hasOutput ? t.apps.run.ready : ''}
+            </p>
             <div className="mx-auto max-w-[720px]">
               {!hasOutput && !job.running && !job.error && (
                 <p className="pt-16 text-center text-sm text-ink-3">{t.apps.run.empty}</p>
