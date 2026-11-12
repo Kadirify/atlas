@@ -54,7 +54,12 @@ export const main = {
   notify: {
     replyReady: 'Cevap hazır',
     replyReadyLocked: 'Atlas cevabı yazdı. Görmek için kilidi aç.',
-    replyFailed: 'Cevap yazılamadı'
+    replyFailed: 'Cevap yazılamadı',
+    approvalNeeded: 'Atlas onayını bekliyor',
+    approvalNeededLocked: 'Atlas bir işlem için onayını bekliyor. Görmek için kilidi aç.',
+    startupTitle: 'Atlas açılamadı',
+    startupFailed: (detail: string, folder: string) =>
+      `Atlas başlatılırken bir hata oldu:\n\n${detail}\n\nVerilerin şu klasörde duruyor ve silinmedi:\n${folder}\n\nBilgisayarı yeniden başlatıp tekrar dene; sorun sürerse bu mesajla birlikte hata bildir.`
   },
 
   export: {

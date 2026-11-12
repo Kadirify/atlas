@@ -52,7 +52,12 @@ export const main: Dict['main'] = {
   notify: {
     replyReady: 'The reply is ready',
     replyReadyLocked: 'Atlas wrote the reply. Unlock to see it.',
-    replyFailed: "The reply couldn't be written"
+    replyFailed: "The reply couldn't be written",
+    approvalNeeded: 'Atlas is waiting for your approval',
+    approvalNeededLocked: 'Atlas is waiting for your approval. Unlock to see it.',
+    startupTitle: "Atlas couldn't start",
+    startupFailed: (detail: string, folder: string) =>
+      `Something went wrong while starting Atlas:\n\n${detail}\n\nYour data is in this folder and was not deleted:\n${folder}\n\nRestart the computer and try again; if it keeps happening, report the problem with this message.`
   },
 
   export: {

@@ -82,6 +82,18 @@ describe('uygulama kilidi', () => {
     expect(lock.state().retryAfterSec).toBe(0)
   })
 
+  it('uygulamayı kapatıp açmak bekleme süresini sıfırlamaz', () => {
+    lock.setPin('1234')
+    lock.lock()
+    for (let i = 0; i < 5; i++) expect(() => lock.unlock('x')).toThrow('Şifre yanlış.')
+    const restarted = new LockService(db, () => {}, () => now)
+    expect(restarted.state().retryAfterSec).toBe(30)
+    expect(() => restarted.unlock('1234')).toThrow('Çok fazla yanlış deneme')
+    now += 31_000
+    expect(restarted.unlock('1234').locked).toBe(false)
+    expect(new LockService(db, () => {}, () => now).state().retryAfterSec).toBe(0)
+  })
+
   it('hata mesajları dile göre değişir', () => {
     setLanguage('en')
     expect(() => lock.setPin('1')).toThrow('at least 4')
