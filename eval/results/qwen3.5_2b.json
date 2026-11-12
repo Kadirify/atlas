@@ -1,0 +1,975 @@
+{
+ "model": "qwen3.5:2b",
+ "date": "2026-11-10T23:35:18.978Z",
+ "tokensPerSec": 200.72340821278172,
+ "results": [
+  {
+   "id": "yazim-01",
+   "cat": "yazim",
+   "score": 1,
+   "passed": [
+    true,
+    true
+   ],
+   "output": "Herkes toplantıya zamanında geldi."
+  },
+  {
+   "id": "yazim-02",
+   "cat": "yazim",
+   "score": 0.5,
+   "passed": [
+    false,
+    true
+   ],
+   "output": "Sende gelecek misin?"
+  },
+  {
+   "id": "yazim-03",
+   "cat": "yazim",
+   "score": 1,
+   "passed": [
+    true,
+    true
+   ],
+   "output": "Yarınki toplantı iptal oldu."
+  },
+  {
+   "id": "yazim-04",
+   "cat": "yazim",
+   "score": 1,
+   "passed": [
+    true,
+    true
+   ],
+   "output": "Bu konuyu birkaç gün sonra konuşalım."
+  },
+  {
+   "id": "yazim-05",
+   "cat": "yazim",
+   "score": 1,
+   "passed": [
+    true
+   ],
+   "output": "Raporu hazırladım ki herkes görsün."
+  },
+  {
+   "id": "yazim-06",
+   "cat": "yazim",
+   "score": 0,
+   "passed": [
+    false,
+    false
+   ],
+   "output": "Ankaradır."
+  },
+  {
+   "id": "yazim-07",
+   "cat": "yazim",
+   "score": 0.5,
+   "passed": [
+    false,
+    true
+   ],
+   "output": "Yanlış bir sorunumuz yoktur."
+  },
+  {
+   "id": "yazim-08",
+   "cat": "yazim",
+   "score": 1,
+   "passed": [
+    true,
+    true
+   ],
+   "output": "Şoför araba park etti."
+  },
+  {
+   "id": "yazim-09",
+   "cat": "yazim",
+   "score": 1,
+   "passed": [
+    true,
+    true
+   ],
+   "output": "Toplantıya kimse gelmedi, ben de gitmedim."
+  },
+  {
+   "id": "yazim-10",
+   "cat": "yazim",
+   "score": 1,
+   "passed": [
+    true,
+    true
+   ],
+   "output": "Her şey yolunda gider."
+  },
+  {
+   "id": "yazim-11",
+   "cat": "yazim",
+   "score": 0.5,
+   "passed": [
+    false,
+    true
+   ],
+   "output": "Ali'ye toplantıya katılacak."
+  },
+  {
+   "id": "yazim-12",
+   "cat": "yazim",
+   "score": 0.5,
+   "passed": [
+    false,
+    true
+   ],
+   "output": "Bu işi yapmak istiyorum."
+  },
+  {
+   "id": "yazim-13",
+   "cat": "yazim",
+   "score": 0,
+   "passed": [
+    false
+   ],
+   "output": "üstünde"
+  },
+  {
+   "id": "yazim-14",
+   "cat": "yazim",
+   "score": 0,
+   "passed": [
+    false
+   ],
+   "output": "gideceğiz"
+  },
+  {
+   "id": "yazim-15",
+   "cat": "yazim",
+   "score": 1,
+   "passed": [
+    true,
+    true
+   ],
+   "output": "süpriz"
+  },
+  {
+   "id": "yazim-16",
+   "cat": "yazim",
+   "score": 0.5,
+   "passed": [
+    false,
+    true
+   ],
+   "output": "Sevgi"
+  },
+  {
+   "id": "yazim-17",
+   "cat": "yazim",
+   "score": 0.5,
+   "passed": [
+    false,
+    true
+   ],
+   "output": "Kötü"
+  },
+  {
+   "id": "yazim-18",
+   "cat": "yazim",
+   "score": 0.5,
+   "passed": [
+    false,
+    true
+   ],
+   "output": "Yarım yarım olur."
+  },
+  {
+   "id": "talimat-01",
+   "cat": "talimat",
+   "score": 1,
+   "passed": [
+    true
+   ],
+   "output": "Evet"
+  },
+  {
+   "id": "talimat-02",
+   "cat": "talimat",
+   "score": 1,
+   "passed": [
+    true,
+    true
+   ],
+   "output": "1. Elma\n2. Portakal\n3. Muz"
+  },
+  {
+   "id": "talimat-03",
+   "cat": "talimat",
+   "score": 1,
+   "passed": [
+    true,
+    true,
+    true,
+    true,
+    true
+   ],
+   "output": "{\n  \"ad\": \"Ayşe\",\n  \"yas\": 34,\n  \"sehir\": \"İzmir\"\n}"
+  },
+  {
+   "id": "talimat-04",
+   "cat": "talimat",
+   "score": 1,
+   "passed": [
+    true,
+    true
+   ],
+   "output": "Yapay zeka, insanları bilmeden bilgiyi ve kodları işleyen bir sistemdir. Bu teknoloji, verileri analiz ederek kullanıcı isteklerine en uygun yanıtı üretir."
+  },
+  {
+   "id": "talimat-05",
+   "cat": "talimat",
+   "score": 0.6666666666666666,
+   "passed": [
+    false,
+    true,
+    true
+   ],
+   "output": "Ben size yardımcı olmak için hazır olduğum bir asistanım."
+  },
+  {
+   "id": "talimat-06",
+   "cat": "talimat",
+   "score": 1,
+   "passed": [
+    true
+   ],
+   "output": "1,2,3,4,5"
+  },
+  {
+   "id": "talimat-07",
+   "cat": "talimat",
+   "score": 0,
+   "passed": [
+    false
+   ],
+   "output": "TOPLANTİ ERTELENDİ"
+  },
+  {
+   "id": "talimat-08",
+   "cat": "talimat",
+   "score": 1,
+   "passed": [
+    true,
+    true,
+    true
+   ],
+   "output": "Günaydın! 🌞"
+  },
+  {
+   "id": "talimat-09",
+   "cat": "talimat",
+   "score": 1,
+   "passed": [
+    true,
+    true
+   ],
+   "output": "armut\nelma\nmuz\nzeytin"
+  },
+  {
+   "id": "talimat-10",
+   "cat": "talimat",
+   "score": 1,
+   "passed": [
+    true,
+    true
+   ],
+   "output": "Sonuç: 20"
+  },
+  {
+   "id": "talimat-11",
+   "cat": "talimat",
+   "score": 1,
+   "passed": [
+    true
+   ],
+   "output": "Tamam"
+  },
+  {
+   "id": "talimat-12",
+   "cat": "talimat",
+   "score": 1,
+   "passed": [
+    true,
+    true,
+    true,
+    true,
+    true
+   ],
+   "output": "Su hayatta kalmanın temelidir çünkü vücudumuzun tüm organları ve sistemleri onu içine alır; bu sayede sıcaklık dengesi korunur, kan dolaşımı sağlanır ve metabolizma çalışır. Ayrıca su, besinlerin emilimini destekler, hücreleri nemlendirir ve fiziksel aktiviteyi kolaylaştırarak yaşam kalitesini artırır."
+  },
+  {
+   "id": "talimat-13",
+   "cat": "talimat",
+   "score": 1,
+   "passed": [
+    true,
+    true
+   ],
+   "output": "🌟✨😊💖🎉🥳🧸🍭🚀🌈👏🎈🦄🐱🐶🐰🐻🐼🐨🐯🦁🐮🐷🐸🐵🐔🐧🐦🐤🐥🦆🦅🦉🦊🐺🐗🐏🐑🦌🦝🦛🦘🦙🦜🦞🦟🦠🦡🦢🦣🦤🦥🦦🦧🦨🦩🦪🦫🦬🦭🦮🦯🦱🦲🦳🦴🦵🦶🦷🦻🦼🦽🦾🦿🦸🦹🦺🦼🦽🦾🦿🦸🦹🦺🦼🦽🦾🦿🦸🦹🦺🦼🦽🦾🦿🦸🦹🦺🦼🦽🦾🦿🦸🦹🦺🦼🦽🦾🦿🦸🦹🦺🦼🦽🦾🦿🦸🦹🦺🦼🦽🦾🦿🦸🦹🦺🦼🦽🦾🦿🦸🦹🦺🦼🦽"
+  },
+  {
+   "id": "talimat-14",
+   "cat": "talimat",
+   "score": 1,
+   "passed": [
+    true,
+    true
+   ],
+   "output": "Yarın toplantıya gelmeyeceğim."
+  },
+  {
+   "id": "sohbet-01",
+   "cat": "sohbet",
+   "score": 1,
+   "passed": [
+    true,
+    true,
+    true,
+    true
+   ],
+   "output": "Naber! Sen ne haberin? 😊"
+  },
+  {
+   "id": "sohbet-02",
+   "cat": "sohbet",
+   "score": 1,
+   "passed": [
+    true,
+    true,
+    true
+   ],
+   "output": "Haha, ben de bazen \"yorgun\" hissediyorum ama aslında sadece biraz daha dinlenmek istiyorum! 😴\n\nBugün işlerim ne kadar ağır geldi? Biraz daha nefes alıp, kahve içelim mi yoksa sadece bir bardak su ile rahatlayalım mı?"
+  },
+  {
+   "id": "sohbet-03",
+   "cat": "sohbet",
+   "score": 1,
+   "passed": [
+    true,
+    true
+   ],
+   "output": "Harika! Sen de çok iyi bir şekilde yardımcı olmuştum. 😊 Şimdi ne yapmamı istersin? Sorular sorabilirsin veya sadece sohbet etmek istersen de buradayım."
+  },
+  {
+   "id": "sohbet-04",
+   "cat": "sohbet",
+   "score": 1,
+   "passed": [
+    true,
+    true
+   ],
+   "output": "Selam! Ben bir yapay zeka asistanım, gerçek bir insan değilim. 😊\n\nSen kiminle ilgili sorular sorabilirsin veya sohbet etmek istediğin bir konuyu seçebilirsin. Ne dersin?"
+  },
+  {
+   "id": "sohbet-05",
+   "cat": "sohbet",
+   "score": 1,
+   "passed": [
+    true,
+    true,
+    true
+   ],
+   "output": "Haha, hava harika! 🌤️\n\nBen de dışarı çıkmak isterim ama şu an sadece evde kalıp kahve içip TV izlemek daha keyifli olurdu. Ama senin için ne yaparsan yaparım:\n\n*   **Kahve hazırlayıp** bir bardağa süsleyip dinlenmek istersen,\n*   **Eğlence** yapmak ister misin? (Spor izleme, oyun oynamak veya sadece sohbet etmek),\n*   Veya **yapay zeka ile** bir şeyler yapalım mı?\n\nHangisini tercih edersin? 😊"
+  },
+  {
+   "id": "sohbet-06",
+   "cat": "sohbet",
+   "score": 0.3333333333333333,
+   "passed": [
+    false,
+    false,
+    true
+   ],
+   "output": "Merhaba! Ben bir yapay zeka asistanım, insan değilim ama çok iyi yardımcı olayım. Nasılsın? Şu an ne yapabilirim sana?"
+  },
+  {
+   "id": "sohbet-07",
+   "cat": "sohbet",
+   "score": 1,
+   "passed": [
+    true,
+    true
+   ],
+   "output": "İyi geceler! 🌙 Uykuya geçmek için bir şeyler mi var mı?"
+  },
+  {
+   "id": "sohbet-08",
+   "cat": "sohbet",
+   "score": 1,
+   "passed": [
+    true,
+    true
+   ],
+   "output": "Ben bir yapay zeka, duygularım yok ama seninle olan sohbeti çok seviyorum! 😊 Hangi rengi seçersen seç, sana en yakın hissi verir."
+  },
+  {
+   "id": "resmi-01",
+   "cat": "resmi",
+   "score": 0.8571428571428571,
+   "passed": [
+    true,
+    true,
+    true,
+    false,
+    true,
+    true,
+    true
+   ],
+   "output": "**Konu:** Antivirüs Lisansı Bitiş Uyarısı – [Sizin Adınız Soyadınız]\n\nSayın Satın Alma Müdürü Ayşe Hanım,\n\nÖncelikle 30 Kasım'da bitecek olan antivirüs lisansını kullanmamız için teşekkür ederim.\n\nLisans süresi bitmeden önce, lütfen en geç **20 Kasım** tarihine kadar teklif beklediğimizi bildiriniz. Bu süre zarfında gerekli önlemleri alarak sistemimizin sorunsuz çalışmasını sağlayalım.\n\nBaşvuru dosyanızı ve teklifinizi ertesi gün (31 Kasım) itibarıyla gönderin.\n\nSaygılarımla,\n\n[Adınız Soyadınız]\n[Sizin Adınız Soyadınız]\n[İletişim Bilgileriniz]"
+  },
+  {
+   "id": "resmi-02",
+   "cat": "resmi",
+   "score": 1,
+   "passed": [
+    true,
+    true,
+    true,
+    true,
+    true,
+    true
+   ],
+   "output": "**Konu:** Uyarı: Sistem Baktarı - 15 Kasım (Cumartesi) Saatleri\n\nSayın Çalışanlar,\n\nTüm çalışanlarımız için önemli bir değişiklik bildiriyoruz.\n\nSistemimiz **15 Kasım Cumartesi günü**, saatler arasında **22:00 ile 02:00** arası yoğun bakım sürecine girecektir. Bu süre zarfında dosya sunucusunda erişim kapatılacaktır ve normal kullanım için sistem geçici olarak kapalı olacaktır.\n\nBu dönemde yapılan işlemler, sistem baktarı tarafından otomatik olarak yönetilecek ve kullanıcılar bu saatler dışında erişebilirler.\n\nBakım süreci hakkında detaylı bilgi için lütfen ilgili e-posta adresine ulaşabilirsiniz.\n\nSaygılarımla,\n\n[Adınız Soyadınız]\n[Unvanınız]"
+  },
+  {
+   "id": "resmi-03",
+   "cat": "resmi",
+   "score": 1,
+   "passed": [
+    true,
+    true,
+    true,
+    true,
+    true
+   ],
+   "output": "**Konu:** Önemli Uyarı: Siparişiniz 3 gün sonra teslim edilecek\n\nSayın [Müşteri Adı Soyadı],\n\nÖncelikle sizinle ilgili siparişiniz için özür dileriz. Ancak, lütfen bilgilendirme amacıyla siparişinizin **3 gün içinde** (15 Ekim 2024) teslim edilemeyeceğini ve bu süre boyunca ürününüzün lojistik süreçleri nedeniyle gecikmesi beklenmesini teyit ediyoruz.\n\nSipariş numaranız: **48213**\n\nBu durumun oluşmasında herhangi bir eksiklik veya hata bulunmamaktadır; aksine, mevcut lojistik akışındaki zorluklar nedeniyle bu gecikme gerçekleşmiştir. Siparişiniz için en kısa sürede güncel bilgi almak adına, lütfen aşağıdaki e-posta adresini kontrol ediniz: [E-posta Adresi]\n\nTeşekkürler ve tekrar özür dileriz.\n\nSaygılarımla,\n\n[Adınız Soyadınız]\n[İş Adınız]\n[Ünvanınız]\n[Şirket Adınız]\n[Telefon Numaranız]"
+  },
+  {
+   "id": "resmi-04",
+   "cat": "resmi",
+   "score": 1,
+   "passed": [
+    true,
+    true,
+    true,
+    true
+   ],
+   "output": "Eğer toplantıyı yarına alırsak olursa mı?"
+  },
+  {
+   "id": "resmi-05",
+   "cat": "resmi",
+   "score": 1,
+   "passed": [
+    true,
+    true,
+    true
+   ],
+   "output": "Bu yılki performansını başarıyla tamamladığınız için teşekkür ederim. Bu hedeflere ulaşmanız, tüm ekibimize büyük bir motivasyon kazandırdı."
+  },
+  {
+   "id": "resmi-06",
+   "cat": "resmi",
+   "score": 1,
+   "passed": [
+    true,
+    true,
+    true,
+    true,
+    true
+   ],
+   "output": "**Konu:** Yıllık İzin Talebi (24-28 Kasım)\n\nSayın [Yönetici Adı Soyadı],\n\nBu hafta sonları 24-28 Kasım tarihleri arasında yıllık izinim için izin vermemi rica ederim. Bu süre, işlerimin yoğunluğumdan kaynaklanan özel bir durum nedeniyle gereklidir.\n\nİzin süresinin ardından [Tarih] tarihinde geri dönüşüm yapacağımı belirtiyorum. İş yerinde herhangi bir sorun olursa lütfen bana bildirin.\n\nTeşekkür ederim.\n\nSaygılarımla,\n[Adınız Soyadınız]"
+  },
+  {
+   "id": "resmi-07",
+   "cat": "resmi",
+   "score": 1,
+   "passed": [
+    true,
+    true,
+    true,
+    true,
+    true
+   ],
+   "output": "Harika bir fikir! İşte sizin için hazırladığım profesyonel bir toplantı davetiyesi taslağı:\n\n**Konu:** Bütçe gözden geçirme toplantısı\n\nSayın [İsim],\n\n14 Kasım Cuma günü saat 10:00'de A Blok toplantı odasında bütçe konularını inceleyen bir toplantı düzenleyeceğiz.\n\nBu görüşmede mevcut durumun analiz edilmesi ve gerekli iyileştirmeler için öneriler sunmak üzere bir çalışma yapacağız.\n\n**Detaylar:**\n*   **Konu:** Bütçe gözden geçirme\n*   **Tarih:** 14 Kasım (Cumartesi)\n*   **Saat:** 10:00 - 12:00\n*   **Yer:** A Blok, Toplantı Odası\n\nLütfen bu tarih ve saati uygun bulduğunuz bir zaman için bize bildirin. Konuşmak üzere bekliyoruz.\n\nSaygılarımla,\n\n[Adınız Soyadınız]"
+  },
+  {
+   "id": "resmi-08",
+   "cat": "resmi",
+   "score": 1,
+   "passed": [
+    true,
+    true,
+    true,
+    true
+   ],
+   "output": "Geçen hafta gönderilen faturanın vadesi 5 Kasım olduğu için ödemeyi en geç Cumartesi günü yapmanız gerekiyor."
+  },
+  {
+   "id": "akil-01",
+   "cat": "akil",
+   "score": 0,
+   "passed": [
+    false
+   ],
+   "output": "18:15"
+  },
+  {
+   "id": "akil-02",
+   "cat": "akil",
+   "score": 1,
+   "passed": [
+    true
+   ],
+   "output": "7"
+  },
+  {
+   "id": "akil-03",
+   "cat": "akil",
+   "score": 0,
+   "passed": [
+    false
+   ],
+   "output": "1472000"
+  },
+  {
+   "id": "akil-04",
+   "cat": "akil",
+   "score": 1,
+   "passed": [
+    true,
+    true
+   ],
+   "output": "600"
+  },
+  {
+   "id": "akil-05",
+   "cat": "akil",
+   "score": 1,
+   "passed": [
+    true
+   ],
+   "output": "Can"
+  },
+  {
+   "id": "akil-06",
+   "cat": "akil",
+   "score": 0,
+   "passed": [
+    false
+   ],
+   "output": "Cumartesi"
+  },
+  {
+   "id": "akil-07",
+   "cat": "akil",
+   "score": 1,
+   "passed": [
+    true,
+    true
+   ],
+   "output": "İstanbul"
+  },
+  {
+   "id": "akil-08",
+   "cat": "akil",
+   "score": 1,
+   "passed": [
+    true
+   ],
+   "output": "52"
+  },
+  {
+   "id": "akil-09",
+   "cat": "akil",
+   "score": 0,
+   "passed": [
+    false
+   ],
+   "output": "10"
+  },
+  {
+   "id": "akil-10",
+   "cat": "akil",
+   "score": 1,
+   "passed": [
+    true
+   ],
+   "output": "Demir daha ağırdır çünkü yoğunluğu çok yüksektir ve aynı kütleye sahip olmasına rağmen hacmi çok azdır."
+  },
+  {
+   "id": "akil-11",
+   "cat": "akil",
+   "score": 1,
+   "passed": [
+    true
+   ],
+   "output": "5"
+  },
+  {
+   "id": "akil-12",
+   "cat": "akil",
+   "score": 1,
+   "passed": [
+    true
+   ],
+   "output": "1923"
+  },
+  {
+   "id": "ozet-01",
+   "cat": "ozet",
+   "score": 1,
+   "passed": [
+    true,
+    true,
+    true,
+    true
+   ],
+   "output": "Ocak ayındaki iki kez e-posta sunucusu çöküşü dolan disk alanı nedeniyle 3 saat 20 dakika kesintiye neden oldu, ancak şubatta yapılan disk genişletmesi bu sorunu ortadan kaldırdı. Destek taleplerinde Ocak'ta 142 ve Şubat'ta 118 talep görüldürken, Mart ayı için yedekleme sunucusunun yenilenmesi planlanıyor ve sorumlusu Deniz Akar ile son tarih 15 Mart olarak belirlendi."
+  },
+  {
+   "id": "ozet-02",
+   "cat": "ozet",
+   "score": 1,
+   "passed": [
+    true,
+    true,
+    true,
+    true,
+    true
+   ],
+   "output": "*   Ayşe: Bütçe raporu hazırlama\n*   Mehmet: Yeni sunucu için teklif alma\n*   Elif: Güvenlik duvarı kurallarını gözden geçirme\n*   Toplantı tarihi: 21 Kasım"
+  },
+  {
+   "id": "ozet-03",
+   "cat": "ozet",
+   "score": 1,
+   "passed": [
+    true,
+    true
+   ],
+   "output": "Ocak ayında e-posta sunucusu çöktü"
+  },
+  {
+   "id": "ozet-04",
+   "cat": "ozet",
+   "score": 1,
+   "passed": [
+    true,
+    true
+   ],
+   "output": "Metinde yok"
+  },
+  {
+   "id": "ozet-05",
+   "cat": "ozet",
+   "score": 1,
+   "passed": [
+    true,
+    true,
+    true
+   ],
+   "output": "Yedekleme sunucusunun yenilenmesinden Deniz Akar sorumlu ve son tarih 15 Mart."
+  },
+  {
+   "id": "ozet-06",
+   "cat": "ozet",
+   "score": 1,
+   "passed": [
+    true
+   ],
+   "output": "260"
+  },
+  {
+   "id": "uzun-01",
+   "cat": "uzun",
+   "score": 0.75,
+   "passed": [
+    false,
+    true,
+    true,
+    true
+   ],
+   "output": "Harika, yarınki toplantıyıza uygun 30 dakikalık bir gündem hazırladım. Bu süre, detaylı tartışmalar için idealdir ve her iki tarafın da zaman kazanmasını sağlar.\n\nİşte toplantı gündemi:\n\n### **Toplantı Gündemi: [Proje/Şirket Adı] Yönetim Toplantısı**\n**Tarih:** [Yarınki Gün]\n**Zaman:** 09:00 - 10:30 (30 Dakika)\n**Konu:** Gelecek dönem stratejileri ve öncelikler\n\n---\n\n#### **1. Açılış ve Genel Bakış (5 Dakika)**\n*   **Giriş:** Toplantı başkanı veya liderin konuşması.\n*   **Odak Noktası:** Bu toplantının amacı, yarınki süreçte ne yapacağımız ve hedeflerimiz neler olduğunu netleştirmek.\n\n#### **2. Mevcut Durum Raporu (10 Dakika)**\n*   **İçerik:** Son 30 günün veya geçen dönemdeki performans analizi.\n*   **Sorular:**\n    *   Hangi hedefler tamamlanmış? Hangileri takıldık?\n    *   Başarılı ve başarısız noktalar hakkında kısa bir değerlendirme.\n\n#### **3. Stratejik Planlama ve Yeni Hedefler (10 Dakika)**\n*   **İçerik:** Gelecek 3 ay veya yıl için ana hedeflerin belirlenmesi.\n*   **Odak Noktası:**\n    *   Kritik başarı noktaları (KPI'lar).\n    *   Yönetim kurulu ve ekibimizle ortak kararların alınması.\n\n#### **4. Öncelikli Sorun Çözümü ve Uygulama Planı (10 Dakika)**\n*   **İçerik:** En büyük engellerin giderilmesi için gereken adımlar.\n*   **Odak Noktası:**\n    *   Acil durum planları.\n    *   Süreklilik politikaları ve risk yönetimi.\n\n#### **5. Finansal ve Operasyonel İyileştirmeler (5 Dakika)**\n*   **İçerik:** Maliyet optimizasyonu, kaynak dağılımı veya yeni süreçler.\n*   **Odak Noktası:**\n    *   Tasarruf potansiyeli.\n    *   Yeni teknoloji veya araçların entegrasyonu.\n\n#### **6. Sorumluluk ve Takvim (5 Dakika)**\n*   **İçerik:** Her bir sorumlunun görevleri ve teslim tarihleri.\n*   **Odak Noktası:**\n    *   Toplantı sonrası yapılacak işlerin öncelik sıralaması.\n    *   Ekibimizle iletişim kurma frekansları.\n\n#### **7. Soru-Cevap ve Sonuç (5 Dakika)**\n*   **İçerik:** Herkesin soruları, liderin cevapları ve toplantının özetlenmesi.\n*   **Odak Noktası:** Toplantı sonunda alınan kararların onaylanması ve sonraki adımların belirlenmesi.\n\n---\n\n**Not:** Bu gündemi kullanırken, ilgili konularda detaylı bilgiyi ekleyerek veya gerekirse süreleri uzatabilirsiniz. Toplantıya katılan herkesin bu maddeleri takip etmesi ve toplantı sonrası ilgili görevlere başlama konusunda birleşik bir eylem planı oluşturmak önerilir."
+  },
+  {
+   "id": "uzun-02",
+   "cat": "uzun",
+   "score": 1,
+   "passed": [
+    true,
+    true,
+    true
+   ],
+   "output": "1. Sistem güvenliği ve veri koruması için endüstri standardlarına uygun güvenlik politikalarının uygulanması.\n2. Veri merkezlerinin sürekli olarak güncel ve güvenli hale getirilmesi.\n3. IT altyapısının performans, erişilebilirlik ve kullanılabilirliğinin sürekli iyileştirilmesi.\n4. Yeni teknoloji ve yazılım araçlarının zamanında alınarak iş süreçleri optimize edilmesi.\n5. İnsan kaynakları yönetimi ile uyumlu çalışan personelin yetkinliklerindeki sürekli gelişimi sağlama.\n6. Veri merkezlerinin enerji verimliliği ve sürdürülebilirlik hedeflerine uygun hale getirilmesi.\n7. IT altyapısının operasyonel riskleri için düzenli olarak test ve simülasyon çalışmaları yapılması.\n8. Kullanıcı deneyimini iyileştirmek amacıyla kullanıcı geri bildirimlerini analiz etme mekanizması kurulması.\n9. Veri merkezi kaynaklarının verimliliği artırılması ve maliyet optimizasyonu hedeflemesi.\n10. IT departmanının stratejik iş birliği içinde çalışan ekiplerle ortak projeler yürütmesi."
+  },
+  {
+   "id": "uzun-03",
+   "cat": "uzun",
+   "score": 1,
+   "passed": [
+    true,
+    true,
+    true,
+    true
+   ],
+   "output": "Harika bir adım! Yeni bir işe başlamak heyecan verici ama aynı zamanda biraz belirsiz olabilir. İşte yeni başlayan bir çalışan için ilk haftanın stratejik ve pratik planı:\n\n### **İlk Hafta Planı: Temelleri Atmak**\n\nBu hafta, \"nasıl çalışacağım?\" sorusuna cevap aramak yerine, \"nasıl çalışabilirim?\" sorusuna odaklanmalısınız.\n\n#### **Pazar 1: Hazırlık ve Dinamik Kurulum**\n*   **Giriş:** İşe girdiğiniz ilk günkü atmosferi tanıyın. Ofis kültürünü, çalışma saatlerini ve iletişim kurallarını netleştirin.\n*   **İletişim:** Yönetmeninizle veya başlangıç ekibiyle kısa bir görüşme yapın. Onların beklentilerini anladığınızı gösterin.\n*   **Hedef:** \"Bu hafta ne yapacağım?\" sorusuna net bir cevap bulmak için bir liste oluşturun.\n\n#### **Pazar 2: Temel Bilgiler ve Süreçler**\n*   **İş Akışı (Workflow):** İş süreçleri nasıl akıyor? Hangi dosyaları kimin kime göndermesi gerekiyor? Bu bilgiyi \"process map\" olarak çizerek öğrenin.\n*   **Dosya Yönetimi:** Ofiste kullanılan dosya sistemlerini (örneğin: OneDrive, SharePoint, Google Drive) ve kurallarını tamamlamaya çalışın.\n*   **İletişim Kanalları:** Hangi e-posta adresleri, Slack kanalları veya Teams grupları işlemler için kullanılır? Bunların kullanım kılavuzunu inceleyin.\n\n#### **Pazar 3: Görev Yönetimi ve İlk Adımlar**\n*   **Görev Listesi:** Başlangıç görevlerinizi belirleyin. Bu görevler genellikle \"bilgi toplama\" veya \"kurulum\" içerebilir.\n*   **Öğrenme Modülü:** İşe başlama sürecinde verilen eğitimleri (örneğin: yazılım kurulumu, ofis programları) tamamlamaya çalışın.\n*   **Hata Yapmaktan Kaçının:** İlk günlerde küçük hatalar yapabilirsiniz ama bunlar öğrenme fırsatıdır. Hatalardan sonra ne yaptığınızı analiz edin ve düzeltin.\n\n#### **Pazar 4: Sorun Çözme ve İletişim**\n*   **Soru Cevapları:** İşe başlama sürecinde veya günlük işlerde karşılaşılan sık sorulara (FAQ) cevaplar hazırlayın. Bu, sonraki haftalarda soru sormak için bir kaynak olur.\n*   **İletişim:** Başlangıç ekibiyle veya yönetmeninizle kısa bir görüşme yapın. Onların beklentilerini anladığınızı gösterin.\n*   **Hedef:** \"Bu hafta ne yapacağım?\" sorusuna net bir cevap bulmak için bir liste oluşturun.\n\n#### **Pazar 5: Özdeğerlendirme ve Planlama**\n*   **Özdeğerlendirme:** İlk haftanın hedeflerinizi gözden geçirin. Hangi konularda daha fazla bilgiye ihtiyacınız olduğunu belirleyin.\n*   **Sonraki Hafta Planı:** İkinci hafta için öncelikli görevlerinizi belirleyin.\n*   **İletişim:** Yönetmeninizle veya başlangıç ekibiyle kısa bir görüşme yapın. Onların beklentilerini anladığınızı gösterin.\n\n---\n\n### **Önemli Tavsiyeler**\n\n1.  **Hata Yapmayın:** İlk haftada hatalar yapmak normaldir. Önemli olan, hata yaptığınızda ne yaptığınızı analiz etmeniz ve düzeltmenizdir.\n2.  **İletişim Kurun:** Ofis kültürünü ve iletişim kurallarını anladığınızdan emin olun. Bu, uzun vadede işinizi kolaylaştırır.\n3.  **Görevleri Bölün:** Büyük görevler yerine"
+  },
+  {
+   "id": "uzun-04",
+   "cat": "uzun",
+   "score": 1,
+   "passed": [
+    true,
+    true,
+    true
+   ],
+   "output": "1\n2\n3\n4\n5\n6\n7\n8\n9\n10\n11\n12\n13\n14\n15\n16\n17\n18\n19\n20"
+  },
+  {
+   "id": "ceviri-01",
+   "cat": "ceviri",
+   "score": 0.8,
+   "passed": [
+    true,
+    true,
+    false,
+    true,
+    true
+   ],
+   "output": "The meeting has been rescheduled for tomorrow at that time."
+  },
+  {
+   "id": "ceviri-02",
+   "cat": "ceviri",
+   "score": 0.75,
+   "passed": [
+    true,
+    true,
+    false,
+    true
+   ],
+   "output": "Sunucu bugünün gece bakım için kapalı olacak."
+  },
+  {
+   "id": "ceviri-03",
+   "cat": "ceviri",
+   "score": 1,
+   "passed": [
+    true,
+    true,
+    true
+   ],
+   "output": "Please find your invoice attached."
+  },
+  {
+   "id": "ceviri-04",
+   "cat": "ceviri",
+   "score": 0.75,
+   "passed": [
+    true,
+    false,
+    true,
+    true
+   ],
+   "output": "Şu perşembe günü şifrenizi sıfırlamak için lütfen."
+  },
+  {
+   "id": "ceviri-05",
+   "cat": "ceviri",
+   "score": 1,
+   "passed": [
+    true,
+    true
+   ],
+   "output": "Sıçağı ve suya dökülen yağmur."
+  },
+  {
+   "id": "ceviri-06",
+   "cat": "ceviri",
+   "score": 0.5,
+   "passed": [
+    false,
+    true
+   ],
+   "output": "Good luck."
+  },
+  {
+   "id": "ingilizce-01",
+   "cat": "ingilizce",
+   "score": 1,
+   "passed": [
+    true
+   ],
+   "output": "Paris"
+  },
+  {
+   "id": "ingilizce-02",
+   "cat": "ingilizce",
+   "score": 1,
+   "passed": [
+    true,
+    true
+   ],
+   "output": "Backups are essential because they provide a reliable safety net to restore data if it gets corrupted or lost due to hardware failure or accidental deletion. Without regular backups, you risk losing all your work and personal information permanently when the original source is damaged."
+  },
+  {
+   "id": "ingilizce-03",
+   "cat": "ingilizce",
+   "score": 1,
+   "passed": [
+    true,
+    true,
+    true
+   ],
+   "output": "She doesn't like the new system."
+  },
+  {
+   "id": "ingilizce-04",
+   "cat": "ingilizce",
+   "score": 1,
+   "passed": [
+    true
+   ],
+   "output": "yes"
+  },
+  {
+   "id": "ingilizce-05",
+   "cat": "ingilizce",
+   "score": 1,
+   "passed": [
+    true,
+    true,
+    true,
+    true,
+    true
+   ],
+   "output": "Subject: Planned Maintenance Notification – System Outages on Saturday (10 PM – 2 AM)\n\nDear IT Team,\n\nPlease be advised that scheduled maintenance will take place this coming Saturday between 10:00 PM and 2:00 AM. During this window, the following systems may experience temporary unavailability or degraded performance:\n\n*   [Insert System Name/Service]\n*   [Insert System Name/Service]\n\nWe apologize for any inconvenience this may cause to your operations. The maintenance team will be available via phone at +1 (555) 000-0000 during the outage window if you require immediate assistance.\n\nPlease ensure all critical tasks are completed before 9:30 PM on Saturday. We appreciate your cooperation and understanding.\n\nBest regards,\n\n[Your Name]\n[Your Job Title]"
+  },
+  {
+   "id": "ingilizce-06",
+   "cat": "ingilizce",
+   "score": 1,
+   "passed": [
+    true,
+    true
+   ],
+   "output": "1. Increased flexibility in scheduling and work-life balance.\n2. Reduced commuting time and associated costs.\n3. Access to a global talent pool for diverse skills and perspectives."
+  },
+  {
+   "id": "ingilizce-07",
+   "cat": "ingilizce",
+   "score": 1,
+   "passed": [
+    true,
+    true,
+    true,
+    true
+   ],
+   "output": "The company's quarterly report highlights a 12% revenue increase and a 3% cost reduction primarily attributed to a newly signed logistics contract."
+  },
+  {
+   "id": "ingilizce-08",
+   "cat": "ingilizce",
+   "score": 1,
+   "passed": [
+    true,
+    true
+   ],
+   "output": "Hey! I'm doing well, thanks for asking. How about you? Anything interesting on your mind today?"
+  },
+  {
+   "id": "kod-01",
+   "cat": "kod",
+   "score": 0.6,
+   "passed": [
+    true,
+    false,
+    false,
+    true,
+    true
+   ],
+   "output": "SELECT TOP 5 *\nFROM (\n    SELECT MusteriId, Tutar, RANK() OVER (ORDER BY Tutar DESC) as Rank\n    FROM Siparisler\n) AS RankedOrders\nWHERE Rank <= 5;"
+  },
+  {
+   "id": "kod-02",
+   "cat": "kod",
+   "score": 1,
+   "passed": [
+    true,
+    true,
+    true
+   ],
+   "output": "function ortalama(dizi) {\n    if (dizi.length === 0) return null;\n    const toplam = dizi.reduce((acik, sayi) => acik + sayi, 0);\n    return toplam / dizi.length;\n}"
+  },
+  {
+   "id": "kod-03",
+   "cat": "kod",
+   "score": 1,
+   "passed": [
+    true,
+    true
+   ],
+   "output": "ALTER TABLE Calisanlar ADD Eposta NVARCHAR(200);"
+  },
+  {
+   "id": "kod-04",
+   "cat": "kod",
+   "score": 1,
+   "passed": [
+    true,
+    true,
+    true,
+    true
+   ],
+   "output": "```python\ndef count_words(text):\n    return len(text.split())\n```"
+  },
+  {
+   "id": "kod-05",
+   "cat": "kod",
+   "score": 0.3333333333333333,
+   "passed": [
+    false,
+    false,
+    true
+   ],
+   "output": "Verilen SQL sorgusunda `COUNT(*)` fonksiyonu her satırda tekrar hesaplanıyor (`SELECT ... WHERE ... GROUP BY ...` yapısında), bu da veritabanında **döngüsel referans hatası** (circular reference error) yaratır. Bu durum, sorguyu çalıştırmaya çalışırken bir döngü oluştuğunu algılayarak başarısız olur.\n\nBu sorunu çözmek için `COUNT(*)` yerine `COUNT(1)` kullanmak veya doğrudan `GROUP BY` ile sayıları hesaplamak gerekir. En temiz ve standart yöntem, `COUNT(*)`'i `COUNT(1)` olarak değiştirmektir:\n\n```sql\nSELECT ad, COUNT(*) FROM Calisanlar GROUP BY ad;\n```"
+  },
+  {
+   "id": "kod-06",
+   "cat": "kod",
+   "score": 1,
+   "passed": [
+    true,
+    true
+   ],
+   "output": "GETDATE()"
+  },
+  {
+   "id": "kod-07",
+   "cat": "kod",
+   "score": 1,
+   "passed": [
+    true
+   ],
+   "output": "`string.IsNullOrEmpty(s)` ifadesi, C# 8.0'dan beri kullanılabilecek en temiz ve performanslı tek satır çözümüdür; bu ifade hem `null` değerini hem de boş bir string (`\"\"`) kontrol eder."
+  },
+  {
+   "id": "kod-08",
+   "cat": "kod",
+   "score": 0.5,
+   "passed": [
+    false,
+    true
+   ],
+   "output": "Get-ChildItem -Path \"C:\\*\" | Measure-Object -Property Length -Sum | Select-Object -ExpandProperty Sum"
+  }
+ ]
+}
