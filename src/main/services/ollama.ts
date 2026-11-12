@@ -484,7 +484,6 @@ export interface ChatOptions {
 /** Cevabı parça parça verir; bittiğinde istatistikleri döndürür. */
 export async function* chatStream(opts: ChatOptions): AsyncGenerator<string, ChatStats> {
   const numCtx = contextFor(opts.model, opts.numCtx)
-  const withTools = Boolean(opts.tools && opts.tools.length > 0)
   const res = await postNoThink(
     '/api/chat',
     {
@@ -494,11 +493,12 @@ export async function* chatStream(opts: ChatOptions): AsyncGenerator<string, Cha
       ...(opts.tools && opts.tools.length > 0 ? { tools: opts.tools } : {}),
       options: {
         num_ctx: numCtx,
-        // Araç turlarında model dosyadaki metni birebir kopyalayabilmeli (edit_file'ın old_text'i, adlar, import'lar):
-        // düşük sıcaklık ve tekrar cezası yok. Sohbette tekrar cezası küçük modellerde döngüyü azaltır.
-        ...(withTools
-          ? { temperature: opts.temperature ?? 0.3, repeat_penalty: 1, presence_penalty: 0, frequency_penalty: 0 }
-          : { temperature: opts.temperature ?? 0.7, repeat_penalty: 1.15, repeat_last_n: 256 }),
+        // Araç turlarında daha düşük sıcaklık: model dosyadaki metni (edit_file'ın old_text'i, adlar) daha tutarlı kopyalar.
+        temperature: opts.temperature ?? (opts.tools && opts.tools.length > 0 ? 0.4 : 0.7),
+        // Aynı ifadeyi tekrar etmeyi zorlaştırır; küçük modellerde döngüyü azaltır. Araç turlarında da gerekli:
+        // ceza kaldırılınca Atlas Strong araç sonucundan sonra düşünme kanalı işaretini (<channel|>) döngüyle yazdı.
+        repeat_penalty: opts.tools && opts.tools.length > 0 ? 1.1 : 1.15,
+        repeat_last_n: 256,
         // Düşünme de bu sınıra sayılır; düşünürken cevaba yer kalsın diye sınır büyütülür. Bağlamın yarısını geçemez:
         // istem de sığmalı.
         num_predict: Math.min(opts.think ? MAX_REPLY_TOKENS * 3 : MAX_REPLY_TOKENS, Math.floor(numCtx / 2))
