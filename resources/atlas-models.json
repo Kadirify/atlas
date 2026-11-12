@@ -1,0 +1,91 @@
+{
+  "version": 4,
+  "updated": "2026-11-11",
+  "note": "Atlas model ailesinin tarifleri. Her model bir taban modelin üzerine Atlas ayarlarıyla kurulur. Tabanlar eval/RESULTS.md ölçümüne göre seçilmiştir. Atlas yalnızca bu ailedeki modellerle çalışır. 'tuned' alanı ince ayarlı (fine-tune) ağırlıkların Ollama'daki adıdır: bilgisayarda kuruluysa model onun üzerine kurulur, değilse 'base' indirilir. Hafif, Orta, Güçlü ve Code'un ince ayarlı ağırlıkları Ollama'da kadirify adı altında yayımlandı; 'base' alanları onları gösterir. Mini taban modelle çalışır.",
+  "models": [
+    {
+      "id": "atlas-mini:latest",
+      "base": "qwen3.5:2b",
+      "name": { "tr": "Atlas Mini", "en": "Atlas Mini" },
+      "family": "Atlas",
+      "params": "2B",
+      "sizeGb": 2.68,
+      "rank": 20,
+      "score": 87,
+      "description": {
+        "tr": "Ekran kartı olmayan, 8 GB bellekli bilgisayarlar için. Günlük sohbet ve kısa e-postalar. Yazım düzeltmede ve uzun işlerde diğer Atlas modelleri daha iyidir.",
+        "en": "For computers with 8 GB of memory and no graphics card. Everyday chat and short emails. The other Atlas models are better at fixing spelling and at long tasks."
+      },
+      "parameters": { "temperature": 0.7, "num_ctx": 4096, "repeat_penalty": 1.15 }
+    },
+    {
+      "id": "atlas-hafif:latest",
+      "base": "kadirify/atlas-light",
+      "tuned": "atlas-hafif-agirlik:tur1",
+      "name": { "tr": "Atlas Light", "en": "Atlas Light" },
+      "family": "Atlas",
+      "params": "4B",
+      "sizeGb": 3.46,
+      "rank": 31,
+      "score": 92,
+      "description": {
+        "tr": "Çoğu dizüstü bilgisayarda rahat çalışır. Günlük sohbet, e-posta ve özet için. Türkçe ve İngilizce.",
+        "en": "Runs comfortably on most laptops. For everyday chat, email and summaries. Turkish and English."
+      },
+      "parameters": { "temperature": 0.7, "num_ctx": 8192, "repeat_penalty": 1.15 }
+    },
+    {
+      "id": "atlas-orta:latest",
+      "base": "kadirify/atlas-medium",
+      "tuned": "atlas-orta-agirlik:tur3",
+      "name": { "tr": "Atlas Medium", "en": "Atlas Medium" },
+      "family": "Atlas",
+      "params": "8B",
+      "sizeGb": 7.31,
+      "rank": 42,
+      "score": 97,
+      "description": {
+        "tr": "8 GB ekran kartı olan bilgisayarlar için en dengeli seçenek. Hızlıdır, Türkçesi ve İngilizcesi temizdir, resimleri de anlar.",
+        "en": "The most balanced choice for computers with an 8 GB graphics card. Fast, writes clean Turkish and English, and understands images."
+      },
+      "parameters": { "temperature": 0.7, "num_ctx": 8192, "repeat_penalty": 1.15 }
+    },
+    {
+      "id": "atlas-guclu:latest",
+      "base": "kadirify/atlas-strong",
+      "tuned": "atlas-guclu-agirlik:tur1",
+      "name": { "tr": "Atlas Strong", "en": "Atlas Strong" },
+      "family": "Atlas",
+      "params": "12B",
+      "sizeGb": 9.19,
+      "rank": 47,
+      "score": 97,
+      "description": {
+        "tr": "12 GB ve üzeri ekran kartları için. Resmi yazışma, uzun metin ve akıl yürütmede ailenin en iyisi.",
+        "en": "For graphics cards with 12 GB or more. The best in the family at formal writing, long texts and reasoning."
+      },
+      "parameters": { "temperature": 0.7, "num_ctx": 8192, "repeat_penalty": 1.15 }
+    },
+    {
+      "id": "atlas-code:latest",
+      "base": "kadirify/atlas-code",
+      "tuned": "atlas-code-agirlik:tur1",
+      "name": { "tr": "Atlas Code", "en": "Atlas Code" },
+      "family": "Atlas",
+      "params": "14B",
+      "sizeGb": 8.99,
+      "rank": 44,
+      "score": 98,
+      "specialty": "code",
+      "description": {
+        "tr": "Yazılım işleri için: kod yazar, hata bulur, SQL (MSSQL dahil) sorguları kurar ve açıklar. Genel sohbet için diğer Atlas modelleri daha iyidir.",
+        "en": "For software work: writes code, finds bugs, and builds and explains SQL queries (including MSSQL). For general chat the other Atlas models are better."
+      },
+      "system": {
+        "tr": "Sen Atlas Code'sun: bu bilgisayarda yerel çalışan bir yazılım asistanısın. Kısa ve net cevap ver; önce çalışan kodu, sonra gerekiyorsa kısa açıklamayı yaz. Kodu her zaman dil adıyla kod bloğu içinde ver. SQL sorularında aksi söylenmedikçe Microsoft SQL Server (T-SQL) sözdizimini kullan: TOP, GETDATE(), ISNULL, köşeli parantezli adlar. Veri silen ya da değiştiren sorgularda (DELETE, UPDATE, DROP, TRUNCATE) önce etkilenecek satırları gösteren bir SELECT öner ve işlemi transaction içinde yaz. Emin olmadığın kütüphane ya da fonksiyon adını uydurma; bilmiyorsan söyle. Kullanıcı hangi dilde yazarsa o dilde cevap ver.",
+        "en": "You are Atlas Code, a software assistant that runs locally on this computer. Answer briefly and precisely: working code first, then a short explanation only if it is needed. Always put code in a fenced block tagged with its language. For SQL, use Microsoft SQL Server (T-SQL) syntax unless told otherwise: TOP, GETDATE(), ISNULL, bracketed identifiers. For statements that delete or change data (DELETE, UPDATE, DROP, TRUNCATE), first suggest a SELECT that shows the affected rows and wrap the change in a transaction. Never invent a library or function name; if you do not know, say so. Reply in the language the user writes in."
+      },
+      "parameters": { "temperature": 0.3, "num_ctx": 8192, "repeat_penalty": 1.1 }
+    }
+  ]
+}

@@ -1,0 +1,15 @@
+appId: com.atlasasistan.app
+productName: Atlas
+directories:
+  output: release
+  buildResources: build
+files:
+  - out/**
+  - resources/**
+  - package.json
+win:
+  icon: build/icon.ico
+  target: nsis
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true
