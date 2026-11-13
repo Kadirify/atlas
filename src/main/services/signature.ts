@@ -29,8 +29,11 @@ const COMMAND = [
 export function readSignature(file: string): Promise<FileSignature | null> {
   if (process.platform !== 'win32') return Promise.resolve(null)
   return new Promise((resolve) => {
+    // PowerShell 7'den başlatılan bir süreçte PSModulePath PowerShell 7'nin modüllerini gösterir; Windows PowerShell
+    // onları yükleyemez ve Get-AuthenticodeSignature bulunamaz. Değişken atılır, Windows PowerShell kendi yolunu kullanır.
+    const { PSModulePath: _ignored, ...env } = process.env
     const child = spawn(join(SYSTEM32, 'WindowsPowerShell', 'v1.0', 'powershell.exe'), ['-NoProfile', '-NonInteractive', '-Command', COMMAND], {
-      env: { ...process.env, ATLAS_SIGNATURE_FILE: file },
+      env: { ...env, ATLAS_SIGNATURE_FILE: file },
       windowsHide: true,
       stdio: ['ignore', 'pipe', 'ignore']
     })
