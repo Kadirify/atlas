@@ -1,5 +1,6 @@
 import { spawn } from 'node:child_process'
 import { join } from 'node:path'
+import { log } from '../log'
 
 /** Windows'un bir dosya için bildirdiği Authenticode imzası */
 export interface FileSignature {
@@ -13,6 +14,12 @@ const SYSTEM32 = join(process.env.SystemRoot ?? 'C:\\Windows', 'System32')
 /** Büyük bir dosyanın özetini çıkarmak birkaç saniye sürer; takılırsa beklenmez. */
 const TIMEOUT_MS = 60_000
 const MAX_OUTPUT = 16_000
+
+let lastError = ''
+/** Son okunamayan imzanın nedeni (hata ayıklama ve testler için) */
+export function lastSignatureError(): string {
+  return lastError
+}
 
 // Dosya yolu komutun içine yazılmaz, ortam değişkeniyle verilir: yoldaki tırnak ya da özel işaretler komutu bozamaz.
 // Yalnızca kısıtlı PowerShell kiplerinde de (kurumsal bilgisayarlar) çalışan yalın komutlar kullanılır.
@@ -35,31 +42,39 @@ export function readSignature(file: string): Promise<FileSignature | null> {
     const child = spawn(join(SYSTEM32, 'WindowsPowerShell', 'v1.0', 'powershell.exe'), ['-NoProfile', '-NonInteractive', '-Command', COMMAND], {
       env: { ...env, ATLAS_SIGNATURE_FILE: file },
       windowsHide: true,
-      stdio: ['ignore', 'pipe', 'ignore']
+      stdio: ['ignore', 'pipe', 'pipe']
     })
     let out = ''
+    let err = ''
     let settled = false
-    const finish = (signature: FileSignature | null): void => {
+    const finish = (signature: FileSignature | null, reason = ''): void => {
       if (settled) return
       settled = true
+      if (!signature) {
+        lastError = `${reason} ${err}`.trim().slice(0, 600)
+        log('warn', 'File signature could not be read', lastError)
+      }
       clearTimeout(timer)
       resolve(signature)
     }
     const timer = setTimeout(() => {
       child.kill()
-      finish(null)
+      finish(null, 'timeout')
     }, TIMEOUT_MS)
+    child.stderr.on('data', (chunk: Buffer) => {
+      if (err.length < MAX_OUTPUT) err += chunk.toString('utf8')
+    })
     child.stdout.on('data', (chunk: Buffer) => {
       if (out.length < MAX_OUTPUT) out += chunk.toString('utf8')
     })
-    child.on('error', () => finish(null))
+    child.on('error', (e) => finish(null, `spawn: ${e.message}`))
     child.on('close', (code) => {
-      if (code !== 0) return finish(null)
+      if (code !== 0) return finish(null, `exit ${code}; out: ${out.slice(0, 200)}`)
       try {
         const parsed = JSON.parse(out.trim()) as { status?: unknown; subject?: unknown }
         finish(typeof parsed.status === 'string' ? { status: parsed.status, subject: typeof parsed.subject === 'string' ? parsed.subject : '' } : null)
       } catch {
-        finish(null)
+        finish(null, `parse: ${out.slice(0, 200)}`)
       }
     })
   })

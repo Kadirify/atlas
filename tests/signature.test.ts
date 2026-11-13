@@ -2,7 +2,7 @@ import { mkdtemp, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
-import { isOllamaSignature, readSignature, subjectFields } from '../src/main/services/signature'
+import { isOllamaSignature, lastSignatureError, readSignature, subjectFields } from '../src/main/services/signature'
 
 /** Ollama'nın Windows programlarındaki gerçek sertifika sahibi biçimi */
 const OLLAMA_SUBJECT = 'CN=Ollama Inc., O=Ollama Inc., L=Toronto, S=Ontario, C=CA, SERIALNUMBER=2713355, OID.2.5.4.15=Private Organization'
@@ -48,7 +48,7 @@ describe('isOllamaSignature', () => {
 describe.skipIf(process.platform !== 'win32')('readSignature (Windows)', () => {
   it("Windows'un kendi programının imzasını geçerli okur ama Ollama saymaz", async () => {
     const signature = await readSignature(join(process.env.SystemRoot ?? 'C:\\Windows', 'System32', 'notepad.exe'))
-    expect(signature?.status).toBe('Valid')
+    expect(signature?.status, lastSignatureError()).toBe('Valid')
     expect(signature?.subject).toContain('Microsoft')
     expect(isOllamaSignature(signature)).toBe(false)
   }, 60_000)
@@ -60,7 +60,7 @@ describe.skipIf(process.platform !== 'win32')('readSignature (Windows)', () => {
       await writeFile(file, Buffer.from('MZ bu gerçek bir program değil'))
       const signature = await readSignature(file)
       // Windows bozuk ya da imzasız dosya için "NotSigned" ya da "UnknownError" der; önemli olan "Valid" dememesi.
-      expect(signature).not.toBeNull()
+      expect(signature, lastSignatureError()).not.toBeNull()
       expect(signature?.status).not.toBe('Valid')
       expect(signature?.subject).toBe('')
       expect(isOllamaSignature(signature)).toBe(false)
