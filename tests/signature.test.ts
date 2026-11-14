@@ -45,7 +45,9 @@ describe('isOllamaSignature', () => {
   })
 })
 
-describe.skipIf(process.platform !== 'win32')('readSignature (Windows)', () => {
+// GitHub'ın Windows makinesinde Windows PowerShell'in güvenlik modülü yüklenemiyor (CouldNotAutoloadMatch); orada
+// imza okunamaz ve kod güvenli tarafta kalır (dosya çalıştırılmaz). Gerçek okuma yalnızca yerelde denenir.
+describe.skipIf(process.platform !== 'win32' || !!process.env.CI)('readSignature (Windows)', () => {
   it("Windows'un kendi programının imzasını geçerli okur ama Ollama saymaz", async () => {
     const signature = await readSignature(join(process.env.SystemRoot ?? 'C:\\Windows', 'System32', 'notepad.exe'))
     expect(signature?.status, lastSignatureError()).toBe('Valid')
