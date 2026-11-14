@@ -77,7 +77,7 @@ Gereksinimler: Windows 10/11, en az 8 GB bellek. Ekran kartı şart değil ama �
 
 ## Gizlilik
 
-Atlas yalnızca iki durumda internete çıkar: kurulumda Ollama'yı ve modeli indirirken, ve sen "Güncellemeleri denetle" dediğinde. İkisinde de seninle ilgili hiçbir bilgi gönderilmez. Ayrıntı: [docs/gizlilik-ve-guvenlik.md](docs/gizlilik-ve-guvenlik.md)
+Atlas yalnızca iki durumda internete çıkar: kurulumda Ollama'yı ve modeli indirirken, ve yeni sürüm var mı diye GitHub'a bakarken (açılışta ve günde bir kez; ayarlardan kapatılabilir). İkisinde de seninle ilgili hiçbir bilgi gönderilmez. Ayrıntı: [docs/gizlilik-ve-guvenlik.md](docs/gizlilik-ve-guvenlik.md)
 
 ## Geliştiriciler için
 

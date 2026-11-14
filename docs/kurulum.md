@@ -37,7 +37,7 @@ Birden fazla model kurup sohbet başına seçebilirsin. Modellerin ayrıntısı:
 
 ## Güncelleme
 
-**Ayarlar → Hakkında → Güncellemeleri denetle.** Yeni sürüm varsa notlarını gösterir, kurulum dosyasını indirir, boyutunu ve özetini kontrol edip kurar. Atlas kendiliğinden internete çıkmaz; yalnızca bu düğmeye bastığında GitHub'daki sürümlere bakar.
+Yeni sürüm çıkınca Atlas haber verir: açıldığında ve günde bir kez GitHub'daki sürümlere bakar. Pencere öndeyse sağ üstte küçük bir kart, değilse Windows bildirimi çıkar. **Güncelle**'ye basınca sürüm notlarını gösterir; **İndir** dersen kurulum dosyasını indirir, boyutunu ve özetini kontrol edip kurar. Sohbetlerin silinmez. Bunu istemezsen **Ayarlar → Hakkında → Yeni sürüm çıkınca haber ver**'i kapat; o zaman yalnızca **Güncellemeleri denetle** düğmesine bastığında bakar.
 
 ## Verilerin nerede?
 

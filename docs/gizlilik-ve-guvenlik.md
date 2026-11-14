@@ -21,10 +21,10 @@ Atlas'ın var olma nedeni verinin senin bilgisayarında kalması. Bu sayfa veril
 
 ## Atlas ne zaman internete çıkar
 
-Yalnızca şu durumlarda, ve yalnızca sen başlatınca:
+Yalnızca şu durumlarda:
 
 1. **Kurulumda:** Ollama'yı `ollama.com`'dan indirirken ve seçtiğin modeli indirirken (model indirmeyi Ollama yapar). İndirilen Ollama kurulum dosyası çalıştırılmadan önce Windows imzası denetlenir: imza geçerli ve Ollama'ya ait değilse dosya çalıştırılmaz.
-2. **"Güncellemeleri denetle" dediğinde:** GitHub'dan son sürümün bilgisini ve model tarifleri dosyasını okur; yeni sürümü kurmayı seçersen kurulum dosyasını indirir.
+2. **Yeni sürüme bakarken:** Atlas açılınca ve günde bir kez (ya da sen "Güncellemeleri denetle" dediğinde) GitHub'dan son sürümün bilgisini ve model tarifleri dosyasını okur; yeni sürüm varsa haber verir. Kurulum dosyasını yalnızca sen "İndir" dersen indirir. Kendiliğinden bakmayı **Ayarlar → Hakkında → Yeni sürüm çıkınca haber ver** ile kapatabilirsin; o zaman yalnızca düğmeye bastığında bakar.
 
 Bunların hiçbirinde seninle ilgili bir bilgi gönderilmez. Kullanım istatistiği, hata raporu ya da reklam kimliği yoktur.
 

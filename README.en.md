@@ -67,7 +67,7 @@ Requirements: Windows 10/11, at least 8 GB of RAM. A graphics card is optional b
 
 ## Privacy
 
-Atlas only goes online in two cases: when it downloads Ollama and a model during setup, and when you press "Check for updates". Neither sends anything about you.
+Atlas only goes online in two cases: when it downloads Ollama and a model during setup, and when it asks GitHub whether there is a new version (at startup and once a day; you can turn this off in Settings). Neither sends anything about you.
 
 ## For developers
 

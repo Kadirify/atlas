@@ -12,7 +12,7 @@ import { cn, errorText, FIT_LABEL, formatBytes, formatGb } from '@/lib/format'
 import { useT } from '@/lib/useT'
 import { useApp } from '@/stores/app'
 
-type Tab = 'genel' | 'masaustu' | 'kisilikler' | 'hafiza' | 'klasorler' | 'modeller' | 'hakkinda'
+export type Tab = 'genel' | 'masaustu' | 'kisilikler' | 'hafiza' | 'klasorler' | 'modeller' | 'hakkinda'
 
 /** Sekme kimlikleri kod içi anahtarlardır; görünen etiketler sözlükten gelir. */
 const TAB_IDS: Tab[] = ['genel', 'masaustu', 'kisilikler', 'hafiza', 'klasorler', 'modeller', 'hakkinda']
@@ -473,10 +473,12 @@ function ModelsTab() {
   )
 }
 
-function AboutTab({ onClose }: { onClose(): void }) {
+/** checkNow: açılır açılmaz güncellemeyi denetle (yeni sürüm haberine tıklanınca) */
+function AboutTab({ onClose, checkNow = false }: { onClose(): void; checkNow?: boolean }) {
   const t = useT()
   const a = t.settings.about
   const saveSettings = useApp((s) => s.saveSettings)
+  const autoCheck = useApp((s) => s.settings?.autoCheckUpdates ?? true)
   const [version, setVersion] = useState('')
   const [update, setUpdate] = useState<UpdateInfo | null>(null)
   const [checking, setChecking] = useState(false)
@@ -529,6 +531,12 @@ function AboutTab({ onClose }: { onClose(): void }) {
     }
   }
 
+  // Yeni sürüm haberinden açıldıysa denetim hemen yapılır: "İndir" düğmesi beklemeden çıksın.
+  useEffect(() => {
+    if (checkNow) void check()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [checkNow])
+
   return (
     <div className="space-y-8">
       <section>
@@ -556,6 +564,9 @@ function AboutTab({ onClose }: { onClose(): void }) {
         <Button disabled={checking} onClick={() => void check()}>
           {checking ? a.checking : a.checkUpdates}
         </Button>
+        <div className="mt-3 max-w-[60ch]">
+          <CheckCard checked={autoCheck} onChange={(autoCheckUpdates) => void saveSettings({ autoCheckUpdates })} title={a.autoCheck} description={a.autoCheckHint} />
+        </div>
         <div className="mt-3 space-y-1 text-[13px]" role="status">
           {update && (
             <p className="text-ink-2">
@@ -640,9 +651,9 @@ function AboutTab({ onClose }: { onClose(): void }) {
   )
 }
 
-export default function SettingsDialog({ onClose }: { onClose(): void }) {
+export default function SettingsDialog({ onClose, initialTab = 'genel', checkUpdate = false }: { onClose(): void; initialTab?: Tab; checkUpdate?: boolean }) {
   const t = useT()
-  const [tab, setTab] = useState<Tab>('genel')
+  const [tab, setTab] = useState<Tab>(initialTab)
   const settings = useApp((s) => s.settings) as Settings
   const panelRef = useRef<HTMLDivElement>(null)
 
@@ -703,7 +714,7 @@ export default function SettingsDialog({ onClose }: { onClose(): void }) {
             {tab === 'hafiza' && <MemoryTab />}
             {tab === 'klasorler' && <FoldersTab />}
             {tab === 'modeller' && <ModelsTab />}
-            {tab === 'hakkinda' && <AboutTab onClose={onClose} />}
+            {tab === 'hakkinda' && <AboutTab onClose={onClose} checkNow={checkUpdate} />}
           </div>
         </div>
       </div>

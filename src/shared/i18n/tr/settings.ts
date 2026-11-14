@@ -138,7 +138,7 @@ export const settings = {
   about: {
     version: (version: string) => `Sürüm ${version}`,
     privacy:
-      'Sohbetlerin ve ayarların sadece bu bilgisayarda saklanır. Uygulama internete yalnızca model indirirken ve sen güncelleme denetlediğinde bağlanır.',
+      'Sohbetlerin ve ayarların sadece bu bilgisayarda saklanır. Uygulama internete yalnızca model indirirken ve yeni sürüme bakarken bağlanır.',
     openSource: (appName: string) =>
       `${appName} açık kaynaklı ve ücretsizdir. Kaynak kodu MIT lisansıyla yayımlanır: inceleyebilir, değiştirebilir ve kendi işinde kullanabilirsin.`,
     models: 'Atlas modelleri Qwen ve Gemma taban modellerinden ince ayarla türetilmiştir; taban modeller gibi Apache 2.0 lisansıyla dağıtılır.',
@@ -147,6 +147,11 @@ export const settings = {
     updatesTitle: 'Güncellemeler',
     updatesHint: 'Yeni sürüme ve yeni Atlas modellerine GitHub deposundan bakar. Depoya hiçbir bilgi gönderilmez.',
     checkUpdates: 'Güncellemeleri denetle',
+    autoCheck: 'Yeni sürüm çıkınca haber ver',
+    autoCheckHint: 'Atlas açılınca ve günde bir kez GitHub’a yeni sürüm var mı diye bakar. Seninle ilgili hiçbir bilgi gönderilmez; kapatırsan yalnızca bu düğmeye bastığında bakar.',
+    updateBanner: (version: string) => `Atlas ${version} çıktı.`,
+    updateBannerAction: 'Güncelle',
+    updateBannerDismiss: 'Sonra',
     checking: 'Denetleniyor…',
     upToDate: 'En güncel sürümü kullanıyorsun.',
     noRelease: 'Henüz yayımlanmış bir sürüm yok.',

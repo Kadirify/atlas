@@ -138,7 +138,7 @@ export const settings: Dict['settings'] = {
   about: {
     version: (version: string) => `Version ${version}`,
     privacy:
-      'Your chats and settings are stored only on this computer. The app connects to the internet only to download models and when you check for updates.',
+      'Your chats and settings are stored only on this computer. The app connects to the internet only to download models and to look for a new version.',
     openSource: (appName: string) =>
       `${appName} is free and open source. The source code is published under the MIT license: you can read it, change it and use it in your own work.`,
     models: 'Atlas models are fine-tuned derivatives of the Qwen and Gemma base models and, like them, are distributed under the Apache 2.0 license.',
@@ -147,6 +147,11 @@ export const settings: Dict['settings'] = {
     updatesTitle: 'Updates',
     updatesHint: 'Looks for a new version and new Atlas models in the GitHub repository. Nothing is sent to it.',
     checkUpdates: 'Check for updates',
+    autoCheck: 'Tell me when a new version is out',
+    autoCheckHint: 'When Atlas starts and once a day, it asks GitHub whether there is a new version. Nothing about you is sent; if you turn this off, it only looks when you press this button.',
+    updateBanner: (version: string) => `Atlas ${version} is out.`,
+    updateBannerAction: 'Update',
+    updateBannerDismiss: 'Later',
     checking: 'Checking…',
     upToDate: "You're on the latest version.",
     noRelease: 'No version has been released yet.',

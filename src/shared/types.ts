@@ -695,6 +695,8 @@ export interface Settings {
   think: boolean
   /** Arayüzün yakınlaştırması: 1 = %100 (Ctrl + ve Ctrl - ile de değişir) */
   zoom: number
+  /** Atlas açılınca ve günde bir kez yeni sürüm var mı diye GitHub'a bakar ve haber verir */
+  autoCheckUpdates: boolean
 }
 
 export interface SlashPrompt {
@@ -754,7 +756,8 @@ export const DEFAULT_SETTINGS: Settings = {
   selectionShortcut: 'Ctrl+Shift+Space',
   slashPrompts: [],
   think: false,
-  zoom: 1
+  zoom: 1,
+  autoCheckUpdates: true
 }
 
 // --- Mini uygulamalar ---
@@ -1078,8 +1081,12 @@ export interface Api {
     /** Kurulumla gelen açık kaynak lisans bildirimlerini metin düzenleyicide açar */
     openNotices(): Promise<void>
     setTitleBarTheme(dark: boolean): Promise<void>
-    /** Depodan yeni sürüme ve yeni model tariflerine bakar. Yalnızca kullanıcı isteyince çağrılır. */
+    /** Depodan yeni sürüme ve yeni model tariflerine bakar. */
     checkUpdates(): Promise<UpdateInfo>
+    /** Kendiliğinden yapılan denetimde yeni sürüm bulundu */
+    onUpdateAvailable(cb: (info: UpdateInfo) => void): () => void
+    /** Güncelleme bildirimine tıklandı: Ayarlar → Hakkında açılsın */
+    onOpenUpdate(cb: () => void): () => void
     /** Kurulum dosyasıyla kurulmuş sürüm mü (geliştirme modunda false) */
     isPackaged(): Promise<boolean>
     /** Sistem tepsisinden "Yeni sohbet" seçildiğinde çağrılır. */

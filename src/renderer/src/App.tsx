@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { ZOOM_STEPS } from '@shared/types'
 import ChatView from '@/components/ChatView'
 import LockScreen from '@/components/LockScreen'
-import SettingsDialog from '@/components/SettingsDialog'
+import SettingsDialog, { type Tab as SettingsTab } from '@/components/SettingsDialog'
 import Sidebar from '@/components/Sidebar'
 import AppRunPage from '@/pages/AppRunPage'
 import AppsPage from '@/pages/AppsPage'
@@ -13,7 +13,8 @@ import WhatsAppPage from '@/pages/WhatsAppPage'
 import { setActiveLanguage } from '@/lib/i18n'
 import { useApp } from '@/stores/app'
 import Markdown from '@/components/Markdown'
-import { Button } from '@/components/ui'
+import { Button, IconButton } from '@/components/ui'
+import { Sparkles, X } from 'lucide-react'
 import { useT } from '@/lib/useT'
 import type { WhatsNew } from '@shared/types'
 
@@ -43,6 +44,10 @@ export default function App() {
   const lock = useApp((s) => s.lock)
   const language = useApp((s) => s.settings?.language ?? s.lock?.language ?? 'tr')
   const [settingsOpen, setSettingsOpen] = useState(false)
+  /** Ayarlar hangi sekmeyle açılsın; güncelleme haberinden açılınca Hakkında ve hemen denetim */
+  const [settingsStart, setSettingsStart] = useState<{ tab: SettingsTab; checkUpdate: boolean }>({ tab: 'genel', checkUpdate: false })
+  /** Kendiliğinden denetimde bulunan yeni sürüm ("Sonra" denince bu açılışta yeniden gösterilmez) */
+  const [newVersion, setNewVersion] = useState<string | null>(null)
   const [whatsNew, setWhatsNew] = useState<WhatsNew | null>(null)
   const t = useT()
 
@@ -95,6 +100,20 @@ export default function App() {
       }),
     []
   )
+
+  // Yeni sürüm haberi: uygulama içinde bir kart; Windows bildirimine tıklanınca doğrudan Ayarlar → Hakkında.
+  useEffect(() => {
+    const offAvailable = window.api.app.onUpdateAvailable((info) => setNewVersion(info.latestVersion))
+    const offOpen = window.api.app.onOpenUpdate(() => {
+      setNewVersion(null)
+      setSettingsStart({ tab: 'hakkinda', checkUpdate: true })
+      setSettingsOpen(true)
+    })
+    return () => {
+      offAvailable()
+      offOpen()
+    }
+  }, [])
 
   // Güncellemeden sonraki ilk açılışta sürüm notları bir kez gösterilir.
   useEffect(() => {
@@ -172,7 +191,13 @@ export default function App() {
   // Dil değişince bütün ekran yeniden kurulur; her metin yeni dilde çizilir.
   return (
     <div key={language} className="flex h-full">
-      <Sidebar ref={searchRef} onOpenSettings={() => setSettingsOpen(true)} />
+      <Sidebar
+        ref={searchRef}
+        onOpenSettings={() => {
+          setSettingsStart({ tab: 'genel', checkUpdate: false })
+          setSettingsOpen(true)
+        }}
+      />
       {view.name === 'chat' && <ChatView />}
       {view.name === 'apps' && <AppsPage />}
       {view.name === 'code' && <CodeHome />}
@@ -207,8 +232,30 @@ export default function App() {
           </div>
         </div>
       )}
+      {newVersion && !settingsOpen && (
+        <div role="status" className="fixed top-12 right-5 z-40 flex max-w-[360px] items-center gap-3 rounded-xl border border-line bg-surface py-2.5 pr-2 pl-3.5 text-sm text-ink shadow-pop">
+          <Sparkles size={16} className="shrink-0 text-accent" aria-hidden />
+          <span className="min-w-0 flex-1">{t.settings.about.updateBanner(newVersion)}</span>
+          <Button
+            size="sm"
+            variant="primary"
+            onClick={() => {
+              setNewVersion(null)
+              setSettingsStart({ tab: 'hakkinda', checkUpdate: true })
+              setSettingsOpen(true)
+            }}
+          >
+            {t.settings.about.updateBannerAction}
+          </Button>
+          <IconButton label={t.settings.about.updateBannerDismiss} onClick={() => setNewVersion(null)} className="h-7 w-7">
+            <X size={14} aria-hidden />
+          </IconButton>
+        </div>
+      )}
       {settingsOpen && (
         <SettingsDialog
+          initialTab={settingsStart.tab}
+          checkUpdate={settingsStart.checkUpdate}
           onClose={() => {
             setSettingsOpen(false)
             void refreshInstalled()

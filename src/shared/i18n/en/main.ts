@@ -61,6 +61,8 @@ export const main: Dict['main'] = {
   },
 
   notify: {
+    updateTitle: (version: string) => `Atlas ${version} is out`,
+    updateBody: 'Click to update. Your chats are kept.',
     replyReady: 'The reply is ready',
     replyReadyLocked: 'Atlas wrote the reply. Unlock to see it.',
     replyFailed: "The reply couldn't be written",

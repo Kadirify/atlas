@@ -126,7 +126,7 @@ async function getJson(url: string): Promise<unknown> {
 
 /**
  * Yeni uygulama sürümü ve yeni model tarifi var mı diye depoya bakar.
- * Yalnızca kullanıcı istediğinde çağrılır; depoya hiçbir bilgi gönderilmez.
+ * Kullanıcı istediğinde ve (ayar açıksa) günde bir kez kendiliğinden çağrılır; depoya hiçbir bilgi gönderilmez.
  */
 export async function checkUpdates(currentVersion: string, currentRecipes: number, userData: string): Promise<UpdateInfo> {
   let release: unknown

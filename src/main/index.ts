@@ -9,7 +9,9 @@ import { restoreBounds, type WindowState } from './windowState'
 import { toolContextSize } from './services/hardware'
 import { getLanguage, setLanguage } from './i18n'
 import { BUNDLED_RECIPES_VERSION } from './services/catalog'
-import { loadSavedRecipes } from './services/updates'
+import { checkUpdates, loadSavedRecipes } from './services/updates'
+import { startUpdateWatch } from './updateWatch'
+import { recipesVersion } from './services/catalog'
 import { broadcast, registerIpc } from './ipc'
 import { builtinApps } from './services/builtinApps'
 import { ChatService } from './services/chat'
@@ -437,6 +439,31 @@ if (!app.requestSingleInstanceLock()) {
     // Kurulum bittiyse Ollama arka planda başlatılır (kapalıysa): ilk soruda beklenmesin, "çalışmıyor" hatası çıkmasın.
     if (settings.setupDone) void ensureRunning()
 
+    // Yeni sürüm kendiliğinden denetlenir (ayardan kapatılabilir). Pencere öndeyse uygulama içinde, değilse Windows
+    // bildirimiyle haber verilir. Geliştirme sürümünde bakılmaz; denemeler için ATLAS_FAKE_UPDATE sahte bir sürüm verir.
+    const fakeUpdate = !app.isPackaged && testUserData ? process.env.ATLAS_FAKE_UPDATE : undefined
+    const stopUpdateWatch = startUpdateWatch({
+      enabled: () => {
+        const s = db.getSettings()
+        return s.setupDone && s.autoCheckUpdates && (app.isPackaged || !!fakeUpdate)
+      },
+      check: async () =>
+        fakeUpdate
+          ? { currentVersion: app.getVersion(), latestVersion: fakeUpdate, hasUpdate: true, url: '', modelsUpdated: false, notes: '', installable: false, sizeMb: 0 }
+          : checkUpdates(app.getVersion(), recipesVersion(), app.getPath('userData')),
+      notify: (info) => {
+        broadcast('app:updateAvailable', info)
+        const visible = mainWindow && !mainWindow.isDestroyed() && mainWindow.isVisible() && mainWindow.isFocused()
+        if (visible) return
+        const t = L().main.notify
+        tray.notify(t.updateTitle(info.latestVersion), t.updateBody, () => {
+          showWindow()
+          broadcast('app:openUpdate', null)
+        })
+      },
+      firstCheckMs: fakeUpdate ? 3000 : undefined
+    })
+
     app.on('activate', () => showWindow())
     let closing = false
     app.on('before-quit', (event) => {
@@ -447,6 +474,7 @@ if (!app.requestSingleInstanceLock()) {
       // Veritabanı kapanmadan önce pencerenin yeri saklanır.
       persistWindow()
       clearInterval(idleTimer)
+      stopUpdateWatch()
       stopWatching()
       panel.destroy()
       tray.destroy()

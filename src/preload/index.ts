@@ -186,6 +186,8 @@ const api: Api = {
     isPackaged: () => call('app:isPackaged'),
     onNewChat: (cb) => on('app:newChat', () => cb()),
     onOpenConversation: (cb) => on('app:openConversation', cb),
+    onUpdateAvailable: (cb) => on('app:updateAvailable', cb),
+    onOpenUpdate: (cb) => on('app:openUpdate', cb),
     downloadUpdate: () => call('app:downloadUpdate'),
     onUpdateProgress: (cb) => on('app:updateProgress', cb),
     installUpdate: () => call('app:installUpdate'),

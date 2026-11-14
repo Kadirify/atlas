@@ -47,6 +47,7 @@
 - Veritabanı açılamazsa uygulama asılı kalmıyor, ne olduğunu söylüyor.
 
 ### Diğer
+- Yeni sürüm çıkınca Atlas haber veriyor: açılışta ve günde bir kez GitHub'a bakıyor; pencere öndeyse sağ üstte bir kart, değilse Windows bildirimi çıkıyor. **Ayarlar → Hakkında → Yeni sürüm çıkınca haber ver** ile kapatılabilir; kapalıyken yalnızca düğmeye basınca bakıyor.
 - Açık kaynak bildirimleri: kurulum dosyasına Atlas'ın lisansı ve içindeki açık kaynak yazılımların lisans metinleri eklendi; **Ayarlar → Hakkında → Açık kaynak bildirimleri** ile açılır. Her derlemede lisansı belli olmayan ya da uygun olmayan paket var mı diye denetleniyor.
 - Lisansı bildirilmemiş bir paketi getiren eski bir alt bağımlılık yenisiyle değiştirildi; kurulum dosyasına `node_modules` olarak giren paket sayısı 308'den 205'e indi.
 - Kod alanında git: proje bir git deposuysa **Değişiklikler** sekmesi son commit'e göre değişen dosyaları ve satır satır farkı gösteriyor. Seçili dosyalarla commit, commit mesajı önerisi, yeni dal açma ve dosyayı son commit'teki haline döndürme (şimdiki hali çöp kutusuna gider). Commit yalnızca senin tıklamanla atılır; push yoktur.

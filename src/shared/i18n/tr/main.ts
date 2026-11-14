@@ -63,6 +63,8 @@ export const main = {
   },
 
   notify: {
+    updateTitle: (version: string) => `Atlas ${version} çıktı`,
+    updateBody: 'Güncellemek için tıkla. Sohbetlerin silinmez.',
     replyReady: 'Cevap hazır',
     replyReadyLocked: 'Atlas cevabı yazdı. Görmek için kilidi aç.',
     replyFailed: 'Cevap yazılamadı',

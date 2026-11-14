@@ -1,7 +1,7 @@
 # Sık sorulan sorular
 
 **Atlas gerçekten internete hiç çıkmıyor mu?**
-Sohbetlerin, dosyaların ve soruların hiçbir sunucuya gitmez. Atlas yalnızca iki durumda internete çıkar: kurulumda Ollama'yı ve modeli indirirken, ve sen "Güncellemeleri denetle" düğmesine bastığında GitHub'daki sürümlere bakarken. İkisinde de seninle ilgili hiçbir bilgi gönderilmez. Ayrıntı: [Gizlilik ve güvenlik](gizlilik-ve-guvenlik.md).
+Sohbetlerin, dosyaların ve soruların hiçbir sunucuya gitmez. Atlas yalnızca iki durumda internete çıkar: kurulumda Ollama'yı ve modeli indirirken, ve yeni sürüm var mı diye GitHub'daki sürümlere bakarken (açılışta ve günde bir kez; Ayarlar → Hakkında'dan kapatılabilir, o zaman yalnızca "Güncellemeleri denetle" düğmesine bastığında bakar). İkisinde de seninle ilgili hiçbir bilgi gönderilmez. Ayrıntı: [Gizlilik ve güvenlik](gizlilik-ve-guvenlik.md).
 
 **ChatGPT ya da Claude'dan farkı ne?**
 Onlar bulutta çalışan çok daha büyük modeller; karmaşık işlerde Atlas'tan güçlüler. Atlas'ın farkı verinin bilgisayarında kalması, internetsiz ve ücretsiz çalışması, Türkçe için ayrıca eğitilmiş olması ve dosyalarınla, veritabanınla doğrudan çalışabilmesi. Şirket verisini buluta yapıştıramadığın işler için yapıldı.
