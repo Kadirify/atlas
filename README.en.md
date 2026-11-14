@@ -87,7 +87,11 @@ Atlas is an early release (0.2). It is usable for everyday work, but local model
 
 ## Development note
 
-[Claude](https://www.anthropic.com/claude) (Anthropic) was used as an AI-assisted development tool while building Atlas.
+Building an AI assistant without any help from AI would have been a bit like a chef refusing to taste the soup. 🙂
+
+[Claude](https://www.anthropic.com/claude) (Anthropic) was used as an AI-assisted development tool while building Atlas. Yes, we used one AI to build another; it's the AI age, so why not? 😄
+
+In short: we made an AI with AI, and now that AI runs on your computer, offline, for you. 🚀
 
 ## License
 

@@ -97,7 +97,11 @@ Atlas erken bir sürümde (0.2). Günlük işlerde kullanılabilir durumda, ama 
 
 ## Geliştirme notu
 
-Atlas'ın geliştirilmesinde yapay zeka destekli geliştirme aracı olarak [Claude](https://www.anthropic.com/claude) (Anthropic) kullanıldı.
+Yapay zeka asistanı yazıp yapay zekadan hiç yardım almamak, terzinin kendi söküğünü dikememesi gibi olurdu. 🙂
+
+Atlas'ın geliştirilmesinde yapay zeka destekli geliştirme aracı olarak [Claude](https://www.anthropic.com/claude) (Anthropic) kullanıldı. Evet, bir yapay zeka asistanını yazarken başka bir yapay zekadan yardım aldık; artık yapay zeka çağındayız, biraz da kullanalım değil mi? 😄
+
+Kısacası: AI ile AI yaptık, şimdi o AI senin bilgisayarında, internetsiz, senin için çalışıyor. 🚀
 
 ## Lisans
 
