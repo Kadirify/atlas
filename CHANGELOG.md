@@ -1,6 +1,6 @@
 # Değişiklikler
 
-## Yayımlanmamış
+## 0.2.0 (15 Kasım 2026)
 
 ### Güvenlik
 - Kurulu `Atlas.exe` sıradan bir Node.js çalıştırıcısı gibi kullanılamıyor (`ELECTRON_RUN_AS_NODE`, `NODE_OPTIONS` ve `--inspect` kapalı) ve uygulama kodu yalnızca bütünlüğü denetlenen `app.asar` dosyasından yükleniyor (Electron sigortaları).
