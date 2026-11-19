@@ -62,7 +62,7 @@
     "mssql": "^12.7.14",
     "mysql2": "^3.24.6",
     "pg": "^8.23.1",
-    "systeminformation": "^5.33.19",
+    "systeminformation": "^5.33.23",
     "unpdf": "^2.1.0"
   },
   "overrides": {
