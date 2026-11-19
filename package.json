@@ -63,7 +63,7 @@
     "mysql2": "^3.24.6",
     "pg": "^8.23.1",
     "systeminformation": "^5.33.19",
-    "unpdf": "^2.1.0"
+    "unpdf": "^2.2.1"
   },
   "overrides": {
     "exceljs": {
